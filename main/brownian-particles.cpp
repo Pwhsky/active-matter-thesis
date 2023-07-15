@@ -48,7 +48,7 @@ struct Particle{
 }; 
 
 
-std::vector<Particle> initialize_particles(int nParticles,int hotQuota);
+std::vector<Particle> initialize_particles(int nHot, int nCold);
 void update_position(Particle &particle);
 
 std::vector<double> phoretic_force(Particle &particle1, Particle &particle2);
@@ -63,20 +63,25 @@ void writeToCSV(std::vector<std::vector<Particle>> particlesOverTime,int nPartic
 int main(int argc, char** argv) {
 	
 	//Take user input: 
-	if (argc < 3) {
-		std::cout << "Usage: ./sim <nParticles> <timeSteps>" << std::endl;
-		std::cout << "example: \n" << "./sim 10 100"<< std::endl;
-		
+	if (argc < 4) {
+		std::cout << "Usage: ./sim <nHot> <nCold> <timeSteps>" << std::endl;
+		std::cout << "example: \n" << "./sim 2 2 100"<< std::endl;
 		return 1;
 	}
-	const int nParticles = std::stoi(argv[1]);
-	const int timeSteps = std::stoi(argv[2]);
-	const int hotQuota = nParticles/2;
+	
+	const int nHot = std::stoi(argv[1]);
+	const int nCold = std::stoi(argv[2]);
+	const int timeSteps = std::stoi(argv[3]);
+	const int nParticles = nHot + nCold;
+	
+	
 	//////////////////
-
+	
+	
+	//Start a timer
 	auto start = std::chrono::high_resolution_clock::now();
 
-	vector<Particle> particles = initialize_particles(nParticles,hotQuota);
+	vector<Particle> particles = initialize_particles(nHot,nCold);
 	vector<vector<Particle>> particlesOverTime;
 
    	
@@ -132,17 +137,18 @@ int main(int argc, char** argv) {
 
 
 
-std::vector<Particle> initialize_particles(int nParticles,int hotQuota) {
+std::vector<Particle> initialize_particles(int nHot, int nCold) {
+
 	vector<Particle> particles;
-	
 	uniform_real_distribution<double> dis(0.0,1.0);
-	int hotCounter = 0;
+	
 	//Assign values to the particles
-	for (int i = 0; i<nParticles; i++) {
+	for (int i = 0; i< (nHot + nCold); i++) {
 		Particle newParticle;
-		if(hotCounter < hotQuota){
+		
+		if(i < nHot){
 			newParticle.isHot = true;
-			hotCounter++;
+		
 		}else{
 			newParticle.isHot = false;
 		}		
@@ -154,6 +160,9 @@ std::vector<Particle> initialize_particles(int nParticles,int hotQuota) {
 		particles.push_back(newParticle);	
 		
 	}	
+	
+	
+	
 	return particles;
 }
 

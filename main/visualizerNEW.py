@@ -6,12 +6,13 @@ import matplotlib.animation as animation
 plotMarkerSize=16
 plotDPI = 250
 
-
-nParticles = 6
-timeSteps = 1500
+nHot = 3
+nCold = 4
+nParticles = nHot + nCold
+timeSteps = 310
 #Handler to simulate in C++:
 subprocess.run(['g++','brownian-particles.cpp','-o','sim','-O4'])
-subprocess.run(['./sim',f' {nParticles}',f' {timeSteps}'])
+subprocess.run(['./sim',f' {nHot}',f' {nCold}',f' {timeSteps}'])
 
 print("Processing data...")
 box_size = 100 * 1e-6
@@ -24,14 +25,13 @@ dfCold = pd.read_csv('coldParticles.csv', header=None, names=['x', 'y'],low_memo
 dfHot['x'] = pd.to_numeric(dfHot['x'],errors='coerce')
 dfHot['y'] = pd.to_numeric(dfHot['y'],errors='coerce')
 
-
 dfCold['x'] = pd.to_numeric(dfCold['x'],errors='coerce')
 dfCold['y'] = pd.to_numeric(dfCold['y'],errors='coerce')
 
 
 # Define the number of timesteps (100 rows per timestep)
 #NOTE THIS ASSUMES THAT THERE ARE EQUAL AMMOUNTS OF HOT AND COLD PARTICLES
-numTimesteps = dfHot.shape[0]//nParticles
+
 #%%
 # Create a figure and axis for the scatter plot
 fig, ax = plt.subplots(dpi=plotDPI)
@@ -49,15 +49,19 @@ ax.set_ylabel('Y')
 
 # Function to update the scatter plot for each frame
 def update(frame):
-    start = frame * nParticles
-    end = start + nParticles
-    scatterCold.set_offsets(dfCold.iloc[start:end, :].values)
-    scatterHot.set_offsets(dfHot.iloc[start:end, :].values)
-   
+    
+    startCold = frame * nCold
+    endCold   = startCold + nCold
+
+    startHot  = frame * nHot
+    endHot    = startHot + nHot
+
+    scatterCold.set_offsets(dfCold.iloc[startCold:endCold, :].values)
+    scatterHot.set_offsets(dfHot.iloc[startHot:endHot, :].values)
     return scatterHot,scatterCold
 
 # Create the animation
-ani = animation.FuncAnimation(fig, update, frames=numTimesteps, interval=1)
+ani = animation.FuncAnimation(fig, update, frames=timeSteps, interval=10)
 
 # Save the animation as a movie
 ani.save('particle_movie.gif', writer='pillow')
