@@ -2,14 +2,14 @@ import pandas as pd
 import subprocess
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-plotMarkerSize = 14
+plotMarkerSize = 12.5
 plotDPI        = 250
 
 
-nHot       = 1
-nCold      = 2
+nHot       = 2
+nCold      = 3
 nParticles = nHot + nCold
-timeSteps  = 500
+timeSteps  = 1000
 #Handler to simulate in C++:
 subprocess.run(['g++','brownian-particles.cpp','-o','sim','-O4'])
 subprocess.run(['./sim',f' {nHot}',f' {nCold}',f' {timeSteps}'])
@@ -45,23 +45,26 @@ ax.set_ylim([0,box_size])
 # Set the axis labels
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
+# Draw the 1-micrometer scale bar
 
 # Function to update the scatter plot for each frame
 def update(frame):
     #Limit the number of frames in the gif to reduce loading time
-   # if frame %3 !=0 and frame %3 != 1:
-    if frame %2 ==0:
+    if frame %3 !=0 and frame %3 != 1:
+    #if frame %2 ==0:
         startCold = frame * nCold
         endCold   = startCold + nCold +1
         startHot  = frame * nHot
         endHot    = startHot + nHot+1
-    
+
         scatterCold.set_offsets(dfCold.iloc[startCold:endCold, :].values)
         scatterHot.set_offsets(dfHot.iloc[startHot:endHot, :].values)
     return scatterHot,scatterCold
 
 # Create the animation
-ani = animation.FuncAnimation(fig, update, frames=timeSteps, interval=1)
+ani = animation.FuncAnimation(fig, update, frames=timeSteps, interval=4)
+
+
 print("Encoding movie...")
 # Save the animation as a movie
 ani.save('particle_movie.gif', writer='pillow')
@@ -69,4 +72,5 @@ ani.save('particle_movie.gif', writer='pillow')
 # Show the plot (optional)
 gif_file = "particle_movie.gif"
 print("Encoding complete, opening movie.")
+
 subprocess.run(["xdg-open",gif_file])

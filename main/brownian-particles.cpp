@@ -9,19 +9,25 @@ using namespace std;
 
 const double pi			    = 3.14159265358979323846;
 const double temperature            = 300;
+
 const double particleRadius         = 1*pow(10,-6); //1 micrometer sized particle
 const double cutoff_distance	    = 8*pow(10,-6);
-const double delta_t		    = 0.002;
+const double delta_t		    = 0.005;
 const double kb      		    = 1.380649 * pow(10,-23);
 const double viscosity              = 1*pow(10,-3);
-const double D_T 	            = kb *temperature / (6.0*pi*viscosity*particleRadius);
+const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
+const double D_T 	            = kb *temperature / stokesCoefficient; //Translational diffusion
 const double v_0		    = 10*pow(10,-6); //Phoretic strength
-const double box_size		    = pow(10,-4);
-const double phoreticTerm	    = v_0 * pow(2*particleRadius,2);
-const double trans 		    = sqrt(2.0*D_T*delta_t);
+
+
+const double box_size		    = 100*pow(10,-6);
+
+
+const long double phoreticTerm	    = 4*v_0 * pow(particleRadius,2);
+const long double trans 	    = sqrt(2.0*D_T*delta_t);
 
 const double v			    = particleRadius*10;
-const double spawnArea		    = box_size/30;
+const double spawnArea		    = box_size/28;
 const double cDR  		    = sqrt(2*kb*temperature/(8*pi*0.001*pow(particleRadius,3))*delta_t);
 
 
@@ -34,23 +40,24 @@ struct Particle{
 
 
 	//Coords
-	double x;
-	double y;
+	long double x;
+	long double y;
 	double phi;
-	//Phoretic velocity directions;
+	
 	bool isHot;
-	double vpx; 
-	double vpy;
+	//Phoretic velocity magnitude
+	long double vpx; 
+	long double vpy;
 }; 
 
 
 std::vector<Particle> initialize_particles(int nHot, int nCold);
-void update_position(Particle &particle);
+void update_position(Particle &particle,std::vector<Particle> &particles, int nParticles);
 
-std::vector<double> phoretic_force(Particle &particle1, Particle &particle2);
+void phoretic_force(std::vector<Particle>& particles,int nParticles);
 void hard_sphere_correction(std::vector<Particle>& particles,int nParticles);
 
-vector<double> getDirection(Particle &particle1, Particle &particle2);
+vector<long double> getDirection(Particle &particle1, Particle &particle2);
 double getNorm(Particle &particle1, Particle &particle2);
 
 void boundary_box_correction(std::vector<Particle>& particles,int nParticles);
@@ -84,40 +91,17 @@ int main(int argc, char** argv) {
    	//simulate over time:
 	for (int time = 0; time < timeSteps; time++){
 
-		
+		phoretic_force(particles,nParticles);
 		for (int i = 0; i<nParticles;i++){
-			update_position(particles[i]);
+			update_position(particles[i],particles,nParticles);
 		}
-		//calculate phoretic force	
-		for (int i = 0; i< nParticles; i++){
-		
-			double vpx = 0.0;
-   			double vpy = 0.0;
-   			
-			for(int j = 0; j< nParticles; j++){
 
-				if (particles[j].isHot == true && i != j){
-					vector<double> totalPhoreticForce = phoretic_force(particles[i],particles[j]);
-					vpx += totalPhoreticForce[0];
-					vpy += totalPhoreticForce[1];		
-				}
-			
-			}
-
-			particles[i].vpx =  vpx;
-			particles[i].vpy =  vpy;	
-			
-		}
+		hard_sphere_correction( particles, nParticles);
+		hard_sphere_correction( particles, nParticles);
+		hard_sphere_correction( particles, nParticles);
 		
 		
-		hard_sphere_correction(particles,nParticles);
-		hard_sphere_correction(particles,nParticles);
-		hard_sphere_correction(particles,nParticles);
-		
-		boundary_box_correction(particles,nParticles);
-		particlesOverTime.push_back(particles);
-	
-		
+		particlesOverTime.push_back(particles);		
 	}
 	writeToCSV(particlesOverTime,nParticles,timeSteps);
 
@@ -161,42 +145,38 @@ std::vector<Particle> initialize_particles(int nHot, int nCold) {
 }
 
 
-void update_position(Particle &particle) {
+void update_position(Particle &particle,std::vector<Particle> &particles, int nParticles) {
 
 	normal_distribution<double> normdis(0.0, 1.0);
-	double W_x    = normdis(gen);
-	double W_y    = normdis(gen);
+	long double W_x    = normdis(gen);
+	long double W_y    = normdis(gen);
 	double W_phi  = normdis(gen);
 	
-	particle.phi = particle.phi + W_phi*sqrt(2)*sqrt(delta_t);
-	
-	
-	particle.x = particle.x   + trans*W_x + particle.vpx*delta_t;
-	particle.y = particle.y   + trans*W_y + particle.vpy*delta_t;
+	particle.x = particle.x   + particle.vpx*delta_t;
+	particle.y = particle.y   + particle.vpy*delta_t;
 
 }
 
 
 void hard_sphere_correction(std::vector<Particle> &particles,int nParticles) {
+	//Perform synchronous update
+	std::vector<Particle> tempParticles = particles;
 
-
-	for (int i = 0; i<nParticles; i++){
 	
-		for(int j = i; j<nParticles; j++) {
-			double centerToCenterDistance =  getNorm(particles[i],particles[j]);
-			double overlap = 2.0*particleRadius - centerToCenterDistance;
+	for (int i = 0; i<nParticles; i++){
+		for(int j = 0; j<nParticles; j++) {
+			long double centerToCenterDistance =  getNorm(particles[i],particles[j]);
+			long double overlap =   2.0*particleRadius- centerToCenterDistance;
 			
+			if (overlap > 0 && overlap != 0 && i !=j ){
 			
-			if (overlap > 0 && i!=j){
-			
-				double distanceToMove = overlap/2.0;
-				vector<double> direction = getDirection(particles[i],particles[j]);
-				
+				long double distanceToMove = overlap/6.0;
+				vector<long double> direction = getDirection(particles[i],particles[j]);				
 		
-				particles[i].x = particles[i].x + distanceToMove*direction[0];
-				particles[i].y = particles[i].y + distanceToMove*direction[1];	
-				particles[j].x = particles[j].x - distanceToMove*direction[0];
-				particles[j].y = particles[j].y - distanceToMove*direction[1];	
+				tempParticles[i].x -=  distanceToMove*direction[0];
+				tempParticles[i].y -=  distanceToMove*direction[1];	
+				tempParticles[j].x +=  distanceToMove*direction[0];
+				tempParticles[j].y +=  distanceToMove*direction[1];	
 				
 			}
 		
@@ -204,47 +184,67 @@ void hard_sphere_correction(std::vector<Particle> &particles,int nParticles) {
 									
 		}
 	}
+	
+	particles = tempParticles;
 }
 
 
 
 //Compute the velocity of the phoretic interaction for a given particle
-std::vector<double> phoretic_force(Particle &particle1, Particle &particle2){
-	double vpx = 0.0;
-	double vpy = 0.0;
+void phoretic_force(std::vector<Particle>& particles,int nParticles){
+
+
+	//calculate phoretic force	
+
 	
-	double particleDistance = getNorm(particle2,particle1);
+	for (int i = 0; i< nParticles; i++){
+	particles[i].vpx = 0.0;
+	particles[i].vpy = 0.0;
+	
+		
+		for(int j = 0; j< nParticles; j++){
+
+				
+			if (particles[j].isHot == true && i != j){
 			
-	if (particleDistance < cutoff_distance && particleDistance !=0) {
+				double particleDistance = getNorm(particles[i],particles[j]);
+				
+				if (particleDistance < cutoff_distance && particleDistance != 0) {
+				
+
+					double directionx =  (particles[i].x-particles[j].x)/particleDistance;
+					double directiony =  (particles[i].y-particles[j].y)/particleDistance;
+			
+					particles[i].vpx -= (phoreticTerm/(pow(particleDistance,2)))*directionx;		
+					particles[i].vpy -= (phoreticTerm/(pow(particleDistance,2)))*directiony;
+				}
 	
-		double directionx =  (particle2.x-particle1.x)/particleDistance;
-		double directiony =  (particle2.y-particle1.y)/particleDistance;
-		vpx = (phoreticTerm/(pow(particleDistance,2)))*directionx;
-		vpy = (phoreticTerm/(pow(particleDistance,2)))*directiony;
-		
-		
-		return {vpx,vpy};
-	} else {
-		return {vpx,vpy};
+			}		
+		}	
 	}
+	
+
 
 }
 
 
-vector<double> getDirection(Particle &particle1, Particle &particle2){
+vector<long double> getDirection(Particle &particle1, Particle &particle2){
 	//Return normalized direction, in x and y coordinates.
-	double norm = getNorm(particle1,particle2);
-	double x = (particle1.x-particle2.x)/norm;
-	double y = (particle1.y-particle2.y)/norm;
 	
-	vector<double> direction = {x,y};
+	long double norm = getNorm(particle1,particle2);
+	long double x = (particle2.x-particle1.x)/norm;
+	long double y = (particle2.y-particle1.y)/norm;
+	vector<long double> direction = {x,y};
 
 	return direction;
 }
 
 
 double getNorm(Particle &particle1, Particle &particle2){
-	double norm = sqrt(pow(particle1.x-particle2.x,2) + pow(particle1.y-particle2.y,2));
+	double xdiff = particle1.x-particle2.x;
+	double ydiff = particle1.y-particle2.y;
+
+	double norm = sqrt( pow(xdiff,2) + pow(ydiff,2));
 	return norm;
 }
 
