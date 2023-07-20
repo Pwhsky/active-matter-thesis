@@ -2,4 +2,5 @@ sim
 visualizerOLD.py
 brownian-particles.py
 simfunctions.py
+particle_movie.gif
 /__pycache__
