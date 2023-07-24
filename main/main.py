@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 import subprocess
 import matplotlib
 matplotlib.use('Agg')
@@ -9,20 +10,6 @@ import matplotlib.animation as animation
 #by restarting the IDE.
 
 
-def clear_all():
-    """Clears all the variables from the workspace of the spyder application."""
-    gl = globals().copy()
-    for var in gl:
-        if var[0] == '_': continue
-        if 'func' in str(globals()[var]): continue
-        if 'module' in str(globals()[var]): continue
-
-        del globals()[var]
-        print("Clearing all variables")
-
-
-if __name__ == "__main__":
-    clear_all()
 
 #%%
 
@@ -33,7 +20,7 @@ plotDPI        = 200
 nHot       = 1
 nCold      = 2
 nParticles = nHot + nCold
-timeSteps  = 1000
+timeSteps  = 100
 #Handler to simulate in C++:
 subprocess.run(['g++','brownian-particles.cpp','-o','sim','-O4'])
 subprocess.run(['./sim',f' {nHot}',f' {nCold}',f' {timeSteps}'])
@@ -93,12 +80,15 @@ ani = animation.FuncAnimation(fig, update, frames=timeSteps, interval=4)
 
 
 print("Encoding movie...")
+tic = time.time()
 # Save the animation as a movie
 ani.save('particle_movie.gif', writer='pillow')
 
 # Show the plot (optional)
 gif_file = "particle_movie.gif"
-print("Encoding complete, opening movie.")
+toc = time.time()
+
+print("Encoding complete, opening movie after "+ str(round(toc-tic)) + " seconds")
 
 subprocess.run(["xdg-open",gif_file])
 

@@ -10,14 +10,14 @@ using namespace std;
 const double pi			    = 3.14159265358979323846;
 const double temperature            = 300;
 
-const double particleRadius         = 1*pow(10,-6); //1 micrometer sized particle
+const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
 const double cutoff_distance	    = 8*pow(10,-6);
-const double delta_t		    = 0.001;
+const double delta_t		    = 0.002;
 const double kb      		    = 1.380649 * pow(10,-23);
 const double viscosity              = 1*pow(10,-3);
 const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
 const double D_T 	            = kb *temperature / stokesCoefficient; //Translational diffusion
-const double v_0		    = 10*pow(10,-6); //Phoretic strength
+const double v_0		    = 10*pow(10,-6);			   //Phoretic strength
 
 
 const double box_size		    = 100*pow(10,-6);
@@ -37,7 +37,6 @@ const double cDR  		    = sqrt(2*kb*temperature/(8*pi*0.001*pow(particleRadius,3
 	std::mt19937 gen(rd());
 
 struct Particle{
-
 
 	//Coords
 	long double x;
@@ -152,9 +151,17 @@ void update_position(Particle &particle,std::vector<Particle> &particles, int nP
 	long double W_y    = normdis(gen);
 	double W_phi  = normdis(gen);
 	
+	if (particle.isHot == true){
 	particle.x = particle.x + W_x*trans + particle.vpx*delta_t;
 	particle.y = particle.y + W_y*trans + particle.vpy*delta_t;
+	
+	} else {
+	particle.x = particle.x  + particle.vpx*delta_t;
+	particle.y = particle.y  + particle.vpy*delta_t;
 
+	
+	}
+	
 }
 
 
