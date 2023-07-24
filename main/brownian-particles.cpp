@@ -12,7 +12,7 @@ const double temperature            = 300;
 
 const double particleRadius         = 1*pow(10,-6); //1 micrometer sized particle
 const double cutoff_distance	    = 8*pow(10,-6);
-const double delta_t		    = 0.005;
+const double delta_t		    = 0.001;
 const double kb      		    = 1.380649 * pow(10,-23);
 const double viscosity              = 1*pow(10,-3);
 const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
@@ -27,7 +27,7 @@ const long double phoreticTerm	    = 4*v_0 * pow(particleRadius,2);
 const long double trans 	    = sqrt(2.0*D_T*delta_t);
 
 const double v			    = particleRadius*10;
-const double spawnArea		    = box_size/28;
+const double spawnArea		    = box_size/40;
 const double cDR  		    = sqrt(2*kb*temperature/(8*pi*0.001*pow(particleRadius,3))*delta_t);
 
 
@@ -152,8 +152,8 @@ void update_position(Particle &particle,std::vector<Particle> &particles, int nP
 	long double W_y    = normdis(gen);
 	double W_phi  = normdis(gen);
 	
-	particle.x = particle.x   + particle.vpx*delta_t;
-	particle.y = particle.y   + particle.vpy*delta_t;
+	particle.x = particle.x + W_x*trans + particle.vpx*delta_t;
+	particle.y = particle.y + W_y*trans + particle.vpy*delta_t;
 
 }
 

@@ -1,13 +1,37 @@
 import pandas as pd
 import subprocess
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-plotMarkerSize = 12.5
-plotDPI        = 250
+
+#Avoid interrupting the program as it creates memory leaks, which can only be resolved
+#by restarting the IDE.
 
 
-nHot       = 2
-nCold      = 3
+def clear_all():
+    """Clears all the variables from the workspace of the spyder application."""
+    gl = globals().copy()
+    for var in gl:
+        if var[0] == '_': continue
+        if 'func' in str(globals()[var]): continue
+        if 'module' in str(globals()[var]): continue
+
+        del globals()[var]
+        print("Clearing all variables")
+
+
+if __name__ == "__main__":
+    clear_all()
+
+#%%
+
+plotMarkerSize = 30
+plotDPI        = 200
+
+
+nHot       = 1
+nCold      = 2
 nParticles = nHot + nCold
 timeSteps  = 1000
 #Handler to simulate in C++:
@@ -18,8 +42,11 @@ print("Processing data...")
 box_size = 100 * 1e-6
 
 # Read the CSV file into a DataFrame
-dfHot  = pd.read_csv('hotParticles.csv', header=None, names=['x', 'y'],low_memory=False)
-dfCold = pd.read_csv('coldParticles.csv', header=None, names=['x', 'y'],low_memory=False)
+with open('hotParticles.csv', 'r') as file:
+    dfHot = pd.read_csv(file, header=None, names=['x', 'y'], low_memory=False)
+
+with open('coldParticles.csv', 'r') as file:
+    dfCold = pd.read_csv(file, header=None, names=['x', 'y'], low_memory=False)
 
 # Extract the x and y coordinates from the DataFrame
 dfHot['x'] = pd.to_numeric(dfHot['x'],errors='coerce')
@@ -41,7 +68,7 @@ scatterCold = ax.scatter([], [],s=plotMarkerSize,marker='o',color='blue',label="
 # Set the axis limits
 ax.set_xlim([0,box_size]) 
 ax.set_ylim([0,box_size])
-
+ax.axis('equal')
 # Set the axis labels
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
@@ -74,3 +101,8 @@ gif_file = "particle_movie.gif"
 print("Encoding complete, opening movie.")
 
 subprocess.run(["xdg-open",gif_file])
+
+#Close and clear stuff to prevent leaks
+plt.close(fig)
+del ani
+
