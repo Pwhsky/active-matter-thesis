@@ -17,10 +17,10 @@ plotMarkerSize = 30
 plotDPI        = 200
 
 
-nHot       = 1
-nCold      = 2
+nHot       = 20
+nCold      = 30
 nParticles = nHot + nCold
-timeSteps  = 100
+timeSteps  = 500
 #Handler to simulate in C++:
 subprocess.run(['g++','brownian-particles.cpp','-o','sim','-O4'])
 subprocess.run(['./sim',f' {nHot}',f' {nCold}',f' {timeSteps}'])
@@ -30,10 +30,10 @@ box_size = 100 * 1e-6
 
 # Read the CSV file into a DataFrame
 with open('hotParticles.csv', 'r') as file:
-    dfHot = pd.read_csv(file, header=None, names=['x', 'y'], low_memory=False)
+    dfHot = pd.read_csv(file, header=None, names=['x', 'y'],low_memory=True)
 
 with open('coldParticles.csv', 'r') as file:
-    dfCold = pd.read_csv(file, header=None, names=['x', 'y'], low_memory=False)
+    dfCold = pd.read_csv(file, header=None, names=['x', 'y'], low_memory=True)
 
 # Extract the x and y coordinates from the DataFrame
 dfHot['x'] = pd.to_numeric(dfHot['x'],errors='coerce')
@@ -64,7 +64,7 @@ ax.set_ylabel('Y')
 # Function to update the scatter plot for each frame
 def update(frame):
     #Limit the number of frames in the gif to reduce loading time
-    if frame %3 !=0 and frame %3 != 1:
+    if frame %3 == 0 and frame %3 !=1:
     #if frame %2 ==0:
         startCold = frame * nCold
         endCold   = startCold + nCold +1

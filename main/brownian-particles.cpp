@@ -3,12 +3,12 @@
 #include <cmath>
 #include <vector>
 #include <random>
-#include <omp.h>
 #include <fstream>
 using namespace std;
 
 const double pi			    = 3.14159265358979323846;
 const double temperature            = 300;
+
 
 const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
 const double cutoff_distance	    = 8*pow(10,-6);
@@ -18,17 +18,12 @@ const double viscosity              = 1*pow(10,-3);
 const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
 const double D_T 	            = kb *temperature / stokesCoefficient; //Translational diffusion
 const double v_0		    = 10*pow(10,-6);			   //Phoretic strength
-
-
 const double box_size		    = 100*pow(10,-6);
-
-
 const long double phoreticTerm	    = 4*v_0 * pow(particleRadius,2);
 const long double trans 	    = sqrt(2.0*D_T*delta_t);
 
 const double v			    = particleRadius*10;
-const double spawnArea		    = box_size/40;
-const double cDR  		    = sqrt(2*kb*temperature/(8*pi*0.001*pow(particleRadius,3))*delta_t);
+const double spawnArea		    = box_size/45;
 
 
 
@@ -38,13 +33,13 @@ const double cDR  		    = sqrt(2*kb*temperature/(8*pi*0.001*pow(particleRadius,3
 
 struct Particle{
 
-	//Coords
 	long double x;
 	long double y;
 	double phi;
 	
 	bool isHot;
-	//Phoretic velocity magnitude
+	
+	//Phoretic velocity:
 	long double vpx; 
 	long double vpy;
 }; 
@@ -64,7 +59,7 @@ void writeToCSV(std::vector<std::vector<Particle>> particlesOverTime,int nPartic
 
 int main(int argc, char** argv) {
 	
-	//Take user input: 
+	//Take user input: ////////////////////////////////////
 	if (argc < 4) {
 		std::cout << "Usage: ./sim <nHot> <nCold> <timeSteps>" << std::endl;
 		std::cout << "example: \n" << "./sim 2 2 100"<< std::endl;
@@ -75,37 +70,34 @@ int main(int argc, char** argv) {
 	const int nCold = std::stoi(argv[2]);
 	const int timeSteps = std::stoi(argv[3]);
 	const int nParticles = nHot + nCold;
-	
-	
-	//////////////////
-	
-	
-	//Start a timer
 	auto start = std::chrono::high_resolution_clock::now();
-
+	//////////////////////////////////////////////////////
+	
+	
+	
 	vector<Particle> particles = initialize_particles(nHot,nCold);
 	vector<vector<Particle>> particlesOverTime;
 
    	
    	//simulate over time:
 	for (int time = 0; time < timeSteps; time++){
-
+		////////////////////Phoretic interaction///////////////
 		phoretic_force(particles,nParticles);
 		for (int i = 0; i<nParticles;i++){
 			update_position(particles[i],particles,nParticles);
 		}
-
-		hard_sphere_correction( particles, nParticles);
-		hard_sphere_correction( particles, nParticles);
-		hard_sphere_correction( particles, nParticles);
+		//////////////////////////////////////////////////////
 		
-		
+		hard_sphere_correction( particles, nParticles);
+		hard_sphere_correction( particles, nParticles);
+		hard_sphere_correction( particles, nParticles);
+			
 		particlesOverTime.push_back(particles);		
 	}
 	writeToCSV(particlesOverTime,nParticles,timeSteps);
 
 
-	
+	//Compute elapsed time:
    	auto end = std::chrono::high_resolution_clock::now();
    	std::chrono::duration<double> duration = end - start;
    	double elapsed_seconds = duration.count();
