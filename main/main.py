@@ -17,10 +17,10 @@ plotMarkerSize = 30
 plotDPI        = 200
 
 
-nHot       = 20
-nCold      = 30
+nHot       = 2
+nCold      = 4
 nParticles = nHot + nCold
-timeSteps  = 500
+timeSteps  = 1000
 #Handler to simulate in C++:
 subprocess.run(['g++','brownian-particles.cpp','-o','sim','-O4'])
 subprocess.run(['./sim',f' {nHot}',f' {nCold}',f' {timeSteps}'])

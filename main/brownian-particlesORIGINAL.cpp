@@ -12,7 +12,7 @@ const double temperature            = 300;
 
 const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
 const double cutoff_distance	    = 8*pow(10,-6);
-const double delta_t		    = 0.001;
+const double delta_t		    = 0.002;
 const double kb      		    = 1.380649 * pow(10,-23);
 const double viscosity              = 1*pow(10,-3);
 const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
@@ -44,12 +44,6 @@ struct Particle{
 
 
 std::vector<Particle> initialize_particles(int nHot, int nCold);
-
-std::vector<Particle> initialize_stator();
-std::vector<Particle> initialize_spinner();
-
-
-
 void update_position(Particle &particle,std::vector<Particle> &particles, int nParticles);
 void phoretic_force(std::vector<Particle>& particles,int nParticles);
 void hard_sphere_correction(std::vector<Particle>& particles,int nParticles);
@@ -71,15 +65,15 @@ int main(int argc, char** argv) {
 	const int nHot = std::stoi(argv[1]);
 	const int nCold = std::stoi(argv[2]);
 	const int timeSteps = std::stoi(argv[3]);
-	
+	const int nParticles = nHot + nCold;
 	auto start = std::chrono::high_resolution_clock::now();
 	//////////////////////////////////////////////////////
 	
 	
 	
-	vector<Particle> particles = initialize_spinner();
+	vector<Particle> particles = initialize_particles(nHot,nCold);
 	vector<vector<Particle>> particlesOverTime;
-	const int nParticles = particles.size();
+
    	
    	//simulate over time:
 	for (int time = 0; time < timeSteps; time++){
@@ -93,7 +87,7 @@ int main(int argc, char** argv) {
 		hard_sphere_correction( particles, nParticles);
 		hard_sphere_correction( particles, nParticles);
 		hard_sphere_correction( particles, nParticles);
-
+			
 		particlesOverTime.push_back(particles);		
 	}
 	writeToCSV(particlesOverTime,nParticles,timeSteps);
@@ -136,8 +130,6 @@ std::vector<Particle> initialize_particles(int nHot, int nCold) {
 	
 	return particles;
 }
-
-
 
 
 void update_position(Particle &particle,std::vector<Particle> &particles, int nParticles) {
@@ -256,100 +248,6 @@ void boundary_box_correction(vector<Particle> &particles,int nParticles) {
 	}
 }
 
-
-
-//place 1 stator
-std::vector<Particle> initialize_stator() {
-
-	vector<Particle> particles;
-	
-	//Assign values to the particles and then add to the particles list.
-	//First hot particles
-	for (int i = 1; i < 3; i++) {
-		Particle newParticle;
-		newParticle.isHot = true;
-
-		newParticle.x =  (2*i*particleRadius) + box_size/2- 3*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-	}	
-	
-	for (int i = 1; i < 3; i++) {
-		Particle newParticle;
-		newParticle.isHot = false;
-
-		newParticle.x =  box_size/2;		
-		newParticle.y =  (2*i*particleRadius) + box_size/2 - 3*particleRadius;
-		newParticle.vpx,newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);	
-		
-	}	
-	return particles;
-}
-
-
-
-
-
-//place 1 spinner
-std::vector<Particle> initialize_spinner() {
-
-	vector<Particle> particles;
-	
-
-		Particle newParticle;
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 -2*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		
-		newParticle.isHot = true;
-		newParticle.x =  box_size/2;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 +2*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-
-		newParticle.isHot = true;
-		newParticle.x =  box_size/2 +particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 -particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 +3*particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-
-
-	return particles;
-}
-
-
-
-
-
-
-
-
-
-
 void writeToCSV(std::vector<std::vector<Particle>> particlesOverTime,int nParticles,int timeSteps) {
 
     
@@ -376,4 +274,7 @@ void writeToCSV(std::vector<std::vector<Particle>> particlesOverTime,int nPartic
     	hotFile.close();
    	coldFile.close();
 }
+
+
+
 
