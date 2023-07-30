@@ -9,6 +9,7 @@ import matplotlib.animation as animation
 #Avoid interrupting the program as it creates memory leaks, which can only be resolved
 #by restarting the IDE.
 
+#The simulation timestep is edited in the CPP source file.
 
 
 #%%
@@ -17,13 +18,29 @@ plotMarkerSize = 30
 plotDPI        = 200
 
 
-nHot       = 2
-nCold      = 4
-nParticles = nHot + nCold
+
+clusterType = "migrator"
 timeSteps  = 1000
+
+if clusterType == "spinner":
+    nHot        = 2
+    nCold       = 4
+elif clusterType == "rotator":
+    nHot        = 2
+    nCold       = 3   
+elif clusterType == "stator":
+    nHot        = 2
+    nCold       = 2
+elif clusterType == "migrator":
+    nHot        = 1
+    nCold       = 1
+    
+    
+
+nParticles = nHot + nCold
 #Handler to simulate in C++:
 subprocess.run(['g++','brownian-particles.cpp','-o','sim','-O4'])
-subprocess.run(['./sim',f' {nHot}',f' {nCold}',f' {timeSteps}'])
+subprocess.run(['./sim',clusterType,f' {timeSteps}'])
 
 print("Processing data...")
 box_size = 100 * 1e-6

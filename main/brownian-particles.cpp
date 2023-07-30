@@ -1,95 +1,104 @@
 #include <iostream>
 #include <chrono>
 #include <cmath>
+#include <string>
 #include <vector>
 #include <random>
 #include <fstream>
 using namespace std;
 
-const double pi			    = 3.14159265358979323846;
-const double temperature            = 300;
-
-
-const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
-const double cutoff_distance	    = 8*pow(10,-6);
-const double delta_t		    = 0.001;
-const double kb      		    = 1.380649 * pow(10,-23);
-const double viscosity              = 1*pow(10,-3);
-const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
-const double D_T 	            = kb *temperature / stokesCoefficient; //Translational diffusion
-const double v_0		    = 10*pow(10,-6);			   //Phoretic strength
-const double box_size		    = 100*pow(10,-6);
-const long double phoreticTerm	    = 4*v_0 * pow(particleRadius,2);
-const long double trans 	    = sqrt(2.0*D_T*delta_t);
-
-const double v			    = particleRadius*10;
-const double spawnArea		    = box_size/45;
-
-
-
 //Random number generator:
-	std::random_device rd;
-	std::mt19937 gen(rd());
+std::random_device rd;
+std::mt19937 gen(rd());
+//Constants:
+	const double pi			    = 3.14159265358979323846;
+	const double temperature            = 300;
+	const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
+	const double cutoff_distance	    = 8*pow(10,-6);
+	const double delta_t		    = 0.001;
+	const double kb      		    = 1.380649 * pow(10,-23);
+	const double viscosity              = 1*pow(10,-3);
+	const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
+	const double D_T 	            = kb *temperature / stokesCoefficient; //Translational diffusion
+	const double v_0		    = 10*pow(10,-6);			   //Phoretic strength
+	const double box_size		    = 100*pow(10,-6);
+	const long double phoreticTerm	    = 4*v_0 * pow(particleRadius,2);
+	const long double trans 	    = sqrt(2.0*D_T*delta_t)*0.1;
+	const double v			    = particleRadius*10;
+	const double spawnArea		    = box_size/45;
+
 
 struct Particle{
 
 	long double x,y;
 	double phi;
-	
 	bool isHot;
 	
 	//Phoretic velocity:
 	long double vpx,vpy;
 }; 
 
-
-std::vector<Particle> initialize_particles(int nHot, int nCold);
-
-std::vector<Particle> initialize_stator();
-std::vector<Particle> initialize_spinner();
-
+//Random initialization
+	std::vector<Particle> initialize_particles(int nHot, int nCold);
+//pre-configured cluster initializations:		//the corresponding particle numbers need to be input in main.py
+	std::vector<Particle> initialize_stator(); 	//2 hot 2 cold
+	std::vector<Particle> initialize_spinner();	//2 hot 4 cold
+	std::vector<Particle> initialize_rotator(); 	//2 hot 3 cold
+	std::vector<Particle> initialize_migrator();    //1 hot 1 cold
 
 
 void update_position(Particle &particle,std::vector<Particle> &particles, int nParticles);
 void phoretic_force(std::vector<Particle>& particles,int nParticles);
 void hard_sphere_correction(std::vector<Particle>& particles,int nParticles);
+void boundary_box_correction(std::vector<Particle>& particles,int nParticles);
+
+
 vector<long double> getDirection(Particle &particle1, Particle &particle2);
 double getNorm(Particle &particle1, Particle &particle2);
 
-void boundary_box_correction(std::vector<Particle>& particles,int nParticles);
+
 void writeToCSV(std::vector<std::vector<Particle>> particlesOverTime,int nParticles,int timeSteps);
 
 int main(int argc, char** argv) {
+	auto start = std::chrono::high_resolution_clock::now();
 	
 	//Take user input: ////////////////////////////////////
-	if (argc < 4) {
-		std::cout << "Usage: ./sim <nHot> <nCold> <timeSteps>" << std::endl;
-		std::cout << "example: \n" << "./sim 2 2 100"<< std::endl;
-		return 1;
-	}
-	
-	const int nHot = std::stoi(argv[1]);
-	const int nCold = std::stoi(argv[2]);
-	const int timeSteps = std::stoi(argv[3]);
-	
-	auto start = std::chrono::high_resolution_clock::now();
+		if (argc < 3) {
+			std::cout << "Usage: ./sim <clusterType>  <timeSteps>" << std::endl;
+			std::cout << "example: \n" << "./sim spinner 100"<< std::endl;
+			return 1;
+		}
+		std::string clusterType = argv[1];
+		const int    timeSteps   = std::stoi(argv[2]);
 	//////////////////////////////////////////////////////
+		vector<vector<Particle>> particlesOverTime;
+		vector<Particle> particles; 
+		if (clusterType == "spinner"){
+			particles = initialize_spinner();
+		}else if (clusterType == "rotator") {
+		        particles = initialize_rotator();
+		}else if (clusterType == "stator") {
+			particles = initialize_stator();
+		}else if (clusterType == "migrator"){
+			particles = initialize_migrator();
+		}
+		const int nParticles = particles.size();
+	/////////////////////////////////////////////////////
 	
 	
-	
-	vector<Particle> particles = initialize_spinner();
-	vector<vector<Particle>> particlesOverTime;
-	const int nParticles = particles.size();
    	
    	//simulate over time:
 	for (int time = 0; time < timeSteps; time++){
+	
 		////////////////////Phoretic interaction///////////////
-		phoretic_force(particles,nParticles);
-		for (int i = 0; i<nParticles;i++){
-			update_position(particles[i],particles,nParticles);
-		}
+			phoretic_force(particles,nParticles);
+			for (int i = 0; i<nParticles;i++){
+				update_position(particles[i],particles,nParticles);
+			}
 		//////////////////////////////////////////////////////
 		
+		
+		hard_sphere_correction( particles, nParticles);
 		hard_sphere_correction( particles, nParticles);
 		hard_sphere_correction( particles, nParticles);
 		hard_sphere_correction( particles, nParticles);
@@ -130,8 +139,7 @@ std::vector<Particle> initialize_particles(int nHot, int nCold) {
 		newParticle.vpx = 0.0;
 		newParticle.vpy = 0.0;
 		newParticle.phi = 0.0;
-		particles.push_back(newParticle);	
-		
+		particles.push_back(newParticle);			
 	}	
 	
 	return particles;
@@ -148,14 +156,12 @@ void update_position(Particle &particle,std::vector<Particle> &particles, int nP
 	double W_phi  = normdis(gen);
 	
 	if (particle.isHot == true){
-	particle.x = particle.x + W_x*trans + particle.vpx*delta_t;
-	particle.y = particle.y + W_y*trans + particle.vpy*delta_t;
-	
+		particle.x = particle.x + W_x*trans + particle.vpx*delta_t;
+		particle.y = particle.y + W_y*trans + particle.vpy*delta_t;
 	} else {
-	particle.x = particle.x  + particle.vpx*delta_t;
-	particle.y = particle.y  + particle.vpy*delta_t;
-
 	
+		particle.x = particle.x  + particle.vpx*delta_t + W_x*trans;
+		particle.y = particle.y  + particle.vpy*delta_t + W_y*trans;
 	}
 	
 }
@@ -199,7 +205,8 @@ void phoretic_force(std::vector<Particle>& particles,int nParticles){
 	
 		
 		for(int j = 0; j< nParticles; j++){
-
+		
+		
 			if (particles[j].isHot == true && i != j){
 				double particleDistance = getNorm(particles[i],particles[j]);
 				
@@ -292,11 +299,10 @@ std::vector<Particle> initialize_stator() {
 
 
 
-//place 1 spinner
+//place one spinner, 2 hot 4 cold
 std::vector<Particle> initialize_spinner() {
 
 	vector<Particle> particles;
-	
 
 		Particle newParticle;
 		
@@ -341,18 +347,76 @@ std::vector<Particle> initialize_spinner() {
 	return particles;
 }
 
+//place one rotator,   2 hot 3 cold
+std::vector<Particle> initialize_rotator() {
+
+	vector<Particle> particles;
+
+		Particle newParticle;
+		
+		newParticle.isHot = false;
+		newParticle.x =  box_size/2 -2*particleRadius;		
+		newParticle.y =  box_size/2;
+		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
+		particles.push_back(newParticle);
+		
+		
+		newParticle.isHot = true;
+		newParticle.x =  box_size/2;		
+		newParticle.y =  box_size/2;
+		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
+		particles.push_back(newParticle);
+		
+		newParticle.isHot = true;
+		newParticle.x =  box_size/2 +1.8*particleRadius;		
+		newParticle.y =  box_size/2;
+		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
+		particles.push_back(newParticle);
+
+		
+		newParticle.isHot = false;
+		newParticle.x =  box_size/2 -particleRadius;		
+		newParticle.y =  box_size/2 - particleRadius;
+		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
+		particles.push_back(newParticle);
+		
+		newParticle.isHot = false;
+		newParticle.x =  box_size/2 +particleRadius;		
+		newParticle.y =  box_size/2 - particleRadius;
+		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
+		particles.push_back(newParticle);
 
 
+	return particles;
+}
+
+//place one rotator,   2 hot 3 cold
+std::vector<Particle> initialize_migrator() {
+
+	vector<Particle> particles;
+	
+		Particle newParticle;
+		
+		newParticle.isHot = false;
+		newParticle.x =  box_size/2;		
+		newParticle.y =  box_size/2;
+		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
+		particles.push_back(newParticle);
+		
+		newParticle.isHot = true;
+		newParticle.x =  box_size/2;		
+		newParticle.y =  box_size/2;
+		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
+		particles.push_back(newParticle);
+	
 
 
-
-
+	return particles;
+}
 
 
 
 void writeToCSV(std::vector<std::vector<Particle>> particlesOverTime,int nParticles,int timeSteps) {
-
-    
 	ofstream hotFile("hotParticles.csv");
 	ofstream coldFile("coldParticles.csv");
    	hotFile << "x,y" << std::endl;
