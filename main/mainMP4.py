@@ -19,8 +19,8 @@ plotDPI        = 200
 
 
 
-clusterType = "rotator"
-timeSteps  = 200
+clusterType = "spinner"
+timeSteps  = 3000
 
 if clusterType == "spinner":
     nHot        = 2
@@ -76,13 +76,13 @@ ax.axis('equal')
 # Set the axis labels
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
-# Function to update the scatter plot for each frame
+
 
 if not os.path.exists("movie_frames"):
     os.makedirs("movie_frames")
-
+    
+# Function to update the scatter plot for each frame
 def update(frame):
-    #Limit the number of frames in the gif to reduce loading time
     startCold = frame * nCold
     endCold   = startCold + nCold +1
     startHot  = frame * nHot
@@ -95,7 +95,7 @@ def update(frame):
 
 
 
-# Create the animation, 1000 frames takes 15 seconds (parallelize this)
+# Create the animation:
 tic = time.time()
 
 threads = 6   
@@ -105,8 +105,10 @@ with multiprocessing.Pool(processes=threads) as pool:
 toc = time.time()
 
 print("Movie frames saved after " + str(round(toc-tic)) + " seconds")
+print("\n")
+print("\n")
 
-
+#Compile the images to a movie:
 ffmpeg_command = [
     "ffmpeg",
     "-framerate", "400",
@@ -117,12 +119,7 @@ ffmpeg_command = [
     "brownian-particles_movie.mp4",
     "-t", "1", "-y"
 ]
-
-# Run the FFmpeg command
 subprocess.run(ffmpeg_command)
 
 
-#Close and clear stuff to prevent leaks
-plt.close(fig)
-#del ani
 
