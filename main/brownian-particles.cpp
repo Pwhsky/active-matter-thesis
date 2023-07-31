@@ -47,22 +47,23 @@ struct Particle{
 	std::vector<Particle> initialize_migrator();    //1 hot 1 cold
 
 
-void update_position(Particle &particle,std::vector<Particle> &particles, int nParticles);
-void phoretic_force(std::vector<Particle>& particles,int nParticles);
-void hard_sphere_correction(std::vector<Particle>& particles,int nParticles);
-void boundary_box_correction(std::vector<Particle>& particles,int nParticles);
-
+void update_position	     (Particle &particle,std::vector<Particle> &particles, int nParticles);
+void phoretic_force          (std::vector<Particle>& particles,int nParticles);
+void hard_sphere_correction  (std::vector<Particle>& particles,int nParticles);
+void boundary_box_correction (std::vector<Particle>& particles,int nParticles);
+void writeToCSV		     (std::vector<std::vector<Particle>> particlesOverTime,int nParticles,int timeSteps);
 
 vector<long double> getDirection(Particle &particle1, Particle &particle2);
-double getNorm(Particle &particle1, Particle &particle2);
+double 		    getNorm(Particle &particle1, Particle &particle2);
 
 
-void writeToCSV(std::vector<std::vector<Particle>> particlesOverTime,int nParticles,int timeSteps);
+
 
 int main(int argc, char** argv) {
-	auto start = std::chrono::high_resolution_clock::now();
+
+	auto startTimer = std::chrono::high_resolution_clock::now();
 	
-	//Take user input: ////////////////////////////////////
+	/////////////////////////Take user input: /////////////////
 		if (argc < 3) {
 			std::cout << "Usage: ./sim <clusterType>  <timeSteps>" << std::endl;
 			std::cout << "example: \n" << "./sim spinner 100"<< std::endl;
@@ -70,10 +71,11 @@ int main(int argc, char** argv) {
 		}
 		std::string clusterType = argv[1];
 		const int    timeSteps   = std::stoi(argv[2]);
-	//////////////////////////////////////////////////////
+				
+	///////////////////Initialize the cluster///////////////
 		vector<vector<Particle>> particlesOverTime;
 		vector<Particle> particles; 
-		if (clusterType == "spinner"){
+		if       (clusterType == "spinner"){
 			particles = initialize_spinner();
 		}else if (clusterType == "rotator") {
 		        particles = initialize_rotator();
@@ -95,25 +97,25 @@ int main(int argc, char** argv) {
 			for (int i = 0; i<nParticles;i++){
 				update_position(particles[i],particles,nParticles);
 			}
+		///////////////////Hard Sphere Correction////////////
+			hard_sphere_correction( particles, nParticles);
+			hard_sphere_correction( particles, nParticles);
+			hard_sphere_correction( particles, nParticles);
+			hard_sphere_correction( particles, nParticles);
 		//////////////////////////////////////////////////////
 		
-		
-		hard_sphere_correction( particles, nParticles);
-		hard_sphere_correction( particles, nParticles);
-		hard_sphere_correction( particles, nParticles);
-		hard_sphere_correction( particles, nParticles);
-
 		particlesOverTime.push_back(particles);		
 	}
 	writeToCSV(particlesOverTime,nParticles,timeSteps);
 
 
-	//Compute elapsed time:
-   	auto end = std::chrono::high_resolution_clock::now();
-   	std::chrono::duration<double> duration = end - start;
-   	double elapsed_seconds = duration.count();
-  	std::cout << "Simulation completed after: " << elapsed_seconds << " seconds" << std::endl;
-
+	///////////////////Compute elapsed time/////////////////////////
+   		auto endTimer = std::chrono::high_resolution_clock::now();
+   		std::chrono::duration<double> duration = endTimer - startTimer;
+   		double elapsed_seconds = duration.count();
+  		std::cout << "Simulation completed after: " << elapsed_seconds << " seconds" << std::endl;
+	////////////////////////////////////////////////////////////////////////////	
+	
 	return 0;
 }
 
@@ -121,11 +123,11 @@ int main(int argc, char** argv) {
 
 
 std::vector<Particle> initialize_particles(int nHot, int nCold) {
-
+	//Randomly initializes particles in the center of the arena
+	
 	vector<Particle> particles;
 	uniform_real_distribution<double> dis(0.0,1.0);
 	
-	//Assign values to the particles
 	for (int i = 0; i< (nHot + nCold); i++) {
 		Particle newParticle;
 		
@@ -141,15 +143,12 @@ std::vector<Particle> initialize_particles(int nHot, int nCold) {
 		newParticle.phi = 0.0;
 		particles.push_back(newParticle);			
 	}	
-	
 	return particles;
 }
 
 
-
-
 void update_position(Particle &particle,std::vector<Particle> &particles, int nParticles) {
-
+	
 	normal_distribution<double> normdis(0.0, 1.0);
 	long double W_x    = normdis(gen);
 	long double W_y    = normdis(gen);
@@ -196,17 +195,12 @@ void hard_sphere_correction(std::vector<Particle> &particles,int nParticles) {
 void phoretic_force(std::vector<Particle>& particles,int nParticles){
 
 
-	//calculate phoretic force	
-
-	
+	//calculate total phoretic force for each particle	
 	for (int i = 0; i< nParticles; i++){
-	particles[i].vpx = 0.0;
-	particles[i].vpy = 0.0;
-	
+		particles[i].vpx = 0.0;
+		particles[i].vpy = 0.0;
 		
-		for(int j = 0; j< nParticles; j++){
-		
-		
+		for(int j = 0; j< nParticles; j++){	
 			if (particles[j].isHot == true && i != j){
 				double particleDistance = getNorm(particles[i],particles[j]);
 				
@@ -294,9 +288,6 @@ std::vector<Particle> initialize_stator() {
 	}	
 	return particles;
 }
-
-
-
 
 
 //place one spinner, 2 hot 4 cold
