@@ -4,8 +4,8 @@ import subprocess
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-
+import multiprocessing
+import os
 #Avoid interrupting the program as it creates memory leaks, which can only be resolved
 #by restarting the IDE.
 
@@ -17,10 +17,8 @@ import matplotlib.animation as animation
 plotMarkerSize = 30
 plotDPI        = 200
 
-
-
-clusterType = "migrator"
-timeSteps  = 1000
+clusterType = "rotator"
+timeSteps  = 100
 
 if clusterType == "spinner":
     nHot        = 2
@@ -34,12 +32,11 @@ elif clusterType == "stator":
 elif clusterType == "migrator":
     nHot        = 1
     nCold       = 1
-    
-    
+  
 
 nParticles = nHot + nCold
 #Handler to simulate in C++:
-subprocess.run(['g++','brownian-particles.cpp','-o','sim','-O4'])
+subprocess.run(['g++','main.cpp','particle.cpp','-o','sim','-O4'])
 subprocess.run(['./sim',clusterType,f' {timeSteps}'])
 
 print("Processing data...")
@@ -62,7 +59,7 @@ dfCold['y'] = pd.to_numeric(dfCold['y'],errors='coerce')
 
 
 #%%
-# Create a figure and axis for the scatter plot
+
 
 fig, ax = plt.subplots(dpi=plotDPI)
 
@@ -76,40 +73,53 @@ ax.axis('equal')
 # Set the axis labels
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
-# Draw the 1-micrometer scale bar
 
+
+if not os.path.exists("movie_frames"):
+    os.makedirs("movie_frames")
+
+    
 # Function to update the scatter plot for each frame
 def update(frame):
-    #Limit the number of frames in the gif to reduce loading time
-    if frame %3 == 0 and frame %3 !=1:
-    #if frame %2 ==0:
-        startCold = frame * nCold
-        endCold   = startCold + nCold +1
-        startHot  = frame * nHot
-        endHot    = startHot + nHot+1
+    startCold = frame     * nCold
+    endCold   = startCold + nCold +1
+    startHot  = frame     * nHot
+    endHot    = startHot  + nHot+1
 
-        scatterCold.set_offsets(dfCold.iloc[startCold:endCold, :].values)
-        scatterHot.set_offsets(dfHot.iloc[startHot:endHot, :].values)
+    scatterCold.set_offsets(dfCold.iloc[startCold:endCold, :].values)
+    scatterHot.set_offsets(dfHot.iloc[startHot:endHot, :].values)
+    fig.savefig(f'movie_frames/frame_{frame:04d}.png',dpi=plotDPI)
     return scatterHot,scatterCold
 
-# Create the animation
-ani = animation.FuncAnimation(fig, update, frames=timeSteps, interval=4)
 
 
-print("Encoding movie...")
+# Create the animation: 1000 frames takes 11 seconds
 tic = time.time()
-# Save the animation as a movie
-ani.save('particle_movie.gif', writer='pillow')
-
-# Show the plot (optional)
-gif_file = "particle_movie.gif"
+threads = 6
+with multiprocessing.Pool(processes=threads) as pool:
+    pool.map(update,range(timeSteps))    
 toc = time.time()
 
-print("Encoding complete, opening movie after "+ str(round(toc-tic)) + " seconds")
+print("Movie frames saved after " + str(round(toc-tic)) + " seconds")
+print("\n")
+print("\n")
 
-subprocess.run(["xdg-open",gif_file])
+#Compile the images to a movie:
+    
+if not os.path.exists("movie"):
+    os.makedirs("movie")
 
-#Close and clear stuff to prevent leaks
-plt.close(fig)
-del ani
+ffmpeg_command = [
+    "ffmpeg",
+    "-framerate", "400",
+    "-i", "movie_frames/frame_%04d.png",
+    "-c:v", "libx264",
+    "-r", "30",
+    "-pix_fmt", "yuv420p",
+    "movie/particle-movie.mp4",
+    "-t", "1", "-y"
+]
+subprocess.run(ffmpeg_command)
+
+
 

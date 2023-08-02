@@ -1,6 +1,12 @@
-Program for simulating particles with phoretic interactions.
-The arguments for the simulation need to be manually edited in main.py.
 
-The output is two .csv files with particle positions over time, along with a gif animation.
+#This is the software for simulating particles with phoretic interactions.
 
+#Dependencies: 
+pandas
+matplotlib
+
+
+#Instructions
+To run, select your cluster in the main.py sourcefile and simply run it with python3. 
+The output is a series of snapshots along with a movie. 
 

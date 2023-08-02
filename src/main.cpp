@@ -5,17 +5,19 @@
 #include <vector>
 #include <random>
 #include <fstream>
-using namespace std;
+#include "particle.h"
 
-//Random number generator:
+using namespace std;
 std::random_device rd;
 std::mt19937 gen(rd());
+
+
 //Constants:
 	const double pi			    = 3.14159265358979323846;
 	const double temperature            = 300;
 	const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
 	const double cutoff_distance	    = 8*pow(10,-6);
-	const double delta_t		    = 0.001;
+	const double delta_t		    = 0.005;
 	const double kb      		    = 1.380649 * pow(10,-23);
 	const double viscosity              = 1*pow(10,-3);
 	const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
@@ -28,23 +30,10 @@ std::mt19937 gen(rd());
 	const double spawnArea		    = box_size/45;
 
 
-struct Particle{
-
-	long double x,y;
-	double phi;
-	bool isHot;
-	
-	//Phoretic velocity:
-	long double vpx,vpy;
-}; 
 
 //Random initialization
 	std::vector<Particle> initialize_particles(int nHot, int nCold);
-//pre-configured cluster initializations:		//the corresponding particle numbers need to be input in main.py
-	std::vector<Particle> initialize_stator(); 	//2 hot 2 cold
-	std::vector<Particle> initialize_spinner();	//2 hot 4 cold
-	std::vector<Particle> initialize_rotator(); 	//2 hot 3 cold
-	std::vector<Particle> initialize_migrator();    //1 hot 1 cold
+
 
 
 void update_position	     (Particle &particle,std::vector<Particle> &particles, int nParticles);
@@ -168,7 +157,7 @@ void update_position(Particle &particle,std::vector<Particle> &particles, int nP
 
 void hard_sphere_correction(std::vector<Particle> &particles,int nParticles) {
 
-	//Perform synchronous hard sphere correction
+	//Perform synchronous hard sphere correction using a temp.
 	std::vector<Particle> tempParticles = particles;
 	for (int i = 0; i<nParticles; i++){
 		for(int j = 0; j<nParticles; j++) {
@@ -259,151 +248,6 @@ void boundary_box_correction(vector<Particle> &particles,int nParticles) {
 
 
 
-//place 1 stator
-std::vector<Particle> initialize_stator() {
-
-	vector<Particle> particles;
-	
-	//Assign values to the particles and then add to the particles list.
-	//First hot particles
-	for (int i = 1; i < 3; i++) {
-		Particle newParticle;
-		newParticle.isHot = true;
-
-		newParticle.x =  (2*i*particleRadius) + box_size/2- 3*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-	}	
-	
-	for (int i = 1; i < 3; i++) {
-		Particle newParticle;
-		newParticle.isHot = false;
-
-		newParticle.x =  box_size/2;		
-		newParticle.y =  (2*i*particleRadius) + box_size/2 - 3*particleRadius;
-		newParticle.vpx,newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);	
-		
-	}	
-	return particles;
-}
-
-
-//place one spinner, 2 hot 4 cold
-std::vector<Particle> initialize_spinner() {
-
-	vector<Particle> particles;
-
-		Particle newParticle;
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 -2*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		
-		newParticle.isHot = true;
-		newParticle.x =  box_size/2;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 +2*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-
-		newParticle.isHot = true;
-		newParticle.x =  box_size/2 +particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 -particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 +3*particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-
-
-	return particles;
-}
-
-//place one rotator,   2 hot 3 cold
-std::vector<Particle> initialize_rotator() {
-
-	vector<Particle> particles;
-
-		Particle newParticle;
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 -2*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		
-		newParticle.isHot = true;
-		newParticle.x =  box_size/2;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = true;
-		newParticle.x =  box_size/2 +1.8*particleRadius;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 -particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2 +particleRadius;		
-		newParticle.y =  box_size/2 - particleRadius;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-
-
-	return particles;
-}
-
-//place one rotator,   2 hot 3 cold
-std::vector<Particle> initialize_migrator() {
-
-	vector<Particle> particles;
-	
-		Particle newParticle;
-		
-		newParticle.isHot = false;
-		newParticle.x =  box_size/2;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-		
-		newParticle.isHot = true;
-		newParticle.x =  box_size/2;		
-		newParticle.y =  box_size/2;
-		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
-		particles.push_back(newParticle);
-	
-
-
-	return particles;
-}
 
 
 
