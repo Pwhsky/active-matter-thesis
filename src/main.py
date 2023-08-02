@@ -6,6 +6,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import multiprocessing
 import os
+
+
+
+
 #Avoid interrupting the program as it creates memory leaks, which can only be resolved
 #by restarting the IDE.
 
@@ -14,11 +18,12 @@ import os
 
 #%%
 
+#Select parameters
 plotMarkerSize = 30
 plotDPI        = 200
 
 clusterType = "rotator"
-timeSteps  = 100
+timeSteps  = 5000
 
 if clusterType == "spinner":
     nHot        = 2
@@ -33,16 +38,17 @@ elif clusterType == "migrator":
     nHot        = 1
     nCold       = 1
   
-
 nParticles = nHot + nCold
-#Handler to simulate in C++:
+
+#Handler to start simulation
 subprocess.run(['g++','main.cpp','particle.cpp','-o','sim','-O4'])
 subprocess.run(['./sim',clusterType,f' {timeSteps}'])
-
 print("Processing data...")
-box_size = 100 * 1e-6
 
-# Read the CSV file into a DataFrame
+
+
+
+# Read the CSV files into a pandas dataframe
 with open('hotParticles.csv', 'r') as file:
     dfHot = pd.read_csv(file, header=None, names=['x', 'y'],low_memory=True)
 
@@ -60,10 +66,10 @@ dfCold['y'] = pd.to_numeric(dfCold['y'],errors='coerce')
 
 #%%
 
-
+#Prepare the scatter plot:
+box_size = 100 * 1e-6
 fig, ax = plt.subplots(dpi=plotDPI)
 
-# Create an empty scatter plot
 scatterHot  = ax.scatter([], [],s=plotMarkerSize,marker='o',color='red',label="Hot Particle")
 scatterCold = ax.scatter([], [],s=plotMarkerSize,marker='o',color='blue',label="Cold Particle")
 # Set the axis limits
@@ -79,7 +85,7 @@ if not os.path.exists("movie_frames"):
     os.makedirs("movie_frames")
 
     
-# Function to update the scatter plot for each frame
+# Function to sequentially load data from each timestep and produce a figure
 def update(frame):
     startCold = frame     * nCold
     endCold   = startCold + nCold +1
@@ -93,8 +99,10 @@ def update(frame):
 
 
 
-# Create the animation: 1000 frames takes 11 seconds
+# Create the sequence of figures: (1000 frames takes 11 seconds)
 tic = time.time()
+
+#Using parallelization 
 threads = 6
 with multiprocessing.Pool(processes=threads) as pool:
     pool.map(update,range(timeSteps))    
@@ -104,14 +112,14 @@ print("Movie frames saved after " + str(round(toc-tic)) + " seconds")
 print("\n")
 print("\n")
 
-#Compile the images to a movie:
-    
+#Generate a movie from the figures using FFmpeg
+
 if not os.path.exists("movie"):
     os.makedirs("movie")
 
 ffmpeg_command = [
     "ffmpeg",
-    "-framerate", "400",
+    "-framerate", "300",
     "-i", "movie_frames/frame_%04d.png",
     "-c:v", "libx264",
     "-r", "30",
@@ -121,5 +129,5 @@ ffmpeg_command = [
 ]
 subprocess.run(ffmpeg_command)
 
-
+#All done :)
 

@@ -9,8 +9,8 @@ using namespace std;
 	const double box_size		    = 100*pow(10,-6);
 	const double spawnArea		    = box_size/45;
 
-//place 1 stator
-
+//This file contains some functions to place pre-defined cluster configurations at the center of the arena, 
+//some functions are more easy to read than others...
 
 
 std::vector<Particle> initialize_stator() {

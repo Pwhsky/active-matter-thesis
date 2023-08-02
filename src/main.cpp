@@ -42,6 +42,7 @@ void hard_sphere_correction  (std::vector<Particle>& particles,int nParticles);
 void boundary_box_correction (std::vector<Particle>& particles,int nParticles);
 void writeToCSV		     (std::vector<std::vector<Particle>> particlesOverTime,int nParticles,int timeSteps);
 
+//Euclidean distance 
 vector<long double> getDirection(Particle &particle1, Particle &particle2);
 double 		    getNorm(Particle &particle1, Particle &particle2);
 
