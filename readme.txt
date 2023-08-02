@@ -3,7 +3,7 @@
 
 
 #Requirements:
-Linux with G++, Pandas, Matplotlib.
+Linux with G++, Pandas, Matplotlib, FFmpeg for movie creation
 
 #Luxury:
 CPU with > 4 cores 
