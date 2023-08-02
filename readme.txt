@@ -1,9 +1,14 @@
 
 #This is the software for simulating particles with phoretic interactions.
 
-#Dependencies: 
-pandas
-matplotlib
+
+#Requirements:
+Linux with G++, Pandas, Matplotlib.
+
+#Luxury:
+CPU with > 4 cores 
+
+
 
 
 #Instructions
