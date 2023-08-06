@@ -7,14 +7,10 @@ import matplotlib.pyplot as plt
 import multiprocessing
 import os
 
-
-
-
 #Avoid interrupting the program as it creates memory leaks, which can only be resolved
 #by restarting the IDE.
 
 #The simulation timestep is edited in the CPP source file.
-
 
 #%%
 
@@ -23,7 +19,7 @@ plotMarkerSize = 30
 plotDPI        = 200
 
 clusterType = "rotator"
-timeSteps  = 5000
+timeSteps  = 500
 
 if clusterType == "spinner":
     nHot        = 2

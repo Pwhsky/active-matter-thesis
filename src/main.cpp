@@ -17,7 +17,7 @@ std::mt19937 gen(rd());
 	const double temperature            = 300;
 	const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
 	const double cutoff_distance	    = 8*pow(10,-6);
-	const double delta_t		    = 0.005;
+	const double delta_t		    = 0.001;
 	const double kb      		    = 1.380649 * pow(10,-23);
 	const double viscosity              = 1*pow(10,-3);
 	const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 			for (int i = 0; i<nParticles;i++){
 				update_position(particles[i],particles,nParticles);
 			}
-		///////////////////Hard Sphere Correction////////////
+		///////////////////Hard Sphere Corrections////////////
 			hard_sphere_correction( particles, nParticles);
 			hard_sphere_correction( particles, nParticles);
 			hard_sphere_correction( particles, nParticles);
@@ -158,7 +158,7 @@ void update_position(Particle &particle,std::vector<Particle> &particles, int nP
 
 void hard_sphere_correction(std::vector<Particle> &particles,int nParticles) {
 
-	//Perform synchronous hard sphere correction using a temp.
+	//Perform synchronous hard sphere correction using a temp list.
 	std::vector<Particle> tempParticles = particles;
 	for (int i = 0; i<nParticles; i++){
 		for(int j = 0; j<nParticles; j++) {

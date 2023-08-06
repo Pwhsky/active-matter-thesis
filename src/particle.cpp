@@ -104,7 +104,6 @@ std::vector<Particle> initialize_rotator() {
 		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
 		particles.push_back(newParticle);
 		
-		
 		newParticle.isHot = true;
 		newParticle.x =  box_size/2;		
 		newParticle.y =  box_size/2;
@@ -117,7 +116,6 @@ std::vector<Particle> initialize_rotator() {
 		newParticle.vpx, newParticle.vpy, newParticle.phi = 0.0;
 		particles.push_back(newParticle);
 
-		
 		newParticle.isHot = false;
 		newParticle.x =  box_size/2 -particleRadius;		
 		newParticle.y =  box_size/2 - particleRadius;
