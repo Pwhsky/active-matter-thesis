@@ -3,7 +3,8 @@
 #include <cmath>
 #include <string>
 #include <vector>
-
+#include <mutex>
+#include <thread>
 #include <fstream>
 
 
@@ -23,24 +24,29 @@ using namespace std;
 	const long double bounds 	    = 0.03;
 
 struct Point {
-	long double x;
-	long double y;
-	long double z;
-	long double gradientValue;
+	long double x, y, z, gradientValue;
 };
 
 
 long double sumContributions(std::vector<Point> goldCoating, long double ix, long double iy, long double iz);
 void writeToCSV(std::vector<Point> points);
-void appendValues(std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue);
+void appendValues(Point &newPoint, std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue);
 
-std::vector<Point> generateCap(long double capResolution,long double coating){
+
+float fastSqrt(float x) {
+    int i = *(int*)&x;
+    i = (i >> 1) + 0x1FF80000;
+    float result = *(float*)&i;
+    return static_cast<long double>(result);
+}
+
+std::vector<Point> generateCap(Point &newPoint,long double capResolution,long double coating){
 
 	vector<Point> goldCoating;
 	ofstream capFile("cap.csv");
    	capFile << "x,y,z" << std::endl;
 
-   	Point newPoint;
+   	
 	for (int i = 0; i < capResolution; i++){
 		long double theta = i*2*pi/capResolution;
 		for (int j = 0; j < capResolution; j++){
@@ -65,45 +71,56 @@ std::vector<Point> generateCap(long double capResolution,long double coating){
 
 
 int main(int argc, char** argv) {
-
-	const long double resolution  = stof(argv[1]);
-	const long double resolutionSize = 1/resolution;
 	auto startTimer = std::chrono::high_resolution_clock::now();
+	
+	const long double resolution  = stof(argv[1]);
+	const long double stepSize = 1/resolution;
+	
 	const long double capResolution = 50;
 	const long double coating 	  = stof(argv[2])*pi;
 	
 	//Fill list with location of gold coated points and write to csv.
-	vector<Point> goldCoating = generateCap(capResolution,coating);
-
+	Point newPoint;
+	
+	vector<Point> goldCoating = generateCap(newPoint,capResolution,coating);
+	
 
 	
 	vector<Point> gradientList;
-	for (long double ix = -bounds; ix<bounds; ix += resolutionSize){
-		for (long double iy = -bounds; iy<bounds; iy += resolutionSize){
-			for (long double iz = -bounds; iz<bounds; iz+= resolutionSize){
+	for (long double iy = 0.0; iy<bounds; iy += stepSize){
+		for (long double ix = -bounds; ix<bounds; ix += stepSize){
 		
-				long double distance = sqrt(ix*ix+iy*iy+iz*iz); //Distance from origo
+			for (long double iz = -bounds; iz<bounds; iz+= stepSize){
+		
+				long double distance = fastSqrt(ix*ix+iy*iy+iz*iz); //Distance from origo
 					
-			//Check if we are inside the particle
+					
+					
+				//Check if the point is inside the particle:
+				
 				if(distance> particleRadius){
-			
+				
 					long double contributionSum = sumContributions(goldCoating,ix,iy,iz);
+					
 					long double gradientValue = 1/(4*pi*contributionSum);		
-					appendValues(gradientList,ix,iy,iz,gradientValue);
+					appendValues(newPoint,gradientList,ix,iy,iz,gradientValue);
 				
 				//continue;
 				
 				}
 			
-				else {appendValues(gradientList,ix,iy,iz,0.0);}
+				else {
+					appendValues(newPoint,gradientList,ix,iy,iz,0.0);
+				}
 			
 			
 
 			}
 		}
  	}
-
+	
 		cout<<"Simulation finished, writing to csv..."<<endl;
+
 		writeToCSV(gradientList);
 		
 
@@ -112,7 +129,7 @@ int main(int argc, char** argv) {
    		std::chrono::duration<double> duration = endTimer - startTimer;
    		double elapsed_seconds = duration.count();
   		std::cout << "Program completed after: " << elapsed_seconds << " seconds" << std::endl;
-	////////////////////////////////////////////////////////////////////////////	
+	//////////////////////////////////////////////////////////////////S//////////	
 	
 	return 0;
 }
@@ -123,14 +140,14 @@ long double sumContributions(std::vector<Point> goldCoating, long double ix, lon
 		long double dx = (point.x-ix);
 		long double dy = (point.y-iy);
 		long double dz = (point.z-iz);
-		long double goldDistance = sqrt(dx*dx + dy*dy  +dz*dz); 
-		contributionSum += goldDistance/goldCoating.size();	
+		long double goldDistance = fastSqrt(dx*dx + dy*dy  +dz*dz); 
+		contributionSum += goldDistance;	
 	}
-	return contributionSum;
+	return (contributionSum)/(goldCoating.size());
 }
 
-void appendValues(std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue) {
-	Point newPoint;
+void appendValues(Point &newPoint,std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue) {
+	
 	newPoint.x = ix;
 	newPoint.y = iy;
 	newPoint.z = iz;
@@ -141,15 +158,17 @@ void appendValues(std::vector<Point>& gradient,long double ix, long double iy, l
 void writeToCSV(std::vector<Point> points) {
 
 	ofstream outputFile("gradient.csv");
-	
    	outputFile << "x,y,z,gradientValue" << std::endl;
 
-   	
-   	
     // Write field values
 	for (auto point : points) {
   		outputFile << point.x << "," << point.y << "," << point.z << "," << point.gradientValue << std::endl;
    	}
     	outputFile.close();
 }
+
+
+
+
+
 
