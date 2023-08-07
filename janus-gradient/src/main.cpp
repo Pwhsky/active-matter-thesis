@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
  	
 	
 	//iterate over time:
-	const int iterationLimit = 2;
+	const int iterationLimit = 10;
 	for(int t = 0; t<iterationLimit; t++){
 		
 		//Find adjacent points
@@ -150,9 +150,9 @@ int main(int argc, char** argv) {
  				long double dz = (point1.z - point2.z);
 				const long double distanceSquared = dx*dx+dy*dy+dz*dz;
 				
-				if (distanceSquared<=(stepSize*stepSize)){
+				if (distanceSquared<=(stepSize*stepSize) && distanceSquared >= particleRadiusSquared){
 					
-					point1.gradientValue = (point2.gradientValue)/6;
+					point1.gradientValue = (point2.gradientValue);
 				}
 				
  			}
