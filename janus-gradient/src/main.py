@@ -3,10 +3,11 @@ import numpy as np
 import pandas as pd
 import time 
 import subprocess
+import sys
 
 
-resolution = "4000" #151.648 seconds
-coating    = "0.3"
+resolution = sys.argv[1] #4000 = 151.648 seconds
+coating    = sys.argv[2]
 
 subprocess.run(["g++","main.cpp","-o","sim","-O4"])
 subprocess.run(["./sim",resolution,coating])
@@ -24,13 +25,13 @@ x = df['x']
 y = df['y']
 z = df['z']
 
-
+#Sum the values to project a 3D image to a 2D image.
 Fsum = df.groupby(['z','x'])['gradientValue'].sum().reset_index()
 
-#Sum the slices protruding along the y-axis, kep x and z stationary.
 
 F = Fsum["gradientValue"]
 
+#Normalization
 F = (F-F.min())/(F.max()-F.min())
 
 
@@ -49,7 +50,7 @@ sc = ax.scatter(Fsum['x'], Fsum['z'],c=F, cmap='viridis', marker='.',s=130)
 
 cbar = plt.colorbar(sc)
 ax.set_xlabel('X')
-ax.set_ylabel('Y')
+ax.set_ylabel('Z')
 #ax.set_zlabel('Z')
 ax.set_yticklabels([])
 ax.set_xticklabels([])
@@ -59,12 +60,11 @@ ax.set_facecolor('black')
 ax.set_xlim(-scale,scale)    #For slice representation
 #ax.set_zlim(-scale,scale) #For cube representation
 ax.set_ylim(-scale,scale)
-ax.axis('off')
-fig.set_facecolor('black')
 #ax.set_zlim(-scale,scale)
 # Show the plot
-plt.show()
+plt. savefig("janus.png")
+#plt.show()
+
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
-
 
