@@ -16,22 +16,20 @@ using namespace std;
 	const long double particleRadius    = 1e-2;
 	const long double particleRadiusSquared = pow(particleRadius,2);
 	const long double pi	            = 3.14159265358979323846;
-	//const long double ix		    = 0.0;
-	const double viscosity              = 1*pow(10,-3);
-	const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;			   //Phoretic strength
-	const long double bounds 	    = 0.025;
-	const long double capResolution     = 50;
-
-
+	const long double bounds 	    = 0.015;
+	
+	const long double alphaSilica	 = 1*pow(10,-7);  //actual magnitude is 10e-7
+	const long double alphaFluid	 = 1.43*pow(10,-7);
 struct Point {
-	long double x, y, z, gradientValue;
+	long double x, y, z,r;
+	long double  gradientValue = 0.0;
 };
-	Point newPoint;
+Point newPoint;
 	
 
 
 long double sumContributions(std::vector<Point> goldCoating, const long double ix, const long double iy, const long double iz);
-void writeToCSV(std::vector<Point> points);
+void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> z,vector<vector<vector<long double>>> field);
 void appendValues(Point &newPoint, std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue);
 
 
@@ -42,134 +40,150 @@ float fastSqrt(const float n)
    return (int(3) - n * u.f * u.f) * n * u.f * 0.5f;
 }
 
-/*
-std::vector<Point> generateCap(Point &newPoint, const long double capResolution, const long double coating){
 
-	vector<Point> goldCoating;
-	ofstream capFile("cap.csv");
-   	capFile << "x,y,z" << std::endl;
-
-   	
-	for (int i = 0; i < capResolution; i++){
-		const long double theta = i*2*pi/capResolution;
-		for (int j = 0; j < capResolution; j++){
-		
-			const long double phi = j*pi/capResolution;
-			
-			newPoint.x = particleRadius*cos(theta)*sin(phi);
-			newPoint.y = particleRadius*sin(theta)*sin(phi);
-			
-			if (phi < coating ){ //This controls how much of the sphere is coated. pihalf = half coated.
-				newPoint.z = particleRadius*cos(phi);
-				goldCoating.push_back(newPoint);
-				capFile << newPoint.x << "," << newPoint.y << "," << newPoint.z << std::endl;
-			}
-		}
-	}
-	
-	
-	return goldCoating;
-}*/
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
 	
-	const long double resolution  = stof(argv[1]);
-	const long double stepSize    = 1/resolution;
-	const long double coating     = stof(argv[2])*pi;
+	const long double resolution     = stof(argv[1]);
+	const long double stepSize       = 1/(resolution*1.1);
+	const long double coating        = stof(argv[2])*pi;
+	const int         iterationLimit = stoi(argv[3]);
 	
+
+	const long double skinThickness  = stepSize/(16);
+	const long double delta 	 = 1/(stepSize*stepSize);
 	//Fill list with location of gold coated points and write to csv.
 
 	
 	
 	vector<Point> gradientList;
 	
+	
+	
+	
 	//Initialize space:
+	
 	vector<long double> y;
-	for (long double coordinate = 0.0; coordinate <= bounds; coordinate += stepSize) {
+	for (long double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
         	y.push_back(coordinate);
     	}
+	vector<long double> z = y;
+	vector<long double> x = y;
 	
-	vector<long double> x;
-    	for (long double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
-        	x.push_back(coordinate);
-    	}
-	vector<long double> z = x;
-	//Initialize gradient values:
-	
-	
-	//Initialize boundary conditions (spherical cap)
-	for (const auto iy : y){
-		for (const auto ix : x){
-			for (const auto iz : z){
-				const long double distanceSquared = ix*ix+iy*iy+iz*iz; //Distance from origo	
+	vector<vector<vector<long double>>> field(x.size(), vector<vector<long double>>(y.size(), vector<long double>(y.size())));
+
+ 	long double gradientValue = 0.0;
+ 	//for (int i = 0; i < x.size(); i++){
+
+ 	for (int i = 0; i<x.size(); i++){
+		for (int j = 0; j < y.size(); j++){
+			for (int k = 0; k < z.size(); k++){
+				long double ix = x[i];
+				long double jy = y[j];
+				long double kz = z[k];
+				const long double distanceSquared = ix*ix+jy*jy+kz*kz; //Distance from origo	
 				
-				if(distanceSquared >= particleRadiusSquared-stepSize/8 && distanceSquared <= particleRadiusSquared+stepSize/8)   {
-					newPoint.x = ix;
-					newPoint.y = iy;
-					if(iz>0){
-						newPoint.z = iz;
-						newPoint.gradientValue = 0.2;
-						gradientList.push_back(newPoint);
-						}
+				if (distanceSquared <= particleRadiusSquared && kz>0){
+					gradientValue = 0.5;
+
+				}else if (distanceSquared <= particleRadiusSquared) {
+					gradientValue = 0.3;
 					
-				}else if (distanceSquared >= particleRadiusSquared){
-					newPoint.x = ix;
-					newPoint.y = iy;
-					newPoint.z = iz;
-					newPoint.gradientValue = 0.0;
-					gradientList.push_back(newPoint);
-				
-				}
+				}else {
+					gradientValue = 0.0;
+				}	
+				field[i][j][k] = gradientValue;		
 			}
 		}
  	}
+ 	cout<<"Finished initialization"<<endl;
+ 	
+
+	for(int t = 0; t<iterationLimit; t++){	
+		vector<vector<vector<long double>>> tempField(x.size(), vector<vector<long double>>(y.size(), vector<long double>(y.size())));
+    		for (int i = 1; i<(x.size()-1); i++){
+    			for(int j = 1; j<(y.size()-1); j++){
+    				for(int k = 1; k<(z.size()-1); k++){
+
+    					const long double jy = y[j];
+					const long double ix = x[i];
+					const long double kz = z[k];
+					const long double distanceSquared = ix*ix+jy*jy+kz*kz;
+				
+				// 
+				//Try with second derivative: 	(Works)
+					if(i-1 == 0 || i+1 == x.size()-1 || j-1 == 0 || k-1 == 0 || j+1 == y.size()-1 ||k+1 == z.size()-1){	
+						tempField[i][j][k] = 0.0; //This affects the cooling
+
+					}else{
+						long double gradX = (field[i+1][j][k] - 2*field[i][j][k] + field[i-1][j][k])*delta;
+						long double gradY = (field[i][j+1][k] - 2*field[i][j][k] + field[i][j-1][k])*delta;
+						long double gradZ = (field[i][j][k+1] - 2*field[i][j][k] + field[i][j][k-1])*delta;
+						
+						if (distanceSquared <= particleRadiusSquared) {
+							//Use silica heat coefficient when inside the sphere
+							tempField[i][j][k]  =  field[i][j][k] + alphaSilica*(gradY+gradZ+gradX)*0.02;
+						}else{
+							//use water lutidine heat constants.
+							tempField[i][j][k]  =  field[i][j][k] + alphaFluid*(gradY+gradZ+gradX)*0.02;
+						}
+					
+    					}
+    				}
+    			}
+    		}
+    		field = move(tempField);
+
+    	}
+    		
+    		
+
  	
  	
  	
- 	
- 	
- 	
- 	
+
  	
  	float total_points = y.size()*z.size()*x.size();
  	cout<<"total no. of points: "<<total_points<<endl;
  	
 	
-	//iterate over time:
-	const int iterationLimit = 10;
-	for(int t = 0; t<iterationLimit; t++){
-		
-		//Find adjacent points
- 	for (auto& point1 : gradientList){
- 		for (auto& point2 : gradientList){
- 		
- 			if(&point1 != &point2) {
- 				long double dx = (point1.x - point2.x);
- 				long double dy = (point1.y - point2.y); 
- 				long double dz = (point1.z - point2.z);
-				const long double distanceSquared = dx*dx+dy*dy+dz*dz;
-				
-				if (distanceSquared<=(stepSize*stepSize) && distanceSquared >= particleRadiusSquared){
-					
-					point1.gradientValue = (point2.gradientValue);
-				}
-				
- 			}
- 		
- 		
- 		}
- 	}
-		
- 	}
-		
-
-	
-	
-	
-	
+	//Finite Difference Iterator/////////////
+	//Note, this takes alot of time..../////
+	/*
+	for (int t = 0; t < iterationLimit; t++) {
+   	 vector<Point> tempGradientList;
 
 
+
+		
+    		for ( auto point1 : gradientList) {
+    			Point updatedPoint = point1; 
+     	 		bool updated = false; 
+     	 		
+       		  	for ( auto point2 : gradientList) {
+            	   		if (point1.x != point2.x && point1.y != point2.y && point1.z != point2.z && point1.r >= particleRadiusSquared) {
+            	   		
+               				long double dx = (point1.x - point2.x);
+               				long double dy = (point1.y - point2.y); 
+                			long double dz = (point1.z - point2.z);
+               				const long double distance = fastSqrt(dx * dx + dy * dy + dz * dz);
+               				
+               				
+              				if (distance <= (stepSize)) {
+                   				updatedPoint.gradientValue +=(point2.gradientValue)/6;
+                   				updated = true;
+                    				break;
+               				}
+            			}
+       		  	}
+     			tempGradientList.push_back(updated ? updatedPoint : point1);
+     		}
+   		gradientList = move(tempGradientList);
+   		cout<<"finished iteration " << t<<endl;
+	}*/
+
+	////////////////////////////////////////////////
 
 		//The optimizer loves const datatypes, sorry for the clutter...
 		
@@ -200,7 +214,7 @@ int main(int argc, char** argv) {
 	*/
 	
 	cout<<"Simulation finished, writing to csv..."<<endl;
-	writeToCSV(gradientList);
+	writeToCSV(x,y,z,field);
 		
 
 	///////////////////Compute elapsed time/////////////////////////
@@ -235,19 +249,23 @@ void appendValues(Point &newPoint,std::vector<Point>& gradient,const long double
 	gradient.push_back(newPoint);
 }
 
-void writeToCSV(std::vector<Point> points) {
+void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> z,vector<vector<vector<long double>>> field) {
 
 	ofstream outputFile("gradient.csv");
    	outputFile << "x,y,z,gradientValue" << std::endl;
-
-    // Write field values
-	for (auto point : points) {
-  		outputFile << point.x << "," << point.y << "," << point.z << "," << point.gradientValue << std::endl;
-   	}
+   for (int i = 0; i <x.size(); i++){
+	for (int j = 0; j < y.size(); j++){
+			for (int k = 0; k < z.size(); k++){
+			
+	
+				
+				outputFile << x[i] << "," <<y[j] <<"," << z[k]<<"," << field[i][j][k] << std::endl;		
+			}
+		}
+	}
     	outputFile.close();
 
 }
-
 
 
 
