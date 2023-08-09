@@ -9,12 +9,12 @@ import sys
 #resolution = sys.argv[1] #4000 = 151.648 seconds
 #coating    = sys.argv[2]
 
-resolution = "4500"
+resolution = "100"
 coating =    "0.5"
-iterations =  "1000"
+
 
 subprocess.run(["g++","main.cpp","-o","sim","-O4"])
-subprocess.run(["./sim",resolution,coating,iterations])
+subprocess.run(["./sim",resolution,coating])
 
 #%%
 #df = np.genfromtxt('gradient.csv',delimiter=',',skip_header=1)
@@ -22,7 +22,7 @@ df = pd.read_csv('gradient.csv')
 df.sort_values(by=['y'])
 
 
-scale = 2e-2
+scale = 5e-4
 #Extract the data from the DataFrame
 
 x = df['x']
@@ -49,7 +49,7 @@ ax = fig.add_subplot(111)
 # Scatter plot with colors based on the field values (F)
 # cmap='viridis' is used to map colors to a colormap (you can change it as needed)
 
-sc = ax.scatter(Fsum["x"], Fsum["z"],c=F, cmap='plasma', marker='.',s=130)
+sc = ax.scatter(df["x"], df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
 #sc = ax.scatter(x,y,z,c=df["gradientValue"], cmap='plasma', marker='.',s=100)
 
 cbar = plt.colorbar(sc)
@@ -67,7 +67,7 @@ ax.set_xticklabels([])
 #ax.set_zlim(-scale,scale)
 # Show the plot
 plt. savefig("janus.png")
-plt.title("Temperature at time = " + iterations )
+
 
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
