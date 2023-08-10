@@ -3,8 +3,6 @@
 #include <cmath>
 #include <string>
 #include <vector>
-#include <mutex>
-#include <thread>
 #include <fstream>
 
 
@@ -14,114 +12,216 @@ using namespace std;
 
 
 //Constants:
-	const long double scale 	    = pow(10,-3);
-	const long double particleRadius    = 1e-2;
+
+	const long double particleRadius        = 1.24*pow(10,-6);
 	const long double particleRadiusSquared = pow(particleRadius,2);
-	const long double pi	            = 3.14159265358979323846;
-	//const long double ix		    = 0.0;
-	const double viscosity              = 1*pow(10,-3);
-	const double stokesCoefficient	    = 6.0*pi*viscosity*particleRadius;			   //Phoretic strength
-	const long double bounds 	    = 0.03;
-
-struct Point {
-	long double x, y, z, gradientValue;
-};
-
-
-long double sumContributions(std::vector<Point> goldCoating, long double ix, long double iy, long double iz);
-void writeToCSV(std::vector<Point> points);
-void appendValues(Point &newPoint, std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue);
+	const long double pi	       		= 3.14159265358979323846;
+	const long double bounds 		= particleRadius*2;
+	
+	const long double alphaIron		= 2.43*pow(10,7);  //
+	
+	const long double ironC			= 73.0;
+	const long double silicaC		= 1.4;
+	const long double waterC		= 0.39;
+	const long double power			= 0.001; //1 mw
+	long double stepSize;
+	long double dx;
 
 
-float fastSqrt(float x) {
-    int i = *(int*)&x;
-    i = (i >> 1) + 0x1FF80000;
-    float result = *(float*)&i;
-    return static_cast<long double>(result);
+
+void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> z,vector<vector<vector<long double>>> field);
+
+
+
+float fastSqrt(const float n) 
+{
+   static union{int i; float f;} u;
+   u.i = 0x5F375A86 - (*(int*)&n >> 1);
+   return (int(3) - n * u.f * u.f) * n * u.f * 0.5f;
 }
 
-std::vector<Point> generateCap(Point &newPoint,long double capResolution,long double coating){
+long double getq(long double x,long double y, long double z, long double r) {
+	//The potential will vary depending on the 2 domains:
+	//water   r > particleRadius
+	//gold    r = particleRadius && z > 0
+	//silica  r = particleRadius
+	long double output = 0.0;
 
-	vector<Point> goldCoating;
-	ofstream capFile("cap.csv");
-   	capFile << "x,y,z" << std::endl;
-
-   	
-	for (int i = 0; i < capResolution; i++){
-		long double theta = i*2*pi/capResolution;
-		for (int j = 0; j < capResolution; j++){
-			long double phi = j*pi/capResolution;
-			
-			newPoint.x = particleRadius*cos(theta)*sin(phi);
-			newPoint.y = particleRadius*sin(theta)*sin(phi);
-			
-			if (phi < coating ){ //This controls how much of the sphere is coated. pihalf = half coated.
-				newPoint.z = particleRadius*cos(phi);
-				goldCoating.push_back(newPoint);
-				capFile << newPoint.x << "," << newPoint.y << "," << newPoint.z << std::endl;
-			}
-
-   	
-		}
+	if (r >= particleRadiusSquared-stepSize && r <= particleRadiusSquared+stepSize && z >= 0.0){ //gold surface
+		//output = exp(-2*particleRadius/pow(w,2))/pow(w,2);
+		output = -alphaIron/ironC * power;
+		
+	}else if (r > particleRadiusSquared+stepSize){
+		output = -alphaIron/waterC * power/(pow((r-particleRadiusSquared),2));
+		
+	}else if(r<= particleRadiusSquared && z <=0 ) {
+		output = -alphaIron/silicaC * power;
 	}
 	
+	return output;
 	
-	return goldCoating;
+}	
+
+
+long double integral(int ix, int iz, int iy, vector<long double> x,vector<long double> y, vector<long double> z){
+	long double contributionSum = 0.0;
+
+
+	
+	//distance = r-r'
+	//Volume element = dxdydz
+		
+    	for (int i = 0; i<x.size(); i++){
+    			for(int j = 0; j<y.size(); j++){
+    				for(int k = 0; k<z.size(); k++){
+    				
+				
+					long double rPrim = x[i]*x[i] + z[k]*z[k] + y[j]*y[j];
+						
+					long double rDiff = x[ix]-x[i] + y[iy]+y[j] + z[iz]-z[k];
+
+					long double distance =  sqrt(pow(x[ix]-x[i],2) + pow(z[iz]-z[k],2) + pow(y[iy]-y[j],2))  ; 
+					long double q = getq(x[i], y[j], z[k],rPrim);
+					
+					contributionSum -=    ( q*rDiff/(pow(distance,3))) *dx*dx*dx;
+							
+    			}
+    		}
+    	}
+    	return contributionSum/(4*pi);
+	
+	
 }
+
+
+
 
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
 	
-	const long double resolution  = stof(argv[1]);
-	const long double stepSize = 1/resolution;
+	const long double resolution     = stof(argv[1]);
+	stepSize       			 = bounds/(resolution);
+	const long double coating        = stof(argv[2])*pi;
 	
-	const long double capResolution = 50;
-	const long double coating 	  = stof(argv[2])*pi;
-	
+	dx	 = stepSize;
+
 	//Fill list with location of gold coated points and write to csv.
-	Point newPoint;
-	
-	vector<Point> goldCoating = generateCap(newPoint,capResolution,coating);
-	
 
 	
-	vector<Point> gradientList;
-	for (long double iy = 0.0; iy<bounds; iy += stepSize){
-		for (long double ix = -bounds; ix<bounds; ix += stepSize){
+	
+	
+		//Initialize space in cartesian coordinates
+	vector<long double> z;
+	for (long double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
+        	z.push_back(coordinate);
+   
+    	}
+	vector<long double> y = {0.0};
+	vector<long double> x = z;
+	
+
+
+
+	
+	//Initialize space:
+	vector<vector<vector<long double>>> field(x.size(), vector<vector<long double>>(y.size(), vector<long double>(z.size())));
+ 	cout<<"Finished initialization"<<endl;
+ 	
+		//Volume element = r*r*dr*dphi*dtheta 
+
+
 		
-			for (long double iz = -bounds; iz<bounds; iz+= stepSize){
+    		for (int i = 0; i<x.size(); i++){
+    			for(int j = 0; j<y.size(); j++){
+    				for(int k = 0; k<z.size(); k++){
+					//For a given point in 3D space, compute the integral given by Agnese
+					field[i][j][k] = integral(i,j,k,x,y,z);
+    				}
+    			}
+    		}
+    	
+
+ 
+    		
+    		
+
+ 	
+ 	
+ 	
+
+ 	
+ 	float total_points = y.size()*z.size()*x.size();
+ 	cout<<"total no. of points: "<<total_points<<endl;
+ 	
+	
+	//Finite Difference Iterator/////////////
+	//Note, this takes alot of time..../////
+	/*
+	for (int t = 0; t < iterationLimit; t++) {
+   	 vector<Point> tempGradientList;
+
+
+
 		
-				long double distance = fastSqrt(ix*ix+iy*iy+iz*iz); //Distance from origo
-					
-					
-					
+    		for ( auto point1 : gradientList) {
+    			Point updatedPoint = point1; 
+     	 		bool updated = false; 
+     	 		
+       		  	for ( auto point2 : gradientList) {
+            	   		if (point1.x != point2.x && point1.y != point2.y && point1.z != point2.z && point1.r >= particleRadiusSquared) {
+            	   		
+               				long double dx = (point1.x - point2.x);
+               				long double dy = (point1.y - point2.y); 
+                			long double dz = (point1.z - point2.z);
+               				const long double distance = fastSqrt(dx * dx + dy * dy + dz * dz);
+               				
+               				
+              				if (distance <= (stepSize)) {
+                   				updatedPoint.gradientValue +=(point2.gradientValue)/6;
+                   				updated = true;
+                    				break;
+               				}
+            			}
+       		  	}
+     			tempGradientList.push_back(updated ? updatedPoint : point1);
+     		}
+   		gradientList = move(tempGradientList);
+   		cout<<"finished iteration " << t<<endl;
+	}*/
+
+	////////////////////////////////////////////////
+
+		//The optimizer loves const datatypes, sorry for the clutter...
+		
+		/*
+		
+	for (long double y = 0.0; y<bounds; y += stepSize){
+		const long double iy = y;
+		for (long double x = -bounds; x<bounds; x += stepSize){
+			const long double ix = x;
+			for (long double z = -bounds; z<bounds; z += stepSize){
+				const long double iz = z;
+				
+				const long double distanceSquared = ix*ix+iy*iy+iz*iz; //Distance from origo
+
 				//Check if the point is inside the particle:
 				
-				if(distance> particleRadius){
+				if(distanceSquared>particleRadiusSquared){
 				
-					long double contributionSum = sumContributions(goldCoating,ix,iy,iz);
-					
-					long double gradientValue = 1/(4*pi*contributionSum);		
+					const long double sum = sumContributions(goldCoating,ix,iy,iz);
+					const long double gradientValue = 1/(sum*sum);		
 					appendValues(newPoint,gradientList,ix,iy,iz,gradientValue);
-				
-				//continue;
-				
 				}
 			
-				else {
-					appendValues(newPoint,gradientList,ix,iy,iz,0.0);
-				}
-			
-			
-
+				
 			}
 		}
  	}
+	*/
 	
-		cout<<"Simulation finished, writing to csv..."<<endl;
-
-		writeToCSV(gradientList);
+	cout<<"Simulation finished, writing to csv..."<<endl;
+	writeToCSV(x,y,z,field);
 		
 
 	///////////////////Compute elapsed time/////////////////////////
@@ -134,40 +234,26 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-long double sumContributions(std::vector<Point> goldCoating, long double ix, long double iy, long double iz) {
-	long double contributionSum = 0.0;
-	for (auto point : goldCoating){
-		long double dx = (point.x-ix);
-		long double dy = (point.y-iy);
-		long double dz = (point.z-iz);
-		long double goldDistance = fastSqrt(dx*dx + dy*dy  +dz*dz); 
-		contributionSum += goldDistance;	
-	}
-	return (contributionSum)/(goldCoating.size());
-}
 
-void appendValues(Point &newPoint,std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue) {
-	
-	newPoint.x = ix;
-	newPoint.y = iy;
-	newPoint.z = iz;
-	newPoint.gradientValue = gradientValue;
-	gradient.push_back(newPoint);
-}
 
-void writeToCSV(std::vector<Point> points) {
+
+void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> z,vector<vector<vector<long double>>> field) {
 
 	ofstream outputFile("gradient.csv");
    	outputFile << "x,y,z,gradientValue" << std::endl;
-
-    // Write field values
-	for (auto point : points) {
-  		outputFile << point.x << "," << point.y << "," << point.z << "," << point.gradientValue << std::endl;
-   	}
+   for (int i = 0; i <x.size(); i++){
+	for (int j = 0; j < y.size(); j++){
+			for (int k = 0; k < z.size(); k++){
+			
+	
+				
+				outputFile << x[i] << "," <<y[j] <<"," << z[k]<<"," << field[i][j][k] << std::endl;		
+			}
+		}
+	}
     	outputFile.close();
+
 }
-
-
 
 
 
