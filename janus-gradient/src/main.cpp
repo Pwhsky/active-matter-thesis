@@ -13,25 +13,24 @@ using namespace std;
 
 //Constants:
 
-	const long double particleRadius        = pow(10,-3);
+	const long double particleRadius        = 1.24*pow(10,-6);
 	const long double particleRadiusSquared = pow(particleRadius,2);
 	const long double pi	       		= 3.14159265358979323846;
-	const long double bounds 		= particleRadius*20;
+	const long double bounds 		= particleRadius*2;
 	
-	const long double alphaSilica		 = 1*pow(10,-7);  //actual magnitude is 10e-7
-	const long double alphaFluid		 = 1.43*pow(10,-7);
+	const long double alphaIron		= 2.43*pow(10,7);  //
 	
-struct Point {
-	long double x, y, z, r;
-	long double  gradientValue = 0.0;
-};
-Point newPoint;
-	
+	const long double ironC			= 73.0;
+	const long double silicaC		= 1.4;
+	const long double waterC		= 0.39;
+	const long double power			= 0.001; //1 mw
+	long double stepSize;
+	long double dx;
 
 
-long double sumContributions(std::vector<Point> goldCoating, const long double ix, const long double iy, const long double iz);
+
 void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> z,vector<vector<vector<long double>>> field);
-void appendValues(Point &newPoint, std::vector<Point>& gradient,long double ix, long double iy, long double iz, long double gradientValue);
+
 
 
 float fastSqrt(const float n) 
@@ -41,23 +40,32 @@ float fastSqrt(const float n)
    return (int(3) - n * u.f * u.f) * n * u.f * 0.5f;
 }
 
-long double getq(long double x,long double y, long double z) {
+long double getq(long double x,long double y, long double z, long double r) {
 	//The potential will vary depending on the 2 domains:
 	//water   r > particleRadius
 	//gold    r = particleRadius && z > 0
 	//silica  r = particleRadius
-	
-	
-	long double output = exp(-2*particleRadius/pow((r-particleRadius),2)  );
+	long double output = 0.0;
 
+	if (r >= particleRadiusSquared-stepSize && r <= particleRadiusSquared+stepSize && z >= 0.0){ //gold surface
+		//output = exp(-2*particleRadius/pow(w,2))/pow(w,2);
+		output = -alphaIron/ironC * power;
+		
+	}else if (r > particleRadiusSquared+stepSize){
+		output = -alphaIron/waterC * power/(pow((r-particleRadiusSquared),2));
+		
+	}else if(r<= particleRadiusSquared && z <=0 ) {
+		output = -alphaIron/silicaC * power;
+	}
+	
 	return output;
 	
 }	
 
 
-long double integral(int ix, int iz, int iy, vector<long double> x,vector<long double> y, vector<long double> z,const long double dxdydz){
+long double integral(int ix, int iz, int iy, vector<long double> x,vector<long double> y, vector<long double> z){
 	long double contributionSum = 0.0;
-	long double r 	  =  x[ix]*x[ix]  + z[iz]*z[iz];
+
 
 	
 	//distance = r-r'
@@ -68,12 +76,14 @@ long double integral(int ix, int iz, int iy, vector<long double> x,vector<long d
     				for(int k = 0; k<z.size(); k++){
     				
 				
-					long double rPrim = sqrt(x[i]*x[i] + z[k]*z[k]);	
-					long double rDiff = r - rPrim;
+					long double rPrim = x[i]*x[i] + z[k]*z[k] + y[j]*y[j];
+						
+					long double rDiff = x[ix]-x[i] + y[iy]+y[j] + z[iz]-z[k];
 
-					long double q = getq(rPrim);
+					long double distance =  sqrt(pow(x[ix]-x[i],2) + pow(z[iz]-z[k],2) + pow(y[iy]-y[j],2))  ; 
+					long double q = getq(x[i], y[j], z[k],rPrim);
 					
-					contributionSum -=    ( q*rDiff/(abs(rDiff*rDiff*rDiff)) )*dxdydz;
+					contributionSum -=    ( q*rDiff/(pow(distance,3))) *dx*dx*dx;
 							
     			}
     		}
@@ -91,18 +101,17 @@ int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
 	
 	const long double resolution     = stof(argv[1]);
-	const long double stepSize       = 2*bounds/(resolution);
+	stepSize       			 = bounds/(resolution);
 	const long double coating        = stof(argv[2])*pi;
-	const long double dxdydz	 = pow(stepSize,3);
+	
+	dx	 = stepSize;
 
 	//Fill list with location of gold coated points and write to csv.
 
 	
 	
-	vector<Point> gradientList;
 	
-	
-		//Initialize space in spherical coordinates:
+		//Initialize space in cartesian coordinates
 	vector<long double> z;
 	for (long double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
         	z.push_back(coordinate);
@@ -127,7 +136,7 @@ int main(int argc, char** argv) {
     			for(int j = 0; j<y.size(); j++){
     				for(int k = 0; k<z.size(); k++){
 					//For a given point in 3D space, compute the integral given by Agnese
-					field[i][j][k] = integral(i,j,k,x,y,z,dxdydz);
+					field[i][j][k] = integral(i,j,k,x,y,z);
     				}
     			}
     		}
@@ -245,7 +254,6 @@ void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> 
     	outputFile.close();
 
 }
-
 
 
 
