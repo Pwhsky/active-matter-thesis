@@ -13,7 +13,7 @@ using namespace std;
 
 //Constants:
 
-	const long double particleRadius        = 1.24*pow(10,-6);
+	const long double particleRadius        = 1*pow(10,-5);
 	const long double particleRadiusSquared = pow(particleRadius,2);
 	const long double pi	       		= 3.14159265358979323846;
 	const long double bounds 		= particleRadius*2;
@@ -45,27 +45,26 @@ long double getq(long double x,long double y, long double z, long double r) {
 	//water   r > particleRadius
 	//gold    r = particleRadius && z > 0
 	//silica  r = particleRadius
-	long double output = 0.0;
+		long double output = 0.0;
 
 	if (r >= particleRadiusSquared-stepSize && r <= particleRadiusSquared+stepSize && z >= 0.0){ //gold surface
 		//output = exp(-2*particleRadius/pow(w,2))/pow(w,2);
 		output = -alphaIron/ironC * power;
 		
 	}else if (r > particleRadiusSquared+stepSize){
-		output = -alphaIron/waterC * power/(pow((r-particleRadiusSquared),2));
+		output = -alphaIron/waterC * power;
 		
 	}else if(r<= particleRadiusSquared && z <=0 ) {
 		output = -alphaIron/silicaC * power;
 	}
-	
 	return output;
 	
 }	
 
 
-long double integral(int ix, int iz, int iy, vector<long double> x,vector<long double> y, vector<long double> z){
+long double integral(int ix, int iy, int iz, vector<long double> x,vector<long double> y, vector<long double> z){
 	long double contributionSum = 0.0;
-
+	long double r = sqrt(x[ix]*x[ix] + z[iz]*z[iz] + y[iy]*y[iy]);
 
 	
 	//distance = r-r'
@@ -76,19 +75,46 @@ long double integral(int ix, int iz, int iy, vector<long double> x,vector<long d
     				for(int k = 0; k<z.size(); k++){
     				
 				
-					long double rPrim = x[i]*x[i] + z[k]*z[k] + y[j]*y[j];
+					long double rPrim = sqrt(x[i]*x[i] + z[k]*z[k] + y[j]*y[j]);
 						
-					long double rDiff = x[ix]-x[i] + y[iy]+y[j] + z[iz]-z[k];
+					//long double rDiff = sqrt(r)-rPrim;
 
-					long double distance =  sqrt(pow(x[ix]-x[i],2) + pow(z[iz]-z[k],2) + pow(y[iy]-y[j],2))  ; 
+					//long double distance =  sqrt(pow(x[ix]-x[i],2) + pow(z[iz]-z[k],2) + pow(y[iy]-y[j],2) )  ; 
 					long double q = getq(x[i], y[j], z[k],rPrim);
 					
-					contributionSum -=    ( q*rDiff/(pow(distance,3))) *dx*dx*dx;
-							
+					contributionSum -=     q *dx*dx*dx;
+						
     			}
     		}
     	}
     	return contributionSum/(4*pi);
+	
+	
+}
+
+long double temp(int ix, int iy, int iz, vector<long double> x,vector<long double> y, vector<long double> z){
+	long double output = 0.0;
+	long double r = sqrt(x[ix]*x[ix] + z[iz]*z[iz] + y[iy]*y[iy]);
+
+	
+	//distance = r-r'
+	//Volume element = dxdydz
+	
+			if( r>particleRadius){
+				output = (particleRadius/(r) + z[iz]*particleRadius/(r*r)  + 3* z[iz]*z[iz]*particleRadius/(r*r*r*2) - pow(particleRadius,3)/(r*r*r*2))/(pi);
+			}else {
+			 	output = (1 + z[iz]/(r*particleRadius))/(pi);
+			 
+			}
+		
+		
+						
+		//long double rDiff = sqrt(r)-rPrim;
+					
+		//contributionSum -=    ( q*rDiff/(pow(abs(rDiff),3))) *dx*dx*dx;
+						
+    	
+    	return output;
 	
 	
 }
@@ -105,6 +131,7 @@ int main(int argc, char** argv) {
 	const long double coating        = stof(argv[2])*pi;
 	
 	dx	 = stepSize;
+	cout<<"step size = " <<stepSize<<endl;
 
 	//Fill list with location of gold coated points and write to csv.
 

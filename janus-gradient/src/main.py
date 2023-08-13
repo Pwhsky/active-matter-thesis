@@ -13,7 +13,7 @@ resolution = "100"
 coating =    "0.5"
 
 
-subprocess.run(["g++","main.cpp","-o","sim","-O4"])
+subprocess.run(["g++","main.cpp","-o","sim","-O3"])
 subprocess.run(["./sim",resolution,coating])
 
 #%%
@@ -49,7 +49,7 @@ ax = fig.add_subplot(111)
 # Scatter plot with colors based on the field values (F)
 # cmap='viridis' is used to map colors to a colormap (you can change it as needed)
 
-sc = ax.scatter(df["x"], df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
+sc = ax.scatter(Fsum["x"], df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
 #sc = ax.scatter(x,y,z,c=df["gradientValue"], cmap='plasma', marker='.',s=100)
 
 cbar = plt.colorbar(sc)
