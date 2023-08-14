@@ -22,7 +22,7 @@ df = pd.read_csv('gradient.csv')
 df.sort_values(by=['y'])
 
 
-scale = 5e-4
+scale = 6e-6
 #Extract the data from the DataFrame
 
 x = df['x']
@@ -36,7 +36,7 @@ Fsum = df.groupby(['x','z'])['gradientValue'].sum().reset_index()
 F = Fsum["gradientValue"]
 
 #Normalization
-F = (F-F.min())/(F.max()-F.min())
+#F = (F-F.min())/(F.max()-F.min())
 
 
 
@@ -49,7 +49,10 @@ ax = fig.add_subplot(111)
 # Scatter plot with colors based on the field values (F)
 # cmap='viridis' is used to map colors to a colormap (you can change it as needed)
 
-sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
+
+#sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
+sc = ax.scatter(Fsum["x"],Fsum["z"],c=F, cmap='plasma', marker='.',s=130)
+
 #sc = ax.scatter(x,y,z,c=df["gradientValue"], cmap='plasma', marker='.',s=100)
 
 cbar = plt.colorbar(sc)

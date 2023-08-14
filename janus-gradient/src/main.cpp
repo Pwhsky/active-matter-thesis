@@ -4,29 +4,42 @@
 #include <string>
 #include <vector>
 #include <fstream>
-
-
+#include <random>
 using namespace std;
 
 //Janus particle gradient computation:
+std::random_device rd;
+std::mt19937 gen(rd());
+
 
 
 //Constants:
 
-	const long double particleRadius        = 1.24*pow(10,-6);
+
+	const long double particleRadius        = 2*pow(10,-6);
+
 	const long double particleRadiusSquared = pow(particleRadius,2);
 	const long double pi	       		= 3.14159265358979323846;
-	const long double bounds 		= particleRadius*2;
+	const long double twoPi			= 2*pi;
+	const long double bounds 		= particleRadius*5;
+	const long double Intensity		= 200*pow(10,-3); // milliwatt laser
 	
+	const long double I0			= 2*Intensity/pow(bounds*2,2);
 	const long double alphaIron		= 2.43*pow(10,7);  //
-	
-	const long double ironC			= 73.0;
-	const long double silicaC		= 1.4;
-	const long double waterC		= 0.39;
-	const long double power			= 0.001; //1 mw
+	const int 	  nDeposits		= 10;
+	const long double kWater 		= 0.598; //W/m·K
+	const long double volumePerDeposit      = 4.1666*(10,-4);
+	const long double lambda		= particleRadius;  //wavelength of laser.
 	long double stepSize;
-	long double dx;
+	long double dv;
+	
+	
+struct Point{
+	long double x;
+	long double y;
+	long double z;
 
+};
 
 
 void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> z,vector<vector<vector<long double>>> field);
@@ -40,55 +53,30 @@ float fastSqrt(const float n)
    return (int(3) - n * u.f * u.f) * n * u.f * 0.5f;
 }
 
-long double getq(long double x,long double y, long double z, long double r) {
-	//The potential will vary depending on the 2 domains:
-	//water   r > particleRadius
-	//gold    r = particleRadius && z > 0
-	//silica  r = particleRadius
-	long double output = 0.0;
-
-	if (r >= particleRadiusSquared-stepSize && r <= particleRadiusSquared+stepSize && z >= 0.0){ //gold surface
-		//output = exp(-2*particleRadius/pow(w,2))/pow(w,2);
-		output = -alphaIron/ironC * power;
-		
-	}else if (r > particleRadiusSquared+stepSize){
-		output = -alphaIron/waterC * power/(pow((r-particleRadiusSquared),2));
-		
-	}else if(r<= particleRadiusSquared && z <=0 ) {
-		output = -alphaIron/silicaC * power;
-	}
+long double getq(long double x) {
+	//Compute 
+	long double I = I0 * (1+ cos(  twoPi*x/lambda));
 	
+	long double output = I/(volumePerDeposit*kWater);
 	return output;
 	
 }	
 
 
-long double integral(int ix, int iz, int iy, vector<long double> x,vector<long double> y, vector<long double> z){
+
+long double integral(long double x, long double y, long double z,vector<Point> deposits){
 	long double contributionSum = 0.0;
 
 
-	
-	//distance = r-r'
-	//Volume element = dxdydz
-		
-    	for (int i = 0; i<x.size(); i++){
-    			for(int j = 0; j<y.size(); j++){
-    				for(int k = 0; k<z.size(); k++){
-    				
-				
-					long double rPrim = x[i]*x[i] + z[k]*z[k] + y[j]*y[j];
-						
-					long double rDiff = x[ix]-x[i] + y[iy]+y[j] + z[iz]-z[k];
+    	for (int i = 0; i < deposits.size(); i++){
+    	
+    		long double distance = sqrt((x-deposits[i].x)*(x-deposits[i].x) + (y-deposits[i].y)*(y-deposits[i].y) + (z-deposits[i].z)*(z-deposits[i].z));
+    		
+		long double q = getq(deposits[i].x)/distance;
+		contributionSum -=  q;
+	}
 
-					long double distance =  sqrt(pow(x[ix]-x[i],2) + pow(z[iz]-z[k],2) + pow(y[iy]-y[j],2))  ; 
-					long double q = getq(x[i], y[j], z[k],rPrim);
-					
-					contributionSum -=    ( q*rDiff/(pow(distance,3))) *dx*dx*dx;
-							
-    			}
-    		}
-    	}
-    	return contributionSum/(4*pi);
+    	return dv*contributionSum;
 	
 	
 }
@@ -99,44 +87,56 @@ long double integral(int ix, int iz, int iy, vector<long double> x,vector<long d
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
-	
+	uniform_real_distribution<double> dis(0.0,1.0);
 	const long double resolution     = stof(argv[1]);
 	stepSize       			 = bounds/(resolution);
 	const long double coating        = stof(argv[2])*pi;
 	
-	dx	 = stepSize;
+	dv	 = stepSize*stepSize*stepSize;
 
-	//Fill list with location of gold coated points and write to csv.
+	cout<<"step size = " <<stepSize<<endl;
 
+
+	//Generate coordinates for FeO deposits:
+	vector<Point> deposits;
+	Point newPoint;
+	long double r,theta,phi;
+	r = particleRadius;
+	for(int i = 0; i < nDeposits; i++){
+		theta = dis(gen)*2*pi;
+		phi = dis(gen)*pi;
+		
+		newPoint.x = r*sin(theta)*cos(phi);
+		newPoint.y = r*sin(theta)*cos(phi);
+		newPoint.z = r*cos(theta);
+		deposits.push_back(newPoint);
+		
+		
+	}
 	
 	
 	
-		//Initialize space in cartesian coordinates
-	vector<long double> z;
-	for (long double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
-        	z.push_back(coordinate);
-   
-    	}
-	vector<long double> y = {0.0};
-	vector<long double> x = z;
 	
-
-
-
 	
-	//Initialize space:
-	vector<vector<vector<long double>>> field(x.size(), vector<vector<long double>>(y.size(), vector<long double>(z.size())));
- 	cout<<"Finished initialization"<<endl;
+	
+	//Initialize space in cartesian coordinates
+	 vector<long double> z;
+	 for (long double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
+         	z.push_back(coordinate);
+     	 }
+	 vector<long double> y = {0.0};
+	
+	 vector<long double> x = z;
+	 vector<vector<vector<long double>>> field(x.size(), vector<vector<long double>>(y.size(), vector<long double>(z.size())));
+ 	 cout<<"Finished initialization"<<endl;
  	
-		//Volume element = r*r*dr*dphi*dtheta 
-
-
+		
 		
     		for (int i = 0; i<x.size(); i++){
     			for(int j = 0; j<y.size(); j++){
     				for(int k = 0; k<z.size(); k++){
 					//For a given point in 3D space, compute the integral given by Agnese
-					field[i][j][k] = integral(i,j,k,x,y,z);
+					field[i][j][k] = integral(x[i],y[j],z[k],deposits);
     				}
     			}
     		}
@@ -254,7 +254,6 @@ void writeToCSV(vector<long double> x,vector<long double> y,vector<long double> 
     	outputFile.close();
 
 }
-
 
 
 
