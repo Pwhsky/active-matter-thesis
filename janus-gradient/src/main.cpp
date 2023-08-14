@@ -28,7 +28,7 @@ std::mt19937 gen(rd());
 	const long double alphaIron		= 2.43*pow(10,7);  //
 	const int 	  nDeposits		= 10;
 	const long double kWater 		= 0.598; //W/m·K
-	const long double volumePerDeposit      = 4.1666*(10,-4);
+	const long double volumePerDeposit      = 4.1666*(10,-4)/nDeposits;
 	const long double lambda		= particleRadius;  //wavelength of laser.
 	long double stepSize;
 	long double dv;
