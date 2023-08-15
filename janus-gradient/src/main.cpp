@@ -22,19 +22,21 @@ std::mt19937 gen(rd());
 	//Particle:
 	const long double particleRadius        = 2*pow(10,-6);
 	const long double particleRadiusSquared = pow(particleRadius,2);
-	const int 	  nDeposits		= 6500;
+	const int 	  nDeposits		= 5000;
 	const long double volumePerDeposit      = 4.1666*(10,-4)/nDeposits;
 	//const long double volumePerDeposit	= 4*pi*pow((100*pow(10,-9)),3)/3;
 	
+	const long double depositRadius		= pow(volumePerDeposit*3/(4*pi),-3);	
 	
 	//Simulation box:
 	const long double bounds 		= particleRadius*20; //40 microns for now
 	const long double kWater 		= 0.598; //W/m·K
+	const long double kSilica		= 1.1;  //W/m*K
 	      long double dv;
 	      long double stepSize;
 	      
 	//Laser:
-	const long double lambda		= 808*pow(10,-9);  //wavelength of laser. Keep above particleRadius generally
+	const long double lambda		= 10*pow(10,-9);  //wavelength of laser. Keep above particleRadius generally
 	const long double Intensity		= 100*pow(10,-3); // milliwatt laser
 	const long double I0			= 2*Intensity/pow(bounds*2,2);
 
@@ -55,6 +57,9 @@ float fastSqrt(const float n);
 inline long double integral(long double x, long double y, long double z,vector<Point> deposits){
 	long double contributionSum = 0.0;
 	long double q;
+	long double positionSquared = x*x + y*y + z*z;
+	
+	
     	for (int i = 0; i < deposits.size(); i++){
     		long double distance = sqrt((x-deposits[i].x)*(x-deposits[i].x) + 
     					    (y-deposits[i].y)*(y-deposits[i].y) +
@@ -63,13 +68,17 @@ inline long double integral(long double x, long double y, long double z,vector<P
     		
     		
     		
-    		q = ((I0 + I0*cos(twoPi*distance/lambda))/volumePerDeposit)/(distance*kWater);
+    			q = ((I0 + I0*cos(twoPi*distance/lambda))/volumePerDeposit*kWater)/(distance);
+    		
+    		
+    		
+    		
 		contributionSum -=  q;
 	}
     	return contributionSum*dv;
 }
 
-
+/*
 inline void generateDeposits(vector<Point> &deposits) {
 
 //Places out the deposits evenly according to fibonacci sphere.
@@ -86,6 +95,29 @@ inline void generateDeposits(vector<Point> &deposits) {
 		
 		deposits.push_back(newPoint);	
 	}
+}
+
+*/
+inline void generateDeposits(vector<Point> &deposits) {
+    // Places out the deposits evenly according to the Fibonacci sphere.
+    Point newPoint;
+    long double phi = M_PI * (3.0 - sqrt(5.0)); // Golden ratio constant
+    long double offset = 2.0 / nDeposits; // Offset to distribute points
+
+    for (int i = 0; i < nDeposits; i++) {
+        long double y = 1 - (i * offset); // y ranges from 1 to -1
+        long double radius = sqrt(1 - y * y);
+        
+        long double theta = phi * i; // Use golden ratio to distribute points
+        long double x = cos(theta) * radius * particleRadius;
+        long double z = sin(theta) * radius * particleRadius;
+
+        newPoint.x = x;
+        newPoint.y = y * particleRadius;
+        newPoint.z = z;
+
+        deposits.push_back(newPoint);
+    }
 }
 
 
