@@ -1,17 +1,18 @@
 
-#This is the software for simulating particles with phoretic interactions.
+# Program for simulating various properties of microparticles.
 
 
 #Requirements:
 Linux with G++, Pandas, Matplotlib, FFmpeg for movie creation
 
 #Luxury:
-CPU with > 4 cores 
+CPU with > 4 cores for parallelization
 
 
 
 
 #Instructions
-To run, select your cluster in the main.py sourcefile and simply run it with python3. 
-The output is a series of snapshots along with a movie. 
+
+For integral:
+To run: python3 main.py <resolution> 
 
