@@ -5,75 +5,71 @@ import time
 import subprocess
 import sys
 
+if len(sys.argv) != 3:
+	print("Arguments not given, defaulting to: \n resolution = 100,\n 2D representation \n")
+	resolution = "100" #100 is fast, 500 is slow loading in spyder.
+	representation = "2";
+else:
+	resolution 	       = sys.argv[1] #4000 = 151.648 seconds
+	representation         = str(sys.argv[2])
 
-resolution = sys.argv[1] #4000 = 151.648 seconds
-#coating    = sys.argv[2]
-
-#resolution = "50"
-coating =    "0.5"
 
 
-subprocess.run(["g++","main.cpp","-o","sim","-O4"])
-subprocess.run(["./sim",resolution,coating])
 
+
+print(" Starting simulation...\n")
+subprocess.run(["g++","main.cpp","-o","sim","-O4", "-fopenmp"])
+subprocess.run(["./sim",resolution,representation])
+
+tic = time.time()
 #%%
 #df = np.genfromtxt('gradient.csv',delimiter=',',skip_header=1)
 df = pd.read_csv('gradient.csv')
 df.sort_values(by=['y'])
 
 
-scale = 6e-6
+scale = 5e-6
 #Extract the data from the DataFrame
 
 x = df['x']
 y = df['y']
 z = df['z']
 
-#Sum the values to project a 3D image to a 2D image.
-Fsum = df.groupby(['x','z'])['gradientValue'].sum().reset_index()
-
-
-F = Fsum["gradientValue"]
-
-#Normalization
-#F = (F-F.min())/(F.max()-F.min())
-
-
-
-# Create a 3D scatter plot
-tic = time.time()
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
 # Scatter plot with colors based on the field values (F)
-# cmap='viridis' is used to map colors to a colormap (you can change it as needed)
 
+#If using full 3D:
+#if representation == "3":
+#	Fsum = df.groupby(['x','z'])['gradientValue'].sum().reset_index()
+#	F = Fsum["gradientValue"]
+#	sc = ax.scatter(Fsum["x"],Fsum["z"],c=F, cmap='plasma', marker='.',s=130)
+#else:
+sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
 
-#sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
-sc = ax.scatter(Fsum["x"],Fsum["z"],c=F, cmap='plasma', marker='.',s=130)
-
-#sc = ax.scatter(x,y,z,c=df["gradientValue"], cmap='plasma', marker='.',s=100)
-
-cbar = plt.colorbar(sc)
-ax.set_xlabel('X')
-
-ax.set_ylabel('Z')
 
 ax.set_facecolor('black')
-ax.set_yticklabels([])
-ax.set_xticklabels([])
+cbar = plt.colorbar(sc,label ="$\Delta T$" )
+
+ax.set_xlabel('X $\mu m$')
+ax.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+ax.set_xticklabels([-20,-10,0,10,20])
+
+ax.set_ylabel('Z $\mu m$')
+ax.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
+ax.set_yticklabels([min(z),min(z)/2,0,max(z)/2, max(z)])
 
 
+
+plt.title("FeO microparticle temperature gradient")
 
 #ax.set_xlim(-scale,scale)    #For slice representation
 #ax.set_ylim(-scale,scale) #For cube representation
-#ax.set_ylim(0,0)
-#ax.set_zlim(-scale,scale)
-# Show the plot
-plt. savefig("janus.png")
 
-
+# Save the plot
+plt.savefig("janus.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
 
