@@ -23,23 +23,24 @@ std::mt19937 gen(rd());
 	const long double particleRadius        = 2*pow(10,-6);
 	const long double particleRadiusSquared = pow(particleRadius,2);
 	const int 	  nDeposits		= 6500;
-	const long double volumePerDeposit    = 4.1666*(10,-4)/nDeposits;
-	//const long double volumePerDeposit	= 4*pi*pow((100*pow(10,-9)),3)/3;
-	const long double depositRadius		= pow(volumePerDeposit*3/(4*pi),-3);	
-	
+	//const long double volumePerDeposit    = 4.1666*(10,-4)/nDeposits;
+	const long double volumePerDeposit	= 4*pi*pow((100*pow(10,-9)),3)/3;
+	const long double depositRadius		= 70*pow(10,-9);	
+	const long double depositArea		= pi*pow(depositRadius,2);
 	//Simulation box:
 	const long double bounds 		= 5*pow(10,-6); //40 microns for now
 
-	const long double kWater 		= 0.598; //W/m·K
+	const long double volumetricHeatCapacity = 4.2*pow(10,6);
 	long double stepSize;
 	long double dv;
+	const long double alphaWater 		= 1.43*pow(10,-7);
 	const long double kSilica		= 1.1;  //W/m*K
 	
 	//Laser:
-	const long double lambda		= 808*pow(10,-9);  //wavelength of laser. Keep above particleRadius generally
-	const long double intensity		= 200*pow(10,-3); // milliwatt laser
-	const long double areaOfIllumination    = 20*pow(10,-6); 
-	const long double I0			= 2*intensity/(pi*pow(areaOfIllumination*2,2));
+	const long double lambda		= 400*pow(10,-9);  //wavelength of laser. Keep above particleRadius generally
+	const long double intensity		= 100*pow(10,-3); // milliwatt laser
+	const long double areaOfIllumination    = 40*pow(10,-6); 
+	const long double I0			= 2*intensity/(pow(areaOfIllumination*2,2));
 
 
 	
@@ -66,8 +67,8 @@ inline long double integral(long double x, long double y, long double z,vector<P
     					    (y-deposits[i].y)*(y-deposits[i].y) +
     					    (z-deposits[i].z)*(z-deposits[i].z));
   		
-    		q = ((I0 + I0*cos(twoPi/lambda))/volumePerDeposit*kWater)/(distance);
-		contributionSum -=  q;
+    		q = ((I0 + I0*cos(twoPi/lambda))*depositArea)/(distance*volumePerDeposit);
+		contributionSum +=  q;
 	}
     	return contributionSum*dv;
 }
