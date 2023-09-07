@@ -21,7 +21,7 @@ std::mt19937 gen(rd());
 
 //Particle:
 	constexpr long double particleRadius            	= 2*pow(10,-6);
-	constexpr int 	          nDeposits			      	= 600;			  //should be between 1500-5000 depending on deposit size.
+	constexpr int 	          nDeposits			      	= 1000;			  //should be between 1500-5000 depending on deposit size.
 //         const long double volumePerDeposit             = 4.1666*(10,-4)/nDeposits;
 	constexpr long double depositRadius			= 30*pow(10,-9);	
 	constexpr  long double volumePerDeposit		= 4*pi*pow((depositRadius),3)/3; 
@@ -34,9 +34,9 @@ std::mt19937 gen(rd());
 
 	
 //Laser:
-	constexpr long double lambda			= 100*pow(10,-9);  //wavelength of laser. 
+	constexpr long double lambda			= 8000*pow(10,-9);  //wavelength of laser. 
 	constexpr long double intensity			= 100*pow(10,-3); // milliwatt laser
-	constexpr  long double areaOfIllumination     = 40*pow(10,-6); 
+	constexpr  long double areaOfIllumination      = 40*pow(10,-6); 
 	constexpr long double I0				= 2*intensity/(pow(areaOfIllumination*2,2));
 	
 
@@ -47,8 +47,8 @@ struct Point{
 	long double z;
 };
 
-
-inline void writeToCSV(const vector<long double>& x, const vector<long double>& y, const vector<long double>& z, vector<vector<vector<long double>>>& field);
+inline void writeDepositToCSV(vector<Point> &deposits);
+inline void writeFieldToCSV(const vector<long double>& x, const vector<long double>& y, const vector<long double>& z, vector<vector<vector<long double>>>& field);
 
 float fastSqrt(const float n);
 
@@ -72,10 +72,10 @@ inline long double integral(long double x, long double y, long double z,vector<P
   		
 		contributionSum +=  inv_sqrt_distance1;
 	}
-    	return contributionSum*dv*qTerm;
+    	return contributionSum*dv*qTerm/(4*pi*0.606);
 }
 
-
+/* OLD VERSION, USING FIBONACCI SPHERE.
 inline void generateDeposits(vector<Point> &deposits) {
     // Places out the deposits evenly according to the Fibonacci sphere.
     const long double phi     = M_PI * (3.0 - sqrt(5.0)); // Golden ratio constant
@@ -93,6 +93,23 @@ inline void generateDeposits(vector<Point> &deposits) {
         
     }
 }
+*/
+//New version, sample uniform random numbers untill all are within radius.
+
+inline void generateDeposits(vector<Point> &deposits) {
+	size_t depositCounter = 0;
+    	uniform_real_distribution<double> dis(-1.0,1.0);
+    	while (depositCounter < nDeposits) {
+    		long double x = dis(gen)*particleRadius;
+    		long double y = dis(gen)*particleRadius;
+    		long double z = dis(gen)*particleRadius;
+   		if ((x*x + y*y + z*z )< particleRadius*particleRadius){
+    			deposits.emplace_back(Point{x,y,z});
+    		   	depositCounter +=1;
+    		}
+    	}
+}
+
 
 
 
@@ -118,13 +135,9 @@ int main(int argc, char** argv) {
      	}
      	const vector<long double> z = spaceVector;
 	const vector<long double> x = spaceVector;
-	const vector<long double> y = {0.0};
+	 vector<long double> y = {0.0};
 	      
-	if (stof(argv[2]) == 3) {
-		const vector<long double> y = z;
-	}
-
-     	 
+	
     const int totalIterations = x.size() * y.size() * z.size();
     int currentIteration = 0;
      	 
@@ -163,8 +176,8 @@ int main(int argc, char** argv) {
     	}
     
 	cout<<"Simulation finished, writing to csv..."<<endl;
-	writeToCSV(x,y,z,field);
-		
+	writeFieldToCSV(x,y,z,field);
+	writeDepositToCSV(deposits);	
 
 	///////////////////Compute elapsed time/////////////////////////
    		auto endTimer = std::chrono::high_resolution_clock::now();
@@ -177,7 +190,7 @@ int main(int argc, char** argv) {
 }
 
 
-void writeToCSV(const std::vector<long double>& x, const std::vector<long double>& y, const std::vector<long double>& z, std::vector<std::vector<std::vector<long double>>>& field) {
+void writeFieldToCSV(const std::vector<long double>& x, const std::vector<long double>& y, const std::vector<long double>& z, std::vector<std::vector<std::vector<long double>>>& field) {
 
     std::ofstream outputFile("gradient.csv");
     outputFile << "x,y,z,gradientValue" << std::endl;
@@ -190,6 +203,18 @@ void writeToCSV(const std::vector<long double>& x, const std::vector<long double
 	       	}
 	 }
     
+    outputFile.close();
+}
+
+void writeDepositToCSV(vector<Point> &deposits) {
+
+    std::ofstream outputFile("deposits.csv");
+    outputFile << "x,y,z" << std::endl;
+    
+	for (int i = 0; i < nDeposits; i++) {
+	        outputFile << deposits[i].x << "," << deposits[i].y  << "," << deposits[i].z  << std::endl;
+	}
+
     outputFile.close();
 }
 

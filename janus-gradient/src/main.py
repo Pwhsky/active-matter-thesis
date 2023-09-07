@@ -46,7 +46,7 @@ ax = fig.add_subplot(111)
 #	Fsum = df.groupby(['x','z'])['gradientValue'].sum().reset_index()
 #	F = Fsum["gradientValue"]
 #	sc = ax.scatter(Fsum["x"],Fsum["z"],c=F, cmap='plasma', marker='.',s=130)
-#else:
+
 sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
 
 
