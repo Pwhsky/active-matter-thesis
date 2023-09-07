@@ -55,11 +55,11 @@ cbar = plt.colorbar(sc,label ="$\Delta T$" )
 
 ax.set_xlabel('X $\mu m$')
 ax.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-ax.set_xticklabels([min(x)*1e6,min(x)/2*1e6,0,max(x)/2*1e6, max(x)*1e6])
+ax.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)])
 
 ax.set_ylabel('Z $\mu m$')
 ax.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
-ax.set_yticklabels([min(z)*1e6,min(z)/2*1e6,0,max(z)/2*1e6, max(z)*1e6])
+ax.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)])
 
 
 
