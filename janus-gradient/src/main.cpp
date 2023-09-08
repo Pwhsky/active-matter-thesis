@@ -7,38 +7,30 @@
 #include <random>
 #include <omp.h>
 using namespace std;
-
-//Janus particle gradient computation:
 std::random_device rd;
 std::mt19937 gen(rd());
 
 //Water conductivity = 0.606 
 
-//Constants:
-	constexpr long double pi	       			       = 3.14159265358979323846;
-	constexpr long double twoPi			                = 2*3.14159265358979323846;
-
-
-//Particle:
-	constexpr long double particleRadius            	= 2*pow(10,-6);
-	constexpr int 	          nDeposits			      	= 1000;			  //should be between 1500-5000 depending on deposit size.
-//         const long double volumePerDeposit             = 4.1666*(10,-4)/nDeposits;
-	constexpr long double depositRadius			= 30*pow(10,-9);	
-	constexpr  long double volumePerDeposit		= 4*pi*pow((depositRadius),3)/3; 
-	constexpr  long double depositArea			= pi*pow(depositRadius,2);
-//Simulation box:
-	constexpr long double bounds 		   		= 5*pow(10,-6); //40 microns for now
+	
+	constexpr long double pi	       	 = 3.14159265358979323846;
+	constexpr long double twoPi		 = 2*3.14159265358979323846;
+	constexpr long double particleRadius     = 2*pow(10,-6);
+	constexpr int 	      nDeposits		 = 300;		
+	constexpr long double depositRadius	 = 30*pow(10,-9);	
+	
+	constexpr long double volumePerDeposit	 = 4*pi*pow((depositRadius),3)/3; 
+	constexpr long double depositArea	 = pi*pow(depositRadius,2);
+	
+	
+	constexpr long double bounds 		 = 5*pow(10,-6);     //Area to simulate
+	constexpr long double lambda		 = 8000*pow(10,-9);  //wavelength of laser. 
+	constexpr long double intensity		 = 100*pow(10,-3);   // milliwatt laser
+	constexpr long double areaOfIllumination = 40*pow(10,-6);    //How much area the laser is distributed on.
+	constexpr long double I0		 = 2*intensity/(pow(areaOfIllumination*2,2));
+	
 	long double stepSize;
 	long double dv;
-	constexpr long double alphaWater 			= 1.43*pow(10,-7);
-
-	
-//Laser:
-	constexpr long double lambda			= 8000*pow(10,-9);  //wavelength of laser. 
-	constexpr long double intensity			= 100*pow(10,-3); // milliwatt laser
-	constexpr  long double areaOfIllumination      = 40*pow(10,-6); 
-	constexpr long double I0				= 2*intensity/(pow(areaOfIllumination*2,2));
-	
 
 	
 struct Point{
@@ -47,25 +39,29 @@ struct Point{
 	long double z;
 };
 
+inline void generateDeposits(vector<Point> &deposits);
 inline void writeDepositToCSV(vector<Point> &deposits);
-inline void writeFieldToCSV(const vector<long double>& x, const vector<long double>& y, const vector<long double>& z, vector<vector<vector<long double>>>& field);
+inline void writeFieldToCSV(const vector<long double>& x, 
+			    const vector<long double>& y,
+			    const vector<long double>& z,
+			    vector<vector<vector<long double>>>& field);
+			    
+			    
 
-float fastSqrt(const float n);
+inline  long double integral(long double x, long double y, long double z,vector<Point> deposits){
 
 
-inline long double integral(long double x, long double y, long double z,vector<Point> deposits){
-	long double positionFromCenter = sqrt(x*x + y*y + z*z);
-	long double laserTerm 		         = I0 + I0*cos(twoPi*x/lambda);
+	
+	long double laserTerm 		        = I0 + I0*cos(twoPi*x/lambda);
 	long double qTerm 			= laserTerm*depositArea/(volumePerDeposit);
 	
-	float contributionSum = 0.0;
-	float q = 0;
+	long double contributionSum = 0.0;
+	long double q = 0;
 
-	float inv_sqrt_distance1;
+	long double inv_sqrt_distance1;
 	//float distance2;
-	int i;
-
-    	for (i = 0; i < deposits.size(); i++){
+	
+    	for (size_t i = 0; i < deposits.size(); i++){
     		inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + 
     					    (y-deposits[i].y)*(y-deposits[i].y) +
     					    (z-deposits[i].z)*(z-deposits[i].z));
@@ -73,41 +69,6 @@ inline long double integral(long double x, long double y, long double z,vector<P
 		contributionSum +=  inv_sqrt_distance1;
 	}
     	return contributionSum*dv*qTerm/(4*pi*0.606);
-}
-
-/* OLD VERSION, USING FIBONACCI SPHERE.
-inline void generateDeposits(vector<Point> &deposits) {
-    // Places out the deposits evenly according to the Fibonacci sphere.
-    const long double phi     = M_PI * (3.0 - sqrt(5.0)); // Golden ratio constant
-    const long double offset = 2.0 / nDeposits; // Offset to distribute points
-
-    for (int i = 0; i < nDeposits; i++) {
-    const    long double y = 1 - (i * offset); // y ranges from 1 to -1
-    const    long double radius = sqrt(1 - y * y);
-        
-     const   long double theta = phi * i; // Use golden ratio to distribute points
-     const   long double x = cos(theta) * radius * particleRadius;
-     const   long double z = sin(theta) * radius * particleRadius;
-     
-     deposits.emplace_back(Point{x,y*particleRadius,z});
-        
-    }
-}
-*/
-//New version, sample uniform random numbers untill all are within radius.
-
-inline void generateDeposits(vector<Point> &deposits) {
-	size_t depositCounter = 0;
-    	uniform_real_distribution<double> dis(-1.0,1.0);
-    	while (depositCounter < nDeposits) {
-    		long double x = dis(gen)*particleRadius;
-    		long double y = dis(gen)*particleRadius;
-    		long double z = dis(gen)*particleRadius;
-   		if ((x*x + y*y + z*z )< particleRadius*particleRadius){
-    			deposits.emplace_back(Point{x,y,z});
-    		   	depositCounter +=1;
-    		}
-    	}
 }
 
 
@@ -145,6 +106,8 @@ int main(int argc, char** argv) {
 	 vector<vector<vector<long double>>> field(x.size(), vector<vector<long double>>(y.size(), vector<long double>(z.size())));
  	 cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
 
+
+	//As the integral is a triple nested for-loop, parallelization is in order...
  	#pragma omp parallel for
     	for (int i = 0; i<x.size(); i++){
     		for(int j = 0; j<y.size(); j++){
@@ -154,7 +117,7 @@ int main(int argc, char** argv) {
 				
                			currentIteration++;
 
-              			  // Calculate progress percentage
+              			  // Calculate progress percentage so that the user has something to look at
               			if(currentIteration % 500 == 0) {
              			  	float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
 
@@ -189,7 +152,27 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-
+inline void generateDeposits(vector<Point> &deposits) {
+	size_t depositCounter = 0;
+    	uniform_real_distribution<double> phi(0.0,twoPi);
+    	uniform_real_distribution<double> costheta(-1,1);
+    	uniform_real_distribution<double> u(0,1);
+	
+    	while (depositCounter < nDeposits) {
+    		long double theta = acos(costheta(gen));
+    		long double r 	  = particleRadius* pow(u(gen),-3);
+    	
+    		long double x = r*sin(theta) * cos(phi(gen));
+    		long double y = r*sin(theta) * sin(phi(gen));
+    		long double z = r*cos(theta);
+   		if ((x*x + y*y + z*z )< particleRadius*particleRadius){
+    			deposits.emplace_back(Point{x,y,z});
+    		   	depositCounter +=1;
+    		}
+    		
+    		
+    	}
+}
 void writeFieldToCSV(const std::vector<long double>& x, const std::vector<long double>& y, const std::vector<long double>& z, std::vector<std::vector<std::vector<long double>>>& field) {
 
     std::ofstream outputFile("gradient.csv");
@@ -218,3 +201,30 @@ void writeDepositToCSV(vector<Point> &deposits) {
     outputFile.close();
 }
 
+
+//         const long double volumePerDeposit             = 4.1666*(10,-4)/nDeposits;
+
+
+
+
+/* OLD VERSION, USING FIBONACCI SPHERE.
+inline void generateDeposits(vector<Point> &deposits) {
+    // Places out the deposits evenly according to the Fibonacci sphere.
+    const long double phi     = M_PI * (3.0 - sqrt(5.0)); // Golden ratio constant
+    const long double offset = 2.0 / nDeposits; // Offset to distribute points
+
+    for (int i = 0; i < nDeposits; i++) {
+    const    long double y = 1 - (i * offset); // y ranges from 1 to -1
+    const    long double radius = sqrt(1 - y * y);
+        
+     const   long double theta = phi * i; // Use golden ratio to distribute points
+     const   long double x = cos(theta) * radius * particleRadius;
+     const   long double z = sin(theta) * radius * particleRadius;
+     
+     deposits.emplace_back(Point{x,y*particleRadius,z});
+        
+    }
+}
+
+//New version, sample uniform random numbers untill all are within radius.
+*/

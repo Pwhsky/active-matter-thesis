@@ -4,6 +4,7 @@ import pandas as pd
 import time 
 import subprocess
 import sys
+from matplotlib.patches import Circle
 
 if len(sys.argv) != 3:
 	print("Arguments not given, defaulting to: \n resolution = 100,\n 2D representation \n")
@@ -26,18 +27,10 @@ tic = time.time()
 #df = np.genfromtxt('gradient.csv',delimiter=',',skip_header=1)
 df = pd.read_csv('gradient.csv')
 df.sort_values(by=['y'])
-
-
-scale = 5e-6
-#Extract the data from the DataFrame
-
 x = df['x']
 y = df['y']
 z = df['z']
 
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
 
 # Scatter plot with colors based on the field values (F)
 
@@ -46,8 +39,11 @@ ax = fig.add_subplot(111)
 #	Fsum = df.groupby(['x','z'])['gradientValue'].sum().reset_index()
 #	F = Fsum["gradientValue"]
 #	sc = ax.scatter(Fsum["x"],Fsum["z"],c=F, cmap='plasma', marker='.',s=130)
+fig = plt.figure()
+ax = fig.add_subplot(111)
 
-sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130)
+
+sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130,label='_nolegend_')
 
 
 ax.set_facecolor('black')
@@ -61,15 +57,19 @@ ax.set_ylabel('Z $\mu m$')
 ax.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 ax.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)])
 
+#overlay with particle radius
+circle = Circle((0,0), 2e-6)
+circle.set(fill=False,linestyle='--',alpha=0.2)
+ax.add_patch(circle)
 
 
-plt.title("FeO microparticle temperature gradient")
-
-#ax.set_xlim(-scale,scale)    #For slice representation
-#ax.set_ylim(-scale,scale) #For cube representation
+#Legend
+plt.legend([ "Particle boundary"],loc='lower left')
 
 # Save the plot
+plt.title("FeO microparticle temperature gradient")
 plt.savefig("janus.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
+subprocess.run(["python3","densityplot.py"])
 
