@@ -16,7 +16,7 @@ std::mt19937 gen(rd());
 	constexpr long double pi	       	 = 3.14159265358979323846;
 	constexpr long double twoPi		 = 2*3.14159265358979323846;
 	constexpr long double particleRadius     = 2*pow(10,-6);
-	constexpr int 	      nDeposits		 = 300;		
+	constexpr int 	      nDeposits		 = 5000;		
 	constexpr long double depositRadius	 = 30*pow(10,-9);	
 	
 	constexpr long double volumePerDeposit	 = 4*pi*pow((depositRadius),3)/3; 
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 inline void generateDeposits(vector<Point> &deposits) {
 	size_t depositCounter = 0;
     	uniform_real_distribution<double> phi(0.0,twoPi);
-    	uniform_real_distribution<double> costheta(-1,1);
+    	uniform_real_distribution<double> costheta(0,1);
     	uniform_real_distribution<double> u(0,1);
 	
     	while (depositCounter < nDeposits) {
