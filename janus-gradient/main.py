@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import os
 import time 
 import subprocess
 import sys
@@ -19,8 +20,10 @@ else:
 
 
 print(" Starting simulation...\n")
-subprocess.run(["g++","main.cpp","-o","sim","-O4", "-fopenmp"])
+os.chdir("src")
+subprocess.run(["g++","functions.cpp","main.cpp","-o","sim","-O4", "-fopenmp"])
 subprocess.run(["./sim",resolution,representation])
+
 
 tic = time.time()
 #%%
@@ -68,8 +71,9 @@ plt.legend([ "Particle boundary"],loc='lower left')
 
 # Save the plot
 plt.title("FeO microparticle temperature gradient")
-plt.savefig("janus.png")
+os.chdir("..")
+plt.savefig("gradient.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
-subprocess.run(["python3","densityplot.py"])
+subprocess.run(["python3","plotDensity.py"])
 

@@ -1,12 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import time 
 import subprocess
-
-import sys
 from matplotlib.patches import Circle
+import os
 #TODO: MAKE A HEATMAP DENSITY PLOT THAT LOOKS SICK AF
+os.chdir("src")
 df = pd.read_csv('deposits.csv')
 
 
@@ -44,4 +43,5 @@ ax[1].add_patch(circle2)
 fig.legend([circle1, circle2], ["Particle boundary"], loc='lower left')
 fig.suptitle(f"Distribution for {len(df)} deposits")
 # Save the figure as an image
-plt.savefig("densityyz.jpg")
+os.chdir("..")
+plt.savefig("density.jpg")
