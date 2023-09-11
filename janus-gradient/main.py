@@ -35,42 +35,41 @@ y = df['y']
 z = df['z']
 
 
-# Scatter plot with colors based on the field values (F)
 
-#If using full 3D:
-#if representation == "3":
-#	Fsum = df.groupby(['x','z'])['gradientValue'].sum().reset_index()
-#	F = Fsum["gradientValue"]
-#	sc = ax.scatter(Fsum["x"],Fsum["z"],c=F, cmap='plasma', marker='.',s=130)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
+x_bins = np.linspace(-3.5e-6,3.5e-6,400)
+y_bins = np.linspace(-3.5e-6,3.5e-6,400)
 
-sc = ax.scatter(df["x"],df["z"],c=df["gradientValue"], cmap='plasma', marker='.',s=130,label='_nolegend_')
+H, xedges, yedges = np.histogram2d(x, z, bins = [x_bins, y_bins], weights = df['gradientValue'])
+H_counts, xedges, yedges = np.histogram2d(x, z, bins = [x_bins, y_bins]) 
+H = H/H_counts
+
 
 
 ax.set_facecolor('black')
-cbar = plt.colorbar(sc,label ="$\Delta T$" )
+#cbar = plt.colorbar(sc,label ="$\Delta T$" )
+ax.set_xlabel('X [m]')
 
-ax.set_xlabel('X $\mu m$')
-ax.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-ax.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)])
 
-ax.set_ylabel('Z $\mu m$')
-ax.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
-ax.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)])
+ax.set_ylabel('Z [m]')
+
 
 #overlay with particle radius
 circle = Circle((0,0), 2e-6)
 circle.set(fill=False,linestyle='--',alpha=0.2)
 ax.add_patch(circle)
-
-
 #Legend
 plt.legend([ "Particle boundary"],loc='lower left')
-
 # Save the plot
 plt.title("FeO microparticle temperature gradient")
+plt.imshow(H.T, origin='lower',  cmap='plasma',
+            extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
+plt.colorbar()
+
+
+
 os.chdir("..")
 plt.savefig("gradient.png")
 toc = time.time()

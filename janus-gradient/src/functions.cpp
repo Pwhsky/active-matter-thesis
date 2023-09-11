@@ -1,8 +1,5 @@
 #include "functions.h"
-#include <iostream>
-#include <chrono>
 #include <cmath>
-#include <string>
 #include <vector>
 #include <fstream>
 #include <random>
@@ -17,7 +14,7 @@ std::mt19937 gen(rd());
 void generateDeposits(vector<Point> &deposits) {
 	size_t depositCounter = 0;
     	uniform_real_distribution<double> phi(0.0,twoPi);
-    	uniform_real_distribution<double> costheta(0,1);
+    	uniform_real_distribution<double> costheta(0.0,1);
     	uniform_real_distribution<double> u(0,1);
 	
     	while (depositCounter < nDeposits) {

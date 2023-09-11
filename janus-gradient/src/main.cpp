@@ -1,9 +1,6 @@
-#include <iostream>
 #include <chrono>
 #include <cmath>
-#include <string>
 #include <vector>
-#include <fstream>
 #include <omp.h>
 #include "functions.h"
 
@@ -14,19 +11,17 @@ using namespace std;
 
 
 inline  long double integral(long double x, long double y, long double z,vector<Point> deposits){
-
-
 	
 	long double laserTerm 	    = I0 + I0*cos(twoPi*x/lambda);
 	long double qTerm 	    = laserTerm*depositArea/(volumePerDeposit);
-	long double contributionSum = 0.0;
-	long double q               = 0.0;
+	long double contributionSum    = 0.0;
+	long double q                  = 0.0;
 
 
     	for (size_t i = 0; i < deposits.size(); i++){
     		long double inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + 
-    					    (y-deposits[i].y)*(y-deposits[i].y) +
-    					    (z-deposits[i].z)*(z-deposits[i].z));
+    					      (y-deposits[i].y)*(y-deposits[i].y) +
+    					      (z-deposits[i].z)*(z-deposits[i].z));
   		
 		contributionSum +=  inv_sqrt_distance1;
 	}
