@@ -4,16 +4,17 @@
 #include <omp.h>
 #include "functions.h"
 
+
 using namespace std;
 
 	long double stepSize;
 	long double dv;
-
+	int 	   nDeposits;	
 
 inline  long double integral(long double x, long double y, long double z,vector<Point> deposits){
 	
-	long double laserTerm 	    = I0 + I0*cos(twoPi*x/lambda);
-	long double qTerm 	    = laserTerm*depositArea/(volumePerDeposit);
+	long double laserTerm 	    = I0 + I0*cos(twoPi*(x)/lambda);
+	long double absorbtionTerm     = laserTerm*depositArea/(volumePerDeposit);
 	long double contributionSum    = 0.0;
 	long double q                  = 0.0;
 
@@ -25,7 +26,7 @@ inline  long double integral(long double x, long double y, long double z,vector<
   		
 		contributionSum +=  inv_sqrt_distance1;
 	}
-    	return contributionSum*dv*qTerm/(4*pi*waterConductivity);
+    	return contributionSum*dv*absorbtionTerm/(4*pi*waterConductivity);
 }
 
 
@@ -34,13 +35,14 @@ inline  long double integral(long double x, long double y, long double z,vector<
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
 
-	stepSize = bounds/(stof(argv[1]));
-        dv       = stepSize*stepSize*stepSize; //volume element for integral
+	stepSize  = bounds/(stof(argv[1]));
+	nDeposits = stof(argv[2]);
+         dv        = stepSize*stepSize*stepSize; //volume element for integral
 
 
         ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
 	vector<Point> deposits;
-	generateDeposits(deposits);
+	generateDeposits(deposits,nDeposits);
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
 	 vector< long double> spaceVector;
@@ -49,7 +51,8 @@ int main(int argc, char** argv) {
       	 }
      	 const vector<long double> z = spaceVector;
 	 const vector<long double> x = spaceVector;
-	 vector<long double>       y = {0.0};
+	 vector<long double>       y = spaceVector;
+	 
 	 vector<vector<vector<long double>>> field(x.size(), vector<vector<long double>>(y.size(), vector<long double>(z.size())));      
  	 cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
  	//////////////////////////////////////////////////////////////////////////////////////////////
