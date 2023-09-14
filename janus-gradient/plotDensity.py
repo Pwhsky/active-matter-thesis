@@ -4,7 +4,7 @@ import pandas as pd
 import subprocess
 from matplotlib.patches import Circle
 import os
-#TODO: MAKE A HEATMAP DENSITY PLOT THAT LOOKS SICK AF
+
 os.chdir("src")
 df = pd.read_csv('deposits.csv')
 

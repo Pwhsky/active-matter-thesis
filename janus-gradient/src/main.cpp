@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
 	stepSize  = bounds/(stof(argv[1]));
 	nDeposits = stof(argv[2]);
-         dv        = stepSize*stepSize*stepSize; //volume element for integral
+        dv        = stepSize*stepSize*stepSize; //volume element for integral
 
 
         ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
@@ -52,17 +52,18 @@ int main(int argc, char** argv) {
      	 const vector<long double> z = spaceVector;
 	 const vector<long double> x = spaceVector;
 	 vector<long double>       y = spaceVector;
+	 int nSteps = x.size();
 	 
-	 vector<vector<vector<long double>>> field(x.size(), vector<vector<long double>>(y.size(), vector<long double>(z.size())));      
+	 vector<vector<vector<long double>>> field(nSteps, vector<vector<long double>>(nSteps, vector<long double>(nSteps)));      
  	 cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
  	//////////////////////////////////////////////////////////////////////////////////////////////
  	////////////////////////  INTEGRAL ///////////////////////////////////////////////////////////
-	const int totalIterations = x.size() * y.size() * z.size();
+	const int totalIterations = nSteps * nSteps * nSteps;
    	int currentIteration = 0;
  	#pragma omp parallel for
-    	for (int i = 0; i<x.size(); i++){
-    		for(int j = 0; j<y.size(); j++){
-    			for(int k = 0; k<z.size(); k++){
+    	for (size_t i = 0; i < nSteps; i++){
+    		for(size_t j = 0; j<nSteps; j++){
+    			for(size_t k = 0; k<nSteps; k++){
 
 				field[i][j][k] = integral(x[i],y[j],z[k],deposits);
                			currentIteration++;
