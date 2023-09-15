@@ -48,15 +48,16 @@ void writeFieldToCSV(const std::vector<long double>& x,
 
 	std::ofstream outputFile("gradient.csv");
 	outputFile << "x,y,z,gradientValue" << "\n";
-    	
-	for (int i = 0; i < x.size(); i++) {
-	    	for (int j = 0; j < y.size(); j++) {
-	         	for (int k = 0; k < z.size(); k++){
-	                  	outputFile << x[i] << "," << y[j] << "," << z[k] << "," << field[i][j][k] << "\n";
+
+	for (size_t i = 0; i < x.size(); i++) {
+	    	for (size_t j = 0; j < y.size(); j++) {
+	         	for (size_t k = 0; k < z.size(); k++){
+
+              			outputFile << x[i] << "," << y[j] << "," << z[k] << "," << field[i][j][k] << "\n";
 	    	        }
 	       	}
 	 }
-    
+	
 	outputFile.close();
 }
 
@@ -64,7 +65,7 @@ void writeDepositToCSV(vector<Point> &deposits) {
     std::ofstream outputFile("deposits.csv");
     outputFile << "x,y,z" << "\n";
     	
-	for (int i = 0; i < size(deposits); i++) {
+	for (size_t i = 0; i < size(deposits); i++) {
 	        outputFile << deposits[i].x << "," << deposits[i].y  << "," << deposits[i].z  << "\n";
 	}
 
