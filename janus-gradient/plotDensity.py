@@ -44,4 +44,5 @@ fig.legend([circle1, circle2], ["Particle boundary"], loc='lower left')
 fig.suptitle(f"Distribution for {len(df)} deposits")
 # Save the figure as an image
 os.chdir("..")
+os.chdir("figures")
 plt.savefig("density.jpg")

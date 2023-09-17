@@ -7,48 +7,53 @@ import time
 import subprocess
 import sys
 from matplotlib.patches import Circle
-from cython_functions import accelerate_histogram2d, gradient_cython
+from cython_functions import histogram2d_cython, gradient_cython
 
-if len(sys.argv) != 3:
-	print("Arguments not given, defaulting to: \n resolution = 200,\n nDeposits = 600 \n")
-	resolution = "200" 
-	nDeposits = "600"
-else:
-	resolution 	         = sys.argv[1] 
-	nDeposits                = str(sys.argv[2])
+def dfToNumpy(column):
+    return column.to_numpy()
+
+def parseArgs():
+	if len(sys.argv) != 4:
+		print("Arguments not given, defaulting to:  resolution = 200, nDeposits = 600, generateData = False")
+		resolution   = "150" 
+		nDeposits    = "600"
+		generateData = "false"
+	else:
+		resolution 	         = sys.argv[1] 
+		nDeposits                = str(sys.argv[2])
+		generateData		 = sys.argv[3]
+	
+	return resolution,nDeposits,generateData
 
 
-
-
-
-print(" Starting simulation...\n")
-os.chdir("src")
-
-
-
-
-subprocess.run(["g++","functions.cpp","main.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
-subprocess.run(["./sim",resolution,nDeposits])
 
 
 tic = time.time()
-#%%
-#df = np.genfromtxt('gradient.csv',delimiter=',',skip_header=1)
+os.chdir("src")
+
+if (generateData == "true"):
+	
+	print("Generating new data...\n")
+	subprocess.run(["g++","functions.cpp","main.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["./sim",resolution,nDeposits])
+else:
+	print("No new data will be generated, starting plotting... \n")
+
 
 df = pd.read_csv("gradient.csv",engine="pyarrow")
 df.sort_values(by=['z'])
 
 
+
+
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-    # Submit each Dask Series for concurrent execution
+    #Parallel data loading
     futures = [
         executor.submit(dfToNumpy, df['x']),
         executor.submit(dfToNumpy, df['y']),
         executor.submit(dfToNumpy, df['z']),
         executor.submit(dfToNumpy, df['gradientValue'])
     ]
-
-    # Wait for all tasks to complete and retrieve the results
     x = futures[0].result()
     y = futures[1].result()
     z = futures[2].result()
@@ -89,18 +94,21 @@ plt.legend([ "Particle boundary"],loc='lower left')
 # Save the plot
 plt.title(f"$\Delta$T for {nDeposits} deposits")
 ax.set_facecolor('black')
-cbar = plt.colorbar()
-cbar.set_label(f"$\Delta$T")
 plt.imshow(H.T, origin='lower',  cmap='plasma',
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
+cbar = plt.colorbar()
+cbar.set_label(f"$\Delta$T")
+
 
 
 
 
 
 os.chdir("..")
+os.chdir("figures")
 plt.savefig("gradient.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
+os.chdir("..")
 subprocess.run(["python3","plotDensity.py"])
 

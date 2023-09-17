@@ -101,6 +101,7 @@ plt.imshow(grad_x, origin='lower',  cmap='plasma',
 cbar = plt.colorbar()
 cbar.set_label(f"[T $L^{-2}$]")
 os.chdir("..")
+os.chdir("figures")
 plt.savefig("gradientContour.pdf",format="pdf")
 
 toc = time.time()
