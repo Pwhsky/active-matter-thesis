@@ -18,13 +18,16 @@ inline  long double integral(long double x, long double y, long double z,vector<
 	long double contributionSum    = 0.0;
 	long double q                  = 0.0;
 
-
-    	for (size_t i = 0; i < deposits.size(); i++){
-    		long double inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + 
-    					      (y-deposits[i].y)*(y-deposits[i].y) +
-    					      (z-deposits[i].z)*(z-deposits[i].z));
+	if (x*x + y*y + z*z > particleRadiusSquared){
+	
+	
+    		for (size_t i = 0; i < deposits.size(); i++){
+    			long double inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + 
+    						      (y-deposits[i].y)*(y-deposits[i].y) +
+    						      (z-deposits[i].z)*(z-deposits[i].z));
   		
-		contributionSum +=  inv_sqrt_distance1;
+			contributionSum +=  inv_sqrt_distance1;
+		}
 	}
     	return contributionSum*dv*absorbtionTerm/(4*pi*waterConductivity);
 }

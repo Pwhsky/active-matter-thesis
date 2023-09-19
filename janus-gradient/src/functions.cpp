@@ -22,7 +22,7 @@ std::string to_string_with_precision(long double value, int precision = 15) {
 void generateDeposits(vector<Point> &deposits, int nDeposits) {
 	size_t depositCounter = 0;
     	uniform_real_distribution<double> phi(0.0,twoPi);
-    	uniform_real_distribution<double> costheta(0.0,1);
+    	uniform_real_distribution<double> costheta(-0.05,1);
     	uniform_real_distribution<double> u(0,1);
 	
     	while (depositCounter < nDeposits) {

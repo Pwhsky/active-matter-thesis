@@ -51,15 +51,15 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
     grad = futures[3].result()
 
 
-limit = 5e-6
+limit = 2.2e-6
 
 
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-x_bins = np.linspace(-limit,limit,200)
-y_bins = np.linspace(-limit,limit,200)
+x_bins = np.linspace(-limit,limit,300)
+y_bins = np.linspace(-limit,limit,300)
 
 
 
@@ -72,8 +72,9 @@ H = transpose_cython(H)
 
 dx = xedges[1] - xedges[0]
 dy = yedges[1] - yedges[0]
-#grad_x, grad_y = np.gradient(H, dx, dy,edge_order=2)
+#grad_x, grad_y = np.gradient(H, dx, dy)
 grad_x, grad_y = gradient_cython(H, dx, dy)
+
 
 X_grad, Y_grad = np.meshgrid(xedges[0:-1], yedges[0:-1])
 
@@ -92,19 +93,20 @@ ax.set_facecolor('black')
 #Legend
 plt.legend([ "Particle boundary"],loc='lower left')
 # Save the plot
-plt.title(f"$∇_z$($\Delta$T) ")
+plt.title(f" $∇_z$($\Delta$T)  ")
 
 
 
-plt.imshow(grad_x, origin='lower',  cmap='plasma',
+plt.imshow( abs(grad_x*-1), origin='lower',  cmap='plasma',
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 cbar = plt.colorbar()
-cbar.set_label(f"[T $L^{-2}$]")
+cbar.set_label(f"[T $L^{-1}$]")
 os.chdir("..")
 os.chdir("figures")
 plt.savefig("gradientContour.pdf",format="pdf")
 
 toc = time.time()
+os.chdir("..")
 print("Plotting finished after " + str(round(toc-tic)) + " s")
 subprocess.run(["python3","plotDensity.py"])
 print("Program finished successfully :) \n")

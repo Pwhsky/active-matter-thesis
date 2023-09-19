@@ -8,7 +8,7 @@ import subprocess
 import sys
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
-imageBounds = 5e-6
+imageBounds = 2.2e-6
 
 
 def dfToNumpy(column):
