@@ -27,7 +27,7 @@ void generateDeposits(vector<Point> &deposits, int nDeposits) {
 	
     	while (depositCounter < nDeposits) {
     		long double theta = acos(costheta(gen));
-    		long double r 	  = particleRadius* pow(u(gen),-3);
+    		long double r 	  = particleRadius* u(gen);
     	
     		long double x = r*sin(theta) * cos(phi(gen));
     		long double y = r*sin(theta) * sin(phi(gen));
@@ -49,9 +49,9 @@ void writeFieldToCSV(const std::vector<long double>& x,
 	std::ofstream outputFile("gradient.csv");
 	outputFile << "x,y,z,gradientValue" << "\n";
 
-	for (size_t i = 0; i < x.size(); i++) {
-	    	for (size_t j = 0; j < y.size(); j++) {
-	         	for (size_t k = 0; k < z.size(); k++){
+	for (size_t i = 0; i < x.size()-1; i+=2) {
+	    	for (size_t j = 0; j < y.size()-1; j+=2) {
+	         	for (size_t k =0 ; k < z.size()-1; k+=2){
 
               			outputFile << x[i] << "," << y[j] << "," << z[k] << "," << field[i][j][k] << "\n";
 	    	        }

@@ -9,30 +9,30 @@ import sys
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
 
-
+pi = 3.14159
+imageBounds 	   = float(sys.argv[4])*1e-6
+spatialPeriodicity = float(sys.argv[5])*1e-9
 
 def dfToNumpy(column):
     return column.to_numpy()
 
 def parseArgs():
-	if len(sys.argv) != 4:
-		userInput    = input("Would you like to generate new data? true/false \n")
-		resolution 	         = sys.argv[1] 
-		nDeposits                  = str(sys.argv[2])
-		generateData 		= userInput
-	else:
-		resolution 	         = sys.argv[1] 
-		nDeposits                  = str(sys.argv[2])
-		generateData		= sys.argv[3]
-	return resolution,nDeposits,generateData
-def generateNewData():
 	
+
+	generateData    	 = str(sys.argv[3])
+	resolution 	         = sys.argv[1] 
+	nDeposits                = str(sys.argv[2])
+
+	return resolution,nDeposits,generateData
+	
+def generateNewData():
 	print("Generating new data...\n")
 	subprocess.run(["g++","functions.cpp","main.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
-	subprocess.run(["./sim",resolution,nDeposits])
+	subprocess.run(["./sim",resolution,nDeposits,sys.argv[4], sys.argv[5]])
 
 def loadData():
 	df = pd.read_csv("gradient.csv",engine="pyarrow")
+	depositDF = pd.read_csv('deposits.csv')
 	df.sort_values(by=['z'])
 
 	with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
@@ -47,34 +47,61 @@ def loadData():
 	y    = futures[1].result()
 	z    = futures[2].result()
 	grad = futures[3].result()
-	return x,y,z,grad
+	return x,y,z,grad,depositDF
+def generateLaserProfile(spatialPeriodicity):
+
+	x = np.linspace(-imageBounds,imageBounds, 200)
+	y = np.linspace(-imageBounds,imageBounds, 200)
+	X,Y = np.meshgrid(x,y)	
+	Z = 1+ (np.cos(2*pi*X/spatialPeriodicity))
+	return X,Y,Z
+	
 	
 def generateFigure(imageBounds):
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
+	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
+	for axis in ax:
+		axis.axis('equal')
+		axis.set_xlim(-imageBounds,imageBounds)
+		axis.set_ylim(-imageBounds,imageBounds)
+		axis.set_xlabel('X $\mu m$')
+		axis.set_ylabel('Z $\mu m$')
+		
+		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
+		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+		axis.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)])
+		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)])
 	
+	ax[2].set_ylabel('Y $\mu m$')	
+	ax[1].grid(True)	
+	circle2 = Circle((0, 0), 2e-6)
+	circle2.set(fill=False, linestyle='--', alpha=0.2)
+	ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
+	ax[1].add_patch(circle2)
+
 	x_bins = np.linspace(-imageBounds,imageBounds,200)
 	y_bins = np.linspace(-imageBounds,imageBounds,200)
 	H, xedges, yedges = histogram2d_cython(x, z, grad, x_bins, y_bins)
 
-
 	#Add circle
 	circle = Circle((0,0), 2e-6)
 	circle.set(fill=False,linestyle='--',alpha=0.2)
-	ax.add_patch(circle)
+	ax[0].add_patch(circle)
 	
-	#Labels & Legend
-	ax.set_xlabel('X [m]')
-	ax.set_ylabel('Z [m]')	
-	plt.legend([ "Particle boundary"],loc='lower left')
-	plt.title(f"$\Delta$T for {nDeposits} deposits")
-	ax.set_facecolor('black')
+	#Labels & Legend	
+	fig.legend([ "Particle boundary"],loc='lower left')
+	fig.suptitle(f"$\Delta$T for {nDeposits} deposits, Position of deposits, Laser profile")
+	#plt.title(f"$\Delta$T for {nDeposits} deposits")
+	
 	
 	#Colorbar & imshow
-	plt.imshow(H.T, origin='lower',  cmap='plasma',
+	im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
-	cbar = plt.colorbar()
+	cbar = plt.colorbar(im,ax=ax[0])
 	cbar.set_label(f"$\Delta$T")
+	
+	X,Y,Z = generateLaserProfile(spatialPeriodicity)
+	ax[2].contourf(X,Y,Z,50,cmap="gray")
+	
 
 #Main() below:
 os.chdir("src")
@@ -87,8 +114,8 @@ else:
 	
 tic = time.time()
 
-x,y,z,grad = loadData()
-imageBounds = 2.3e-6
+x,y,z,grad,depositDF = loadData()
+
 generateFigure(imageBounds)
 
 os.chdir("..")
@@ -96,7 +123,7 @@ os.chdir("figures")
 plt.savefig("gradient.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
-os.chdir("..")
-subprocess.run(["python3","plotDensity.py"])
+#os.chdir("..")
+#subprocess.run(["python3","plotDensity.py"])
 
 

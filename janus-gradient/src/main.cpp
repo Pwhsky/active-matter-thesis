@@ -3,13 +3,14 @@
 #include <vector>
 #include <omp.h>
 #include "functions.h"
-
+#include <cstring>
 
 using namespace std;
-
+ 	long double bounds;
+	long double lambda;
 	long double stepSize;
 	long double dv;
-	int 	   nDeposits;	
+	int 	    nDeposits;	
 
 inline  long double integral(long double x, long double y, long double z,vector<Point> deposits){
 	
@@ -37,12 +38,14 @@ inline  long double integral(long double x, long double y, long double z,vector<
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
-
+	bounds    = stold(argv[3])* pow(10,-6);
+	
 	stepSize  = bounds/(stof(argv[1]));
 	nDeposits = stof(argv[2]);
         dv        = stepSize*stepSize*stepSize; //volume element for integral
-
-
+        
+	// 
+	lambda	  = stold(argv[4])  * pow(10,-9);
         ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
 	vector<Point> deposits;
 	generateDeposits(deposits,nDeposits);
