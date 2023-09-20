@@ -5,19 +5,19 @@
 #include <vector>
 #include <cmath>
 
-	constexpr long double pi	      	 = 3.14159265358979323846;
+	constexpr long double pi	      		 = 3.14159265358979323846;
 	constexpr long double twoPi		 = 2*3.14159265358979323846;
 	constexpr long double particleRadius   	 = 2    *pow(10,-6);
 	constexpr long double particleRadiusSquared   = particleRadius*particleRadius;
-	constexpr long double depositRadius	 = 30   *pow(10,-9);	
+	constexpr long double depositRadius	 	 = 30   *pow(10,-9);	
 	constexpr long double volumePerDeposit	 = 4*pi *pow((depositRadius),3)/3; 
-	constexpr long double depositArea	 = 2*pi *pow(depositRadius,2); 
+	constexpr long double depositArea	 	 = 2*pi *pow(depositRadius,2); 
 	
-	constexpr long double bounds 		 = 2.2    *pow(10,-6);  //Area to simulate
+	constexpr long double bounds 		 = 2.3    *pow(10,-6);  //Area to simulate
 	constexpr long double lambda		 = 8000 *pow(10,-9);  //spatial periodicity! 
 	constexpr long double intensity		 = 100  *pow(10,-3);  //milliwatt laser
-	constexpr long double areaOfIllumination = 40   *pow(10,-6);  //How much area the laser is distributed on.
-	constexpr long double I0		 = 2*intensity/(pow(areaOfIllumination*2,2));
+	constexpr long double areaOfIllumination 	 = 40   *pow(10,-6);  //How much area the laser is distributed on.
+	constexpr long double I0		 	 = 2*intensity/(pow(areaOfIllumination*2,2));
 	constexpr long double waterConductivity	 = 0.606;
 struct Point{
 	long double x;

@@ -8,7 +8,7 @@ import subprocess
 import sys
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
-imageBounds = 2.2e-6
+
 
 
 def dfToNumpy(column):
@@ -17,13 +17,13 @@ def dfToNumpy(column):
 def parseArgs():
 	if len(sys.argv) != 4:
 		userInput    = input("Would you like to generate new data? true/false \n")
-		resolution   = "150" 
-		nDeposits    = "600"
-		generateData = userInput
+		resolution 	         = sys.argv[1] 
+		nDeposits                  = str(sys.argv[2])
+		generateData 		= userInput
 	else:
 		resolution 	         = sys.argv[1] 
-		nDeposits                = str(sys.argv[2])
-		generateData		 = sys.argv[3]
+		nDeposits                  = str(sys.argv[2])
+		generateData		= sys.argv[3]
 	return resolution,nDeposits,generateData
 def generateNewData():
 	
@@ -49,7 +49,7 @@ def loadData():
 	grad = futures[3].result()
 	return x,y,z,grad
 	
-def generateFigure():
+def generateFigure(imageBounds):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	
@@ -88,7 +88,8 @@ else:
 tic = time.time()
 
 x,y,z,grad = loadData()
-generateFigure()
+imageBounds = 2.3e-6
+generateFigure(imageBounds)
 
 os.chdir("..")
 os.chdir("figures")
