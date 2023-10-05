@@ -12,7 +12,7 @@ using namespace std;
 std::random_device rd;
 std::mt19937 gen(rd());
 
-std::string to_string_with_precision(long double value, int precision = 15) {
+std::string to_string_with_precision(double value, int precision = 15) {
     std::ostringstream out;
     out << std::fixed << std::setprecision(precision) << value;
     return out.str();
@@ -26,12 +26,12 @@ void generateDeposits(vector<Point> &deposits, int nDeposits) {
     	uniform_real_distribution<double> u(0.5,1);
 	
     	while (depositCounter < nDeposits) {
-    		long double theta = acos(costheta(gen));
-    		long double r 	  = particleRadius* u(gen);
+    		double theta = acos(costheta(gen));
+    		double r 	  = particleRadius* u(gen);
     	
-    		long double x = r*sin(theta) * cos(phi(gen));
-    		long double y = r*sin(theta) * sin(phi(gen));
-    		long double z = r*cos(theta);
+    		double x = r*sin(theta) * cos(phi(gen));
+    		double y = r*sin(theta) * sin(phi(gen));
+    		double z = r*cos(theta);
    		if ((x*x + y*y + z*z )< particleRadius*particleRadius){
     			deposits.emplace_back(Point{x,y,z});
     		   	depositCounter +=1;
@@ -40,17 +40,17 @@ void generateDeposits(vector<Point> &deposits, int nDeposits) {
     		
     	}
 }
-void writeFieldToCSV(const std::vector<long double>& x, 
-		     const std::vector<long double>& y, 
-		     const std::vector<long double>& z, 
-		     std::vector<std::vector<std::vector<long double>>>& field)
+void writeFieldToCSV(const std::vector<double>& x, 
+		     const std::vector<double>& y, 
+		     const std::vector<double>& z, 
+		     std::vector<std::vector<std::vector<double>>>& field)
 		     {
 
 	std::ofstream outputFile("gradient.csv");
 	outputFile << "x,y,z,gradientValue" << "\n";
 
 	for (size_t i = 0; i < x.size()-1; i+=2) {
-	    	for (size_t j = 0; j < y.size()-1; j+=2) {
+	    	for (size_t j = 0; j < y.size(); j++) {
 	         	for (size_t k =0 ; k < z.size()-1; k+=2){
 
               			outputFile << x[i] << "," << y[j] << "," << z[k] << "," << field[i][j][k] << "\n";

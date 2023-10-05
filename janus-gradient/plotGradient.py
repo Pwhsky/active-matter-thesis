@@ -29,7 +29,7 @@ def parseArgs():
 	
 def generateNewData():
 	print("Generating new data...\n")
-	subprocess.run(["g++","functions.cpp","main.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","mainGradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",resolution,nDeposits,sys.argv[4], sys.argv[5]])
 
 def loadData():
@@ -60,7 +60,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	
 def generateFigure(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"$\Delta$T for {nDeposits} deposits, $\Lambda$ = {sys.argv[5]}nm",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {sys.argv[5]} nm"] 
+	axisTitles = [f"gradient of $\Delta$T for {nDeposits} deposits, $\Lambda$ = {sys.argv[5]}nm",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {sys.argv[5]} nm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
@@ -131,7 +131,7 @@ generateFigure(imageBounds)
 
 os.chdir("..")
 os.chdir("figures")
-plt.savefig("gradient.png")
+plt.savefig("gradientZ.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
 #os.chdir("..")

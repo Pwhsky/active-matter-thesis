@@ -5,7 +5,6 @@
 #include "functions.h"
 #include <cstring>
 
-
 using namespace std;
  	double bounds;
 	double lambda;
@@ -50,20 +49,26 @@ int main(int argc, char** argv) {
         
 	// 
 	lambda	  = stold(argv[4])  * pow(10,-9);
-	
         ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
 	vector<Point> deposits;
 	generateDeposits(deposits,nDeposits);
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
 	 vector< double> spaceVector;
-	 for (double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
+	 double coordinate;
+	 for (coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
           	 spaceVector.push_back(coordinate);
       	 }
+      	 
+      	 vector<double> y;
+      	 for ( coordinate = 0; coordinate <= bounds; coordinate += 2*stepSize) {
+          	 y.push_back(coordinate);
+      	 }
+      	 
      	 const vector<double> z = spaceVector;
 	 const vector<double> x = spaceVector;
-	 //vector<double>	y = spaceVector;
-	 vector<double>       y = {0.0};
+	// vector<double>	y = spaceVector;
+	// vector<double>       y = {0.0};
 	 
 	 
 	 int nSteps = x.size();
@@ -72,16 +77,21 @@ int main(int argc, char** argv) {
  	 cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
  	//////////////////////////////////////////////////////////////////////////////////////////////
  	////////////////////////  INTEGRAL ///////////////////////////////////////////////////////////
-	const int totalIterations = nSteps*nSteps;
+	const int totalIterations = nSteps*nSteps*y.size();
    	size_t currentIteration = 0;
+   	//X gradient:
  	#pragma omp parallel for
-    	for (size_t i = 0; i < nSteps; i++){
+    	for (size_t i = 1; i < nSteps-1; i++){
     		for(size_t j = 0; j<y.size(); j++){
     			for(size_t k = 0; k<nSteps; k++){
     			
     				//Check if outside particle:
-			if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared){
-				field[i][j][k] = integral(x[i],y[j],z[k],deposits);
+			if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
+			
+				double back    = integral(x[i+1],y[j],z[k],deposits);
+				double forward = integral(x[i-1],y[j],z[k],deposits);
+				double difference = (forward - back)/(2*stepSize);
+				field[i][j][k] = difference;
                			
        			 }
 				currentIteration++;
@@ -100,11 +110,49 @@ int main(int argc, char** argv) {
 			}
     		}
     	}
+    	/*
+    	//Z gradient:
+ 	#pragma omp parallel for
+    	for (size_t i = 0; i < nSteps; i++){
+    		for(size_t j = 0; j<y.size(); j++){
+    			for(size_t k = 1; k<nSteps-1; k++){
+    			
+    				//Check if outside particle:
+			if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
+			
+				double back    = integral(x[i],y[j],z[k+1],deposits);
+				double forward = integral(x[i],y[j],z[k-1],deposits);
+				double difference = (forward - back)/(2*stepSize);
+				field[i][j][k] += difference;
+               			
+       			 }
+				currentIteration++;
+			
+              			// Calculate progress percentage so that the user has something to look at
+              			if(currentIteration % 500 == 0) {
+             			  	float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
+
+               				 // Print progress bar
+               				 #pragma omp critical
+               				 {
+                			 		cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
+                	  	 	 		cout.flush();
+                			 	}
+              			}
+			}
+    		}
+    	}
+    	*/
+    	
+    	
     	//////////////////////////////////////////////////////////////////
     	//////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<endl;
 	writeFieldToCSV(x,y,z,field);
 	writeDepositToCSV(deposits);	
+	
+	
+	
 	//////////////////////////////////////////////////////////////////
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
    		auto endTimer = std::chrono::high_resolution_clock::now();

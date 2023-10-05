@@ -5,27 +5,26 @@
 #include "functions.h"
 #include <cstring>
 
-
 using namespace std;
- 	double bounds;
-	double lambda;
-	double stepSize;
-	double dv;
+ 	long double bounds;
+	long double lambda;
+	long double stepSize;
+	long double dv;
 	int 	    nDeposits;	
 
-inline  double integral(double x, double y, double z,vector<Point> deposits){
+inline  long double integral(long double x, long double y, long double z,vector<Point> deposits){
 	
-	double laserTerm 	         = I0 + I0*cos(twoPi*(x)/lambda);
-	double absorbtionTerm          = laserTerm*depositArea/(volumePerDeposit);
-	double contributionSum 	= 0.0;
-	double q                	= 0.0;
+	long double laserTerm 	         = I0 + I0*cos(twoPi*(x)/lambda);
+	long double absorbtionTerm          = laserTerm*depositArea/(volumePerDeposit);
+	long double contributionSum 	= 0.0;
+	long double q                	= 0.0;
 
 	
 	
 		
 				
     		for (size_t i = 0; i < deposits.size(); i++){
-    			double inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + 
+    			long double inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + 
     						      (y-deposits[i].y)*(y-deposits[i].y) +
     						      (z-deposits[i].z)*(z-deposits[i].z));
   		
@@ -46,29 +45,28 @@ int main(int argc, char** argv) {
 	
 	stepSize  = bounds/(stof(argv[1]));
 	nDeposits = stof(argv[2]);
-         dv        = stepSize*stepSize*stepSize; //volume element for integral
+        dv        = stepSize*stepSize*stepSize; //volume element for integral
         
 	// 
 	lambda	  = stold(argv[4])  * pow(10,-9);
-	
         ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
 	vector<Point> deposits;
 	generateDeposits(deposits,nDeposits);
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
-	 vector< double> spaceVector;
-	 for (double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
+	 vector< long double> spaceVector;
+	 for (long double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
           	 spaceVector.push_back(coordinate);
       	 }
-     	 const vector<double> z = spaceVector;
-	 const vector<double> x = spaceVector;
-	 //vector<double>	y = spaceVector;
-	 vector<double>       y = {0.0};
+     	 const vector<long double> z = spaceVector;
+	 const vector<long double> x = spaceVector;
+	 vector<long double>	y = spaceVector;
+	 //vector<long double>       y = {0.0};
 	 
 	 
 	 int nSteps = x.size();
 	 
-	 vector<vector<vector<double>>> field(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));      
+	 vector<vector<vector<long double>>> field(nSteps, vector<vector<long double>>(nSteps, vector<long double>(nSteps)));      
  	 cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
  	//////////////////////////////////////////////////////////////////////////////////////////////
  	////////////////////////  INTEGRAL ///////////////////////////////////////////////////////////
