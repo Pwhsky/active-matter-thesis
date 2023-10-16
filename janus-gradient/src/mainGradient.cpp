@@ -10,7 +10,8 @@ using namespace std;
 	double lambda;
 	double stepSize;
 	double dv;
-	int 	    nDeposits;	
+	int 	nDeposits;	
+	int	nSteps;
 
 inline  double integral(double x, double y, double z,vector<Point> deposits){
 	
@@ -35,8 +36,8 @@ inline  double integral(double x, double y, double z,vector<Point> deposits){
 	
     	return contributionSum*dv*absorbtionTerm/(4*pi*waterConductivity);
 }
-
-
+void computeGradientZ(vector<vector<vector<double>>> field, vector<double> x,  vector<double> y, vector<double> z);
+vector<Point> deposits;
 
 
 int main(int argc, char** argv) {
@@ -50,36 +51,37 @@ int main(int argc, char** argv) {
 	// 
 	lambda	  = stold(argv[4])  * pow(10,-9);
         ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
-	vector<Point> deposits;
+	
 	generateDeposits(deposits,nDeposits);
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
-	 vector< double> spaceVector;
+	 vector< double> linspace;
 	 double coordinate;
 	 for (coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
-          	 spaceVector.push_back(coordinate);
+          	 linspace.push_back(coordinate);
       	 }
       	 
-      	 vector<double> y;
+      	/* vector<double> y;
       	 for ( coordinate = 0; coordinate <= bounds; coordinate += 2*stepSize) {
           	 y.push_back(coordinate);
       	 }
-      	 
-     	 const vector<double> z = spaceVector;
-	 const vector<double> x = spaceVector;
-	// vector<double>	y = spaceVector;
-	// vector<double>       y = {0.0};
+      	 */
+     	  vector<double> z = linspace;
+	  vector<double> x = linspace;
+	 // vector<double>	y = spaceVector;
+	  vector<double>       y = {0.0};
 	 
 	 
-	 int nSteps = x.size();
+	 nSteps = x.size();
 	 
 	 vector<vector<vector<double>>> field(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));      
  	 cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
  	//////////////////////////////////////////////////////////////////////////////////////////////
  	////////////////////////  INTEGRAL ///////////////////////////////////////////////////////////
-	const int totalIterations = nSteps*nSteps*y.size();
-   	size_t currentIteration = 0;
+    		const int totalIterations = nSteps*nSteps*y.size();
+   		size_t currentIteration = 0;
    	//X gradient:
+   	/*
  	#pragma omp parallel for
     	for (size_t i = 1; i < nSteps-1; i++){
     		for(size_t j = 0; j<y.size(); j++){
@@ -90,38 +92,6 @@ int main(int argc, char** argv) {
 			
 				double back    = integral(x[i+1],y[j],z[k],deposits);
 				double forward = integral(x[i-1],y[j],z[k],deposits);
-				double difference = (forward - back)/(2*stepSize);
-				field[i][j][k] = difference;
-               			
-       			 }
-				currentIteration++;
-			
-              			// Calculate progress percentage so that the user has something to look at
-              			if(currentIteration % 500 == 0) {
-             			  	float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
-
-               				 // Print progress bar
-               				 #pragma omp critical
-               				 {
-                			 		cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
-                	  	 	 		cout.flush();
-                			 	}
-              			}
-			}
-    		}
-    	}
-    	/*
-    	//Z gradient:
- 	#pragma omp parallel for
-    	for (size_t i = 0; i < nSteps; i++){
-    		for(size_t j = 0; j<y.size(); j++){
-    			for(size_t k = 1; k<nSteps-1; k++){
-    			
-    				//Check if outside particle:
-			if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
-			
-				double back    = integral(x[i],y[j],z[k+1],deposits);
-				double forward = integral(x[i],y[j],z[k-1],deposits);
 				double difference = (forward - back)/(2*stepSize);
 				field[i][j][k] += difference;
                			
@@ -143,8 +113,42 @@ int main(int argc, char** argv) {
     		}
     	}
     	*/
-    	
-    	
+    	//Z gradient:
+    	//computeGradientZ(field, x,  y, z);
+
+
+ 		#pragma omp parallel for
+ 	
+    		for (size_t i = 0; i < nSteps; i++){
+    			for(size_t j = 0; j < y.size(); j++){
+    				for(size_t k = 1; k<nSteps-1; k++){
+    			
+    				//Check if outside particle:
+				if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
+			
+					double back    = integral(x[i],y[j],z[k+1],deposits);
+					double forward = integral(x[i],y[j],z[k-1],deposits);
+					double difference = (forward - back)/(2*stepSize);
+					field[i][j][k] += difference;
+               			
+       				 }
+					currentIteration++;
+			
+              				// Calculate progress percentage so that the user has something to look at
+              				if(currentIteration % 500 == 0) {
+             				  	float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
+
+               					 // Print progress bar
+               					 #pragma omp critical
+               					 {
+                				 		cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
+                		  	 	 		cout.flush();
+                				 	}
+              				}
+				}
+    			}
+    		}
+    		
     	//////////////////////////////////////////////////////////////////
     	//////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<endl;
@@ -163,5 +167,41 @@ int main(int argc, char** argv) {
 	//////////////////END PROGRAM/////////////////////////////////////
 	return 0;
 }	
+
+void computeGradientZ(vector<vector<vector<double>>> field, vector<double> x,  vector<double> y, vector<double> z) {
+    		const int totalIterations = nSteps*nSteps*y.size();
+   		size_t currentIteration = 0;
+ 		#pragma omp parallel for
+ 	
+    		for (size_t i = 0; i < nSteps; i++){
+    			for(size_t j = 0; j<y.size(); j++){
+    				for(size_t k = 1; k<nSteps-1; k++){
+    			
+    				//Check if outside particle:
+				if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
+			
+					double back    = integral(x[i],y[j],z[k+1],deposits);
+					double forward = integral(x[i],y[j],z[k-1],deposits);
+					double difference = (forward - back)/(2*stepSize);
+					field[i][j][k] += difference;
+               			
+       				 }
+					currentIteration++;
+			
+              				// Calculate progress percentage so that the user has something to look at
+              				if(currentIteration % 500 == 0) {
+             				  	float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
+
+               					 // Print progress bar
+               					 #pragma omp critical
+               					 {
+                				 		cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
+                		  	 	 		cout.flush();
+                				 	}
+              				}
+				}
+    			}
+    		}
+    	}
 
 

@@ -15,7 +15,7 @@ using namespace std;
 
 inline  double integral(double x, double y, double z,vector<Point> deposits){
 	
-	double laserTerm 	         = I0 + I0*cos(twoPi*(x)/lambda);
+	double laserTerm 	         = I0 + I0*cos(twoPi*(x)/lambda + pi/2);
 	double absorbtionTerm          = laserTerm*depositArea/(volumePerDeposit);
 	double contributionSum 	= 0.0;
 	double q                	= 0.0;
