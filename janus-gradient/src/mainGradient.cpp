@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
 					double back    = integral(x[i],y[j],z[k+1],deposits);
 					double forward = integral(x[i],y[j],z[k-1],deposits);
 					double difference = (forward - back)/(2*stepSize);
-					field[i][j][k] += difference;
+					field[i][j][k] = -1*difference*25/1000; //normalize to kelvin/micrometer
                			
        				 }
 					currentIteration++;
@@ -168,40 +168,5 @@ int main(int argc, char** argv) {
 	return 0;
 }	
 
-void computeGradientZ(vector<vector<vector<double>>> field, vector<double> x,  vector<double> y, vector<double> z) {
-    		const int totalIterations = nSteps*nSteps*y.size();
-   		size_t currentIteration = 0;
- 		#pragma omp parallel for
- 	
-    		for (size_t i = 0; i < nSteps; i++){
-    			for(size_t j = 0; j<y.size(); j++){
-    				for(size_t k = 1; k<nSteps-1; k++){
-    			
-    				//Check if outside particle:
-				if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
-			
-					double back    = integral(x[i],y[j],z[k+1],deposits);
-					double forward = integral(x[i],y[j],z[k-1],deposits);
-					double difference = (forward - back)/(2*stepSize);
-					field[i][j][k] += difference;
-               			
-       				 }
-					currentIteration++;
-			
-              				// Calculate progress percentage so that the user has something to look at
-              				if(currentIteration % 500 == 0) {
-             				  	float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
-
-               					 // Print progress bar
-               					 #pragma omp critical
-               					 {
-                				 		cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
-                		  	 	 		cout.flush();
-                				 	}
-              				}
-				}
-    			}
-    		}
-    	}
 
 

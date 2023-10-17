@@ -9,6 +9,12 @@ import sys
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
 
+##IMPORTANT:
+#The units on the colorbar are kelvin divided by the step-size of the finite differences.
+#When resolution = 200 (for most simulations) that equals 25 nanometers!
+#Convert accordingly.
+
+
 pi = 3.14159
 circle1 = Circle((0, 0), 2e-6)
 circle1.set(fill=False, linestyle='--', alpha=0.2)
@@ -80,14 +86,14 @@ def generateFigure(imageBounds):
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 		
-		axis.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)])
-		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)])
+		axis.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
+		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 		if index == 0:
 			axis.add_patch(circles[index])
 			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
            			 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
-			cbar.set_label(f"∇T [K]")
+			cbar.set_label(f"K/μm")
 			axis.add_patch(circles[index])
 			
 		if index == 1:
@@ -102,7 +108,7 @@ def generateFigure(imageBounds):
 			
 		
 		index+=1
-
+	
 	#Labels & Legend	
 	fig.legend([ "Particle boundary"],loc='lower left')
 	fig.suptitle(f"Silica microparticle temperature gradient",fontsize=20)

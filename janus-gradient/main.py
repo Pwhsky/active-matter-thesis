@@ -55,12 +55,12 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	x   = np.linspace(-imageBounds*2,imageBounds*2, 200)
 	y   = np.linspace(-imageBounds*2,imageBounds*2, 200)
 	X,Y = np.meshgrid(x,y)	
-	Z = (1+ (np.cos(2*pi*X/spatialPeriodicity + pi/10)))/2
+	Z = (1+ (np.cos(2*pi*X/spatialPeriodicity)))/2
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"$\Delta$T for {nDeposits} deposits, $\Lambda$ = {sys.argv[5]}nm",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
+	axisTitles = [f"$\Delta$T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
@@ -78,8 +78,8 @@ def generateFigure(imageBounds):
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 		
-		axis.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)])
-		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)])
+		axis.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
+		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 		if index == 0:
 			axis.add_patch(circles[index])
 			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
