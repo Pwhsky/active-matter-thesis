@@ -17,7 +17,7 @@ circle2.set(fill=False,linestyle='--',alpha=0.2)
 
 imageBounds 	   = float(sys.argv[4])*1e-6
 spatialPeriodicity = float(sys.argv[5])*1e-9
-
+periodicity = float(sys.argv[5])/1000
 def dfToNumpy(column):
     return column.to_numpy()
 
@@ -55,19 +55,19 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	x   = np.linspace(-imageBounds*2,imageBounds*2, 200)
 	y   = np.linspace(-imageBounds*2,imageBounds*2, 200)
 	X,Y = np.meshgrid(x,y)	
-	Z = (1+ (np.cos(2*pi*X/spatialPeriodicity)))/2
+	Z = (1+ (np.cos(2*pi*X/spatialPeriodicity + pi/10)))/2
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"$\Delta$T for {nDeposits} deposits, $\Lambda$ = {sys.argv[5]}nm",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {sys.argv[5]} nm"] 
+	axisTitles = [f"$\Delta$T for {nDeposits} deposits, $\Lambda$ = {sys.argv[5]}nm",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
 	
 	index = 0
 	for axis in ax:
-		axis.set_title(axisTitles[index])
+		axis.set_title(axisTitles[index],fontsize=16)
 		axis.axis('equal')
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
@@ -103,7 +103,7 @@ def generateFigure(imageBounds):
 
 	#Labels & Legend	
 	fig.legend([ "Particle boundary"],loc='lower left')
-	fig.suptitle(f"Silica microparticle temperature gradient")
+	fig.suptitle(f"Silica microparticle temperature increase",fontsize=20)
 
 	
 	#Colorbar & imshow

@@ -18,6 +18,8 @@ circle2.set(fill=False,linestyle='--',alpha=0.2)
 imageBounds 	   = float(sys.argv[4])*1e-6
 spatialPeriodicity = float(sys.argv[5])*1e-9
 
+periodicity = float(sys.argv[5])/1000
+
 def dfToNumpy(column):
     return column.to_numpy()
 
@@ -60,14 +62,14 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	
 def generateFigure(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"gradient of $\Delta$T for {nDeposits} deposits, $\Lambda$ = {sys.argv[5]}nm",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {sys.argv[5]} nm"] 
+	axisTitles = [f"∇T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
 	
 	index = 0
 	for axis in ax:
-		axis.set_title(axisTitles[index])
+		axis.set_title(axisTitles[index],fontsize=16)
 		axis.axis('equal')
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
@@ -85,7 +87,7 @@ def generateFigure(imageBounds):
 			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
            			 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
-			cbar.set_label(f"$\Delta$T [K]")
+			cbar.set_label(f"∇T [K]")
 			axis.add_patch(circles[index])
 			
 		if index == 1:
@@ -103,7 +105,7 @@ def generateFigure(imageBounds):
 
 	#Labels & Legend	
 	fig.legend([ "Particle boundary"],loc='lower left')
-	fig.suptitle(f"Silica microparticle temperature gradient")
+	fig.suptitle(f"Silica microparticle temperature gradient",fontsize=20)
 
 	
 	#Colorbar & imshow
