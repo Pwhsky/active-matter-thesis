@@ -8,5 +8,7 @@ CPU with > 4 cores for parallelization
 
 
 For integral (janus gradient):
-  $ python3 main.py resolution 2
+  $ python3 main.py resolution deposits true/false bounds Periodicity
+
+commonly the parameters i choose are: python3 main.py 200 1000 true 2.3 80000
 
