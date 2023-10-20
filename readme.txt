@@ -1,7 +1,7 @@
 
 
 #Requirements:
-Linux with G++, Pandas, Matplotlib, FFmpeg for movie creation
+Linux with G++, Pandas, Matplotlib, FFmpeg for movie creation, pyarrow, and whatever other packages i forgot to list here that python will complain about
 
 #Luxury:
 CPU with > 4 cores for parallelization
