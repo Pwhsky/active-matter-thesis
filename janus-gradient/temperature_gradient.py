@@ -9,6 +9,12 @@ import sys
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
 
+##IMPORTANT:
+#The units on the colorbar are kelvin divided by the step-size of the finite differences.
+#When resolution = 200 (for most simulations) that equals 25 nanometers!
+#Convert accordingly.
+
+
 pi = 3.14159
 circle1 = Circle((0, 0), 2e-6)
 circle1.set(fill=False, linestyle='--', alpha=0.2)
@@ -17,7 +23,9 @@ circle2.set(fill=False,linestyle='--',alpha=0.2)
 
 imageBounds 	   = float(sys.argv[4])*1e-6
 spatialPeriodicity = float(sys.argv[5])*1e-9
+
 periodicity = float(sys.argv[5])/1000
+
 def dfToNumpy(column):
     return column.to_numpy()
 
@@ -29,7 +37,7 @@ def parseArgs():
 	
 def generateNewData():
 	print("Generating new data...\n")
-	subprocess.run(["g++","functions.cpp","main.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",resolution,nDeposits,sys.argv[4], sys.argv[5]])
 
 def loadData():
@@ -60,7 +68,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	
 def generateFigure(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"$\Delta$T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
+	axisTitles = [f"∇T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
@@ -85,7 +93,7 @@ def generateFigure(imageBounds):
 			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
            			 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
-			cbar.set_label(f"$\Delta$T [K]")
+			cbar.set_label(f"K/μm")
 			axis.add_patch(circles[index])
 			
 		if index == 1:
@@ -100,10 +108,10 @@ def generateFigure(imageBounds):
 			
 		
 		index+=1
-
+	
 	#Labels & Legend	
 	fig.legend([ "Particle boundary"],loc='lower left')
-	fig.suptitle(f"Silica microparticle temperature increase",fontsize=20)
+	fig.suptitle(f"Silica microparticle temperature gradient",fontsize=20)
 
 	
 	#Colorbar & imshow
@@ -131,7 +139,7 @@ generateFigure(imageBounds)
 
 os.chdir("..")
 os.chdir("figures")
-plt.savefig("temperatureIncrease.png")
+plt.savefig("temperatureGradient.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
 #os.chdir("..")

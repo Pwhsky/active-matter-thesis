@@ -8,10 +8,10 @@
 	constexpr double pi	      		 = 3.14159265358979323846;
 	constexpr double twoPi			 = 2*3.14159265358979323846;
 	constexpr double particleRadius   		 = 2    *pow(10,-6);
-	constexpr double particleRadiusSquared      = particleRadius*particleRadius;
-	constexpr double depositRadius	 	 = 30   *pow(10,-9);	
-	constexpr double volumePerDeposit		 = 4*pi *pow((depositRadius),3)/3; 
-	constexpr double depositArea	 	 = 2*pi *pow(depositRadius,2); 
+	constexpr double particleRadiusSquared    = particleRadius*particleRadius;
+	constexpr double depositRadius	 	      = 30   *pow(10,-9);	
+	constexpr double volumePerDeposit	      = 4*pi *pow((depositRadius),3)/3; 
+	constexpr double depositArea	 	      = 2*pi *pow(depositRadius,2); 
 	
 
 	constexpr double intensity		  	 = 100  *pow(10,-3);  //milliwatt laser

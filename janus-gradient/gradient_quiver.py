@@ -68,7 +68,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	
 def generateFigure(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"∇T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
+	axisTitles = [f"$∇T_r$ for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
@@ -90,10 +90,16 @@ def generateFigure(imageBounds):
 		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 		if index == 0:
 			axis.add_patch(circles[index])
-			quiver = ax[0].quiver(x[::48],z[::48],u[::48],w[::48],grad[::48],
-			headwidth=3,
-			cmap='plasma',
-			width=0.004)
+			#x y z u v w grad are all incrimented in steps of 3, so to subsample(fewer arrows),
+			#  your subsampling factor would need to be a multiple of 3, 48 for example.
+			subsampling_factor = 24
+			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
+							      u[::subsampling_factor],w[::subsampling_factor],
+								  grad[::subsampling_factor], 
+								headwidth=3,
+								cmap='plasma',
+								width=0.004,
+								pivot = 'tail')
 
 
 			cbar = plt.colorbar(quiver,ax=ax[0])
@@ -102,7 +108,7 @@ def generateFigure(imageBounds):
 			
 		if index == 1:
 			ax[1].grid(True)	
-			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=30)
+			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
 			axis.add_patch(circles[index])
 		if index == 2:
 			X,Y,Z = generateLaserProfile(spatialPeriodicity)
