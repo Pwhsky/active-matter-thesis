@@ -30,8 +30,8 @@ def dfToNumpy(column):
     return column.to_numpy()
 
 def parseArgs():
-	generateData    		= str(sys.argv[3])
-	resolution 	         = sys.argv[1] 
+	generateData    		   = str(sys.argv[3])
+	resolution 	               = sys.argv[1] 
 	nDeposits                  = str(sys.argv[2])
 	return resolution,nDeposits,generateData
 	
@@ -90,14 +90,19 @@ def generateFigure(imageBounds):
 		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 		if index == 0:
 			axis.add_patch(circles[index])
-			quiver = ax[0].quiver(x,z,u,w,grad,cmap='viridis',scale=0.002)
+			quiver = ax[0].quiver(x[::48],z[::48],u[::48],w[::48],grad[::48],
+			headwidth=3,
+			cmap='plasma',
+			width=0.004)
+
+
 			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm")
 			axis.add_patch(circles[index])
 			
 		if index == 1:
 			ax[1].grid(True)	
-			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
+			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=30)
 			axis.add_patch(circles[index])
 		if index == 2:
 			X,Y,Z = generateLaserProfile(spatialPeriodicity)
@@ -131,13 +136,11 @@ else:
 tic = time.time()
 print("Starting plotting...")
 x,y,z,grad,depositDF = loadData()
-grad_max = np.max(grad)
-
-
 norms = np.sqrt(x**2 + y**2 + z**2)
-u = x/norms
-v = y/norms
-w = z/norms
+#Scale the sizes with grad values
+u = x*grad
+w = z*grad
+
 
 
 #x_bins = np.linspace(-imageBounds,imageBounds,200)

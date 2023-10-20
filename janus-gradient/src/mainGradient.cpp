@@ -66,8 +66,8 @@ int main(int argc, char** argv) {
    
       vector<double> z = linspace;
 	  vector<double> x = linspace;
-	  y = linspace;
-	    // y = {0.0};
+	   //y= linspace;
+	     y = {0.0};
 	 
 	 
 	 nSteps = x.size();
