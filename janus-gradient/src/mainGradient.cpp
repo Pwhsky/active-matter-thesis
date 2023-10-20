@@ -6,10 +6,10 @@
 #include <cstring>
 
 using namespace std;
- 	double bounds;
-	double lambda;
-	double stepSize;
-	double dv;
+ 	double  bounds;
+	double  lambda;
+	double  stepSize;
+	double  dv;
 	int 	nDeposits;	
 	int	nSteps;
 
@@ -57,19 +57,17 @@ int main(int argc, char** argv) {
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
 	 vector< double> linspace;
 	 double coordinate;
+	 vector<double> y;
 	 for (coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
           	 linspace.push_back(coordinate);
-      	 }
+      }
+
       	 
-      	/* vector<double> y;
-      	 for ( coordinate = 0; coordinate <= bounds; coordinate += 2*stepSize) {
-          	 y.push_back(coordinate);
-      	 }
-      	 */
-     	  vector<double> z = linspace;
+   
+      vector<double> z = linspace;
 	  vector<double> x = linspace;
-	 // vector<double>	y = spaceVector;
-	  vector<double>       y = {0.0};
+	  y = linspace;
+	    // y = {0.0};
 	 
 	 
 	 nSteps = x.size();
@@ -81,11 +79,11 @@ int main(int argc, char** argv) {
     		const int totalIterations = nSteps*nSteps*y.size();
    		size_t currentIteration = 0;
    	//X gradient:
-   	/*
+   	
  	#pragma omp parallel for
     	for (size_t i = 1; i < nSteps-1; i++){
     		for(size_t j = 0; j<y.size(); j++){
-    			for(size_t k = 0; k<nSteps; k++){
+    			for(size_t k = 1; k<nSteps-1; k++){
     			
     				//Check if outside particle:
 			if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
@@ -93,7 +91,7 @@ int main(int argc, char** argv) {
 				double back    = integral(x[i+1],y[j],z[k],deposits);
 				double forward = integral(x[i-1],y[j],z[k],deposits);
 				double difference = (forward - back)/(2*stepSize);
-				field[i][j][k] += difference;
+				field[i][j][k] = pow((difference*25/1000),2);
                			
        			 }
 				currentIteration++;
@@ -112,25 +110,25 @@ int main(int argc, char** argv) {
 			}
     		}
     	}
-    	*/
+    	
     	//Z gradient:
     	//computeGradientZ(field, x,  y, z);
 
 
  		#pragma omp parallel for
  	
-    		for (size_t i = 0; i < nSteps; i++){
+    		for (size_t i = 1; i < nSteps-1; i++){
     			for(size_t j = 0; j < y.size(); j++){
     				for(size_t k = 1; k<nSteps-1; k++){
     			
     				//Check if outside particle:
 				if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
 			
-					double back    = integral(x[i],y[j],z[k+1],deposits);
-					double forward = integral(x[i],y[j],z[k-1],deposits);
+					double back       = integral(x[i],y[j],z[k+1],deposits);
+					double forward    = integral(x[i],y[j],z[k-1],deposits);
 					double difference = (forward - back)/(2*stepSize);
-					field[i][j][k] = -1*difference*25/1000; //normalize to kelvin/micrometer
-               			
+					field[i][j][k]    += pow((difference*25/1000),2); //normalize to kelvin/micrometer
+					field[i][j][k]    = sqrt(field[i][j][k]);
        				 }
 					currentIteration++;
 			

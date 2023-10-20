@@ -131,7 +131,7 @@ generateFigure(imageBounds)
 
 os.chdir("..")
 os.chdir("figures")
-plt.savefig("gradient.png")
+plt.savefig("temperatureIncrease.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
 #os.chdir("..")

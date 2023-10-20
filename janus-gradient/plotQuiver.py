@@ -90,9 +90,8 @@ def generateFigure(imageBounds):
 		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 		if index == 0:
 			axis.add_patch(circles[index])
-			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
-           			 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
-			cbar = plt.colorbar(im,ax=ax[0])
+			quiver = ax[0].quiver(x,z,u,w,grad,cmap='viridis',scale=0.002)
+			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm")
 			axis.add_patch(circles[index])
 			
@@ -132,14 +131,23 @@ else:
 tic = time.time()
 print("Starting plotting...")
 x,y,z,grad,depositDF = loadData()
-x_bins = np.linspace(-imageBounds,imageBounds,200)
-y_bins = np.linspace(-imageBounds,imageBounds,200)
-H, xedges, yedges = histogram2d_cython(x, z, grad, x_bins, y_bins)
+grad_max = np.max(grad)
+
+
+norms = np.sqrt(x**2 + y**2 + z**2)
+u = x/norms
+v = y/norms
+w = z/norms
+
+
+#x_bins = np.linspace(-imageBounds,imageBounds,200)
+#y_bins = np.linspace(-imageBounds,imageBounds,200)
+#H, xedges, yedges = histogram2d_cython(x, z, grad, x_bins, y_bins)
 generateFigure(imageBounds)
 
 os.chdir("..")
 os.chdir("figures")
-plt.savefig("gradientr.png")
+plt.savefig("quiver.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
 #os.chdir("..")
