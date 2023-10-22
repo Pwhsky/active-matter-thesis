@@ -25,6 +25,7 @@ struct Point{
 };
 
 void generateDeposits(std::vector<Point> &deposits,int nDeposits);
+void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration
 void writeDepositToCSV(std::vector<Point> &deposits);
 void writeFieldToCSV(const std::vector<double>& x, 
 			    const std::vector<double>& y,

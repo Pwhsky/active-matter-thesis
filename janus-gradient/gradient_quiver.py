@@ -37,7 +37,7 @@ def parseArgs():
 	
 def generateNewData():
 	print("Generating new data...\n")
-	subprocess.run(["g++","functions.cpp","mainGradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",resolution,nDeposits,sys.argv[4], sys.argv[5]])
 
 def loadData():
@@ -79,20 +79,19 @@ def generateFigure(imageBounds):
 		axis.axis('equal')
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
-		
+
 		axis.set_xlabel(axisLabelsX[index])
 		axis.set_ylabel(axisLabelsY[index])
-		
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-		
-		axis.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
-		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=15)
+		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=15)
+
 		if index == 0:
 			axis.add_patch(circles[index])
 			#x y z u v w grad are all incrimented in steps of 3, so to subsample(fewer arrows),
 			#  your subsampling factor would need to be a multiple of 3, 48 for example.
-			subsampling_factor = 24
+			subsampling_factor = 14
 			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
 							      u[::subsampling_factor],w[::subsampling_factor],
 								  grad[::subsampling_factor], 
@@ -105,11 +104,29 @@ def generateFigure(imageBounds):
 			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm")
 			axis.add_patch(circles[index])
+			ax[0].set_facecolor('gray')
 			
 		if index == 1:
-			ax[1].grid(True)	
-			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
-			axis.add_patch(circles[index])
+
+			#ax[1].grid(True)	
+			#ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
+			#axis.add_patch(circles[index])
+	
+			ax[1] = fig.add_subplot(projection='3d')
+			ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)
+			ax[1].set_xlim(-imageBounds,imageBounds)
+			ax[1].set_ylim(-imageBounds,imageBounds)
+			ax[1].set_zlim(-imageBounds,imageBounds)
+			ax[1].set_xlabel(axisLabelsX[index])
+			ax[1].set_ylabel(axisLabelsY[index])
+			ax[1].set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
+			ax[1].set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+			ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+			ax[1].set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
+			ax[1].set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+			ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+
+
 		if index == 2:
 			X,Y,Z = generateLaserProfile(spatialPeriodicity)
 			laserImage = ax[2].contourf(X,Y,Z,50)
@@ -123,12 +140,6 @@ def generateFigure(imageBounds):
 	fig.legend([ "Particle boundary"],loc='lower left')
 	fig.suptitle(f"Silica microparticle temperature gradient",fontsize=20)
 
-	
-	#Colorbar & imshow
-	
-	
-
-	
 
 #Main() below:
 os.chdir("src")
@@ -149,9 +160,7 @@ w = z*grad
 
 
 
-#x_bins = np.linspace(-imageBounds,imageBounds,200)
-#y_bins = np.linspace(-imageBounds,imageBounds,200)
-#H, xedges, yedges = histogram2d_cython(x, z, grad, x_bins, y_bins)
+
 generateFigure(imageBounds)
 
 os.chdir("..")

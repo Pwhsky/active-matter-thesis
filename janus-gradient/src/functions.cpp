@@ -18,11 +18,31 @@ std::string to_string_with_precision(double value, int precision = 15) {
     return out.str();
 }
 	
-
+//Standard deposit generation:
 void generateDeposits(vector<Point> &deposits, int nDeposits) {
 	size_t depositCounter = 0;
     	uniform_real_distribution<double> phi(0.0,twoPi);
-    	uniform_real_distribution<double> costheta(-0.05,1);
+    	uniform_real_distribution<double> costheta(-0.1,1);
+    	uniform_real_distribution<double> u(0.90,1);
+	
+    	while (depositCounter < nDeposits) {
+    		double theta = acos(costheta(gen));
+    		double r 	  = particleRadius* u(gen);
+    	
+    		double x = r*sin(theta) * cos(phi(gen));
+    		double y = r*sin(theta) * sin(phi(gen));
+    		double z = r*cos(theta);
+   		if ((x*x + y*y + z*z )< particleRadius*particleRadius){
+    			deposits.emplace_back(Point{x,y,z});
+    		   	depositCounter +=1;
+    		}
+    	}
+}
+//Generate a custom configuration
+void generateConfiguration(vector<Point> &deposits, int nDeposits) {
+	size_t depositCounter = 0;
+    	uniform_real_distribution<double> phi(pi/4,pi);
+    	uniform_real_distribution<double> costheta(-0.1,0.1);
     	uniform_real_distribution<double> u(0.95,1);
 	
     	while (depositCounter < nDeposits) {
@@ -36,10 +56,10 @@ void generateDeposits(vector<Point> &deposits, int nDeposits) {
     			deposits.emplace_back(Point{x,y,z});
     		   	depositCounter +=1;
     		}
-    		
-    		
     	}
 }
+
+
 void writeFieldToCSV(const std::vector<double>& x, 
 		     const std::vector<double>& y, 
 		     const std::vector<double>& z, 

@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
 	lambda	  = stold(argv[4])  * pow(10,-9);
         ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
 	
+	//generateConfiguration(deposits,nDeposits);
 	generateDeposits(deposits,nDeposits);
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
       vector<double> z = linspace;
 	  vector<double> x = linspace;
 	   //y= linspace;
-	     y = {0.0};
+	    y = {0.0};
 	 
 	 
 	 nSteps = x.size();

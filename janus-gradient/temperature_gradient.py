@@ -86,15 +86,15 @@ def generateFigure(imageBounds):
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 		
-		axis.set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
-		axis.set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=15)
+		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=15)
 		if index == 0:
-			axis.add_patch(circles[index])
+			
 			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
            			 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
 			cbar.set_label(f"K/μm")
-			axis.add_patch(circles[index])
+			#axis.add_patch(circles[index])
 			
 		if index == 1:
 			ax[1].grid(True)	
