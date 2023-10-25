@@ -23,15 +23,14 @@ circle2.set(fill=False,linestyle='--',alpha=0.2)
 
 imageBounds 	   = float(sys.argv[4])*1e-6
 spatialPeriodicity = float(sys.argv[5])*1e-9
-
 periodicity = float(sys.argv[5])/1000
 
-def dfToNumpy(column):
+def pandasToNumpy(column):
     return column.to_numpy()
 
 def parseArgs():
-	generateData    		= str(sys.argv[3])
-	resolution 	         = sys.argv[1] 
+	generateData    	       = str(sys.argv[3])
+	resolution 	        	   = sys.argv[1] 
 	nDeposits                  = str(sys.argv[2])
 	return resolution,nDeposits,generateData
 	
@@ -48,10 +47,10 @@ def loadData():
 	with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
     		#Parallel data loading
     		futures = [
-        	executor.submit(dfToNumpy, df['x']),
-        	executor.submit(dfToNumpy, df['y']),
-      		executor.submit(dfToNumpy, df['z']),
-       		executor.submit(dfToNumpy, df['gradientValue'])
+        	executor.submit(pandasToNumpy, df['x']),
+        	executor.submit(pandasToNumpy, df['y']),
+      		executor.submit(pandasToNumpy, df['z']),
+       		executor.submit(pandasToNumpy, df['gradientValue'])
        		]
 	x    = futures[0].result()
 	y    = futures[1].result()
@@ -63,12 +62,12 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	x   = np.linspace(-imageBounds*2,imageBounds*2, 200)
 	y   = np.linspace(-imageBounds*2,imageBounds*2, 200)
 	X,Y = np.meshgrid(x,y)	
-	Z = (1+ (np.cos(2*pi*X/spatialPeriodicity)))/2
+	Z   = (1+ (np.cos(2*pi*X/spatialPeriodicity)))/2
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
-	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"∇T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
+	fig, ax     = plt.subplots(1, 3, figsize=(21, 5))
+	axisTitles  = [f"∇T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
@@ -113,17 +112,11 @@ def generateFigure(imageBounds):
 	fig.legend([ "Particle boundary"],loc='lower left')
 	fig.suptitle(f"Silica microparticle temperature gradient",fontsize=20)
 
-	
-	#Colorbar & imshow
-	
-	
-
-	
 
 #Main() below:
+#Navigate to folder containing c++ program
 os.chdir("src")
 resolution,nDeposits,generateData = parseArgs()
-
 if (generateData == "true"):
 	generateNewData()
 else:
@@ -134,15 +127,13 @@ print("Starting plotting...")
 x,y,z,grad,depositDF = loadData()
 x_bins = np.linspace(-imageBounds,imageBounds,200)
 y_bins = np.linspace(-imageBounds,imageBounds,200)
+#Use cython to accelerate histogram generation
 H, xedges, yedges = histogram2d_cython(x, z, grad, x_bins, y_bins)
 generateFigure(imageBounds)
 
+#Save figure to figures directory
 os.chdir("..")
 os.chdir("figures")
 plt.savefig("temperatureGradient.png")
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
-#os.chdir("..")
-#subprocess.run(["python3","plotDensity.py"])
-
-

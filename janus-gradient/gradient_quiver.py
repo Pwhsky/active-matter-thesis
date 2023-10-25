@@ -91,7 +91,7 @@ def generateFigure(imageBounds):
 			axis.add_patch(circles[index])
 			#x y z u v w grad are all incrimented in steps of 3, so to subsample(fewer arrows),
 			#  your subsampling factor would need to be a multiple of 3, 48 for example.
-			subsampling_factor = 14
+			subsampling_factor = 30
 			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
 							      u[::subsampling_factor],w[::subsampling_factor],
 								  grad[::subsampling_factor], 
@@ -104,7 +104,7 @@ def generateFigure(imageBounds):
 			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm")
 			axis.add_patch(circles[index])
-			ax[0].set_facecolor('gray')
+			ax[0].set_facecolor('white')
 			
 		if index == 1:
 
