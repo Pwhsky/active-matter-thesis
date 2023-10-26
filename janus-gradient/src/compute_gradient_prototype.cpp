@@ -33,9 +33,10 @@ inline  double integral(double x, double y, double z,vector<Point> deposits){
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
+	bounds    = stold(argv[3])  * pow(10,-6); //size of simulation box
 	stepSize  = bounds/(stof(argv[1]));		  //Step size, based off of resolution parameter
 	nDeposits = stof(argv[2]);				  //number of deposits to initialize
-	bounds    = stold(argv[3])  * pow(10,-6); //size of simulation box
+	
 	lambda	  = stold(argv[4])  * pow(10,-9); //Spatial periodicity
     dv        = stepSize*stepSize*stepSize;  //volume element for integral
         

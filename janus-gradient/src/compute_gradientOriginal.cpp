@@ -33,15 +33,14 @@ inline  double integral(double x, double y, double z,vector<Point> deposits){
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
-	bounds    = stold(argv[3])  * pow(10,-6); 
 	stepSize  = bounds/(stof(argv[1]));		  //Step size, based off of resolution parameter
 	nDeposits = stof(argv[2]);				  //number of deposits to initialize
-	//size of simulation box
+	bounds    = stold(argv[3])  * pow(10,-6); //size of simulation box
 	lambda	  = stold(argv[4])  * pow(10,-9); //Spatial periodicity
     dv        = stepSize*stepSize*stepSize;  //volume element for integral
         
      ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
-	vector<Point> deposits;
+
 	generateDeposits(deposits,nDeposits);
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
@@ -61,38 +60,22 @@ int main(int argc, char** argv) {
  	////////////////////////  INTEGRAL ///////////////////////////////////////////////////////////
 
 	nSteps = x.size();
-	vector<vector<vector<double>>> field(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));
-
-	vector<vector<vector<double>>> boundary(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));      
+	vector<vector<vector<double>>> field(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));   
     const int totalIterations = nSteps*nSteps*y.size();
 	size_t currentIteration = 0;
-
-
-	//Goal is to compute Radial and Tangental flow 
+   	//X gradient:
+   	
  	#pragma omp parallel for
-    for (size_t i = 0; i < nSteps; i++){
+    for (size_t i = 1; i < nSteps-1; i++){
     	for(size_t j = 0; j<y.size(); j++){
-    		for(size_t k = 0; k<nSteps; k++){		
+    		for(size_t k = 1; k<nSteps-1; k++){		
     			//Check if outside particle:
-				double norm = x[i]*x[i] + y[j]*y[j] + z[k]*z[k];
-
-				if (norm < particleRadiusSquared + 0.00002*stepSize &&  norm > particleRadiusSquared  )
-					{
-					double back    = integral((x[i] - stepSize/2),y[j],z[k],deposits);
-					double forward = integral ((x[i] + stepSize/2),y[j],z[k],deposits);
-
-					double difference = (forward - back)/(stepSize);
-					double parallel   = difference - x[i]*x[i]*difference/(norm); 
-
-					back    = integral(x[i],y[j],(z[k]-stepSize/2),deposits);
-					forward = integral(x[i],y[j],(z[k]+stepSize/2),deposits);
-					difference = (forward - back)/(stepSize);
-					parallel += (difference - z[i]*z[i]*difference/(norm));
-
-					boundary[i][j][k] = (-1*parallel)	;
-      			}else{
-					boundary[i][j][k] = 0.0;
-				}
+				if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
+					double back    = integral(x[i+1],y[j],z[k],deposits);
+					double forward = integral(x[i-1],y[j],z[k],deposits);
+					double difference = (forward - back)/(2*stepSize);
+					field[i][j][k] = pow((difference*25/1000),2);		
+      			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
           		if(currentIteration % 500 == 0) {
@@ -107,38 +90,11 @@ int main(int argc, char** argv) {
 			}
     	}
     }
-	//Find out a way to convert x and y to theta and r
-	cout<<"Finished computing boundary, starting flow field computation... \n";
-	#pragma omp parallel for
-    for (size_t i = 0; i < nSteps; i++){
-    	for(size_t j = 0; j<y.size(); j++){
-    		for(size_t k = 0; k<nSteps; k++){		//Field
-				//Check if outside particle:
-				double norm = x[i]*x[i] + y[j]*y[j] + z[k]*z[k];
-				double contribution = 0.0;
-
-				if (norm > particleRadiusSquared  ){
-					for(size_t ix = 0; ix < nSteps; ix++){	//Sweep over boundary points:
-						for(size_t jx = 0; jx < y.size(); jx++){
-							for(size_t kx = 0; kx < nSteps;kx++){
-							
-								double pointDistance = sqrt( pow(x[i]-x[ix],2) + pow(y[j]-y[jx],2) + pow(z[k]-z[kx],2) ) ;
-								contribution += boundary[i][j][k]/pointDistance;
-							} 
-						}	
-					}
-				}
-
-			field[i][j][k] = (contribution*25/1000)*stepSize*stepSize/4	;
-			}
-    	}
-    }
-
     	
     	//Z gradient:
     	//computeGradientZ(field, x,  y, z);
 
-	/*
+
  	#pragma omp parallel for
     for (size_t i = 1; i < nSteps-1; i++){
     	for(size_t j = 0; j < y.size(); j++){
@@ -166,7 +122,7 @@ int main(int argc, char** argv) {
 			}
     	}
     }
-    		*/
+    		
     	//////////////////////////////////////////////////////////////////
     	//////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<endl;
