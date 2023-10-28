@@ -31,6 +31,12 @@ void writeFieldToCSV(const std::vector<double>& x,
 			    const std::vector<double>& y,
 			    const std::vector<double>& z,
 			    std::vector<std::vector<std::vector<double>>>& field);
+void writeGradToCSV(const std::vector<double>& x, 
+			    const std::vector<double>& y,
+			    const std::vector<double>& z,
+			    std::vector<std::vector<std::vector<double>>>& xGrad,
+				std::vector<std::vector<std::vector<double>>>& yGrad);
+
 
 
 #endif

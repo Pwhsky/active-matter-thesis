@@ -20,13 +20,12 @@ inline  double integral(double x, double y, double z,vector<Point> deposits){
 	//ContributionSum will sum up contributions
 	//Finally, the contributionSum is scaled with volume element dv and divided with constants
 	//																	to get physical results.
-
 	double laserTerm 	           = I0 + I0*cos(twoPi*(x)/lambda);	
 	double absorbtionTerm          = laserTerm*depositArea/(volumePerDeposit);
 	double contributionSum 		   = 0.0;
 		//Since the values scale with the inverse square distance, this is the only heavy computation.
     	for (size_t i = 0; i < deposits.size(); i++){
-    		double inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + (y-deposits[i].y)*(y-deposits[i].y) + z-deposits[i].z)*(z-deposits[i].z);
+    		double inv_sqrt_distance1 = 1.0/sqrt((x-deposits[i].x)*(x-deposits[i].x) + (y-deposits[i].y)*(y-deposits[i].y) + z-deposits[i].z)*(z-deposits[i].z));
 			contributionSum +=  inv_sqrt_distance1;
 		}
     return contributionSum*dv*absorbtionTerm/(4*pi*waterConductivity);
@@ -39,11 +38,9 @@ int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
 
 	//Parse input arguments:
-	bounds    = stold(argv[3])  * pow(10,-6);  //size of simulation box		 in micrometers
-	stepSize  = bounds/(stof(argv[1]));     //step size based off of resolution parameter, 200 = 25 nm step size 
-
+	stepSize  = bounds/(stof(argv[1]));     //step size based off of resolution parameter, 200 = 25 nm step size
 	nDeposits = stof(argv[2]);				//number of deposits to initialize
-	
+	bounds    = stold(argv[3])  * pow(10,-6); //size of simulation box		 in micrometers
 	lambda	  = stold(argv[4])  * pow(10,-9); //Spatial periodicity of laser in nanometers
     dv        = stepSize*stepSize*stepSize; //volume element for integral
 	

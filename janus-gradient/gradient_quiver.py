@@ -51,13 +51,15 @@ def loadData():
         	executor.submit(dfToNumpy, df['x']),
         	executor.submit(dfToNumpy, df['y']),
       		executor.submit(dfToNumpy, df['z']),
-       		executor.submit(dfToNumpy, df['gradientValue'])
+       		executor.submit(dfToNumpy, df['gradX']),
+			executor.submit(dfToNumpy, df['gradZ']),
        		]
 	x    = futures[0].result()
 	y    = futures[1].result()
 	z    = futures[2].result()
-	grad = futures[3].result()
-	return x,y,z,grad,depositDF
+	gradX = futures[3].result()
+	gradZ = futures[4].result()
+	return x,y,z,gradX,gradZ,depositDF
 	
 def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	x   = np.linspace(-imageBounds*2,imageBounds*2, 200)
@@ -91,13 +93,13 @@ def generateFigure(imageBounds):
 			axis.add_patch(circles[index])
 			#x y z u v w grad are all incrimented in steps of 3, so to subsample(fewer arrows),
 			#  your subsampling factor would need to be a multiple of 3, 48 for example.
-			subsampling_factor = 1
+			subsampling_factor = 28
 			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
-							      u[::subsampling_factor],w[::subsampling_factor],
-								  grad[::subsampling_factor], 
-								headwidth=3,
+							      w[::subsampling_factor],u[::subsampling_factor],r[::subsampling_factor],
+							 
+								
 								cmap='plasma',
-								width=0.004,
+							
 								pivot = 'tail')
 
 
@@ -152,15 +154,14 @@ else:
 	
 tic = time.time()
 print("Starting plotting...")
-x,y,z,grad,depositDF = loadData()
-norms = np.sqrt(x**2 + y**2 + z**2)
-#Scale the sizes with grad values
-u = -x*grad
-w = -z*grad
+x,y,z,gradX,gradZ,depositDF = loadData()
 
+#Scale the sizes with grad valuessqrt
 
-
-
+r     = (gradX + gradZ)
+theta = np.arctan2(z,x)
+w     = r*np.sin(theta + pi/2 )
+u     = r*np.cos(theta + pi/2 )
 
 generateFigure(imageBounds)
 

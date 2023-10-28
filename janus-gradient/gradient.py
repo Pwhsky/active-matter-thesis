@@ -36,7 +36,7 @@ def parseArgs():
 	
 def generateNewData():
 	print("Generating new data...\n")
-	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-O3", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",resolution,nDeposits,sys.argv[4], sys.argv[5]])
 
 def loadData():
@@ -50,13 +50,15 @@ def loadData():
         	executor.submit(pandasToNumpy, df['x']),
         	executor.submit(pandasToNumpy, df['y']),
       		executor.submit(pandasToNumpy, df['z']),
-       		executor.submit(pandasToNumpy, df['gradientValue'])
+       		executor.submit(pandasToNumpy, df['gradX']),
+			executor.submit(pandasToNumpy, df['gradZ'])
        		]
 	x    = futures[0].result()
 	y    = futures[1].result()
 	z    = futures[2].result()
-	grad = futures[3].result()
-	return x,y,z,grad,depositDF
+	gradX = futures[3].result()
+	gradZ = futures[4].result()
+	return x,y,z,gradX,gradZ,depositDF
 	
 def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	x   = np.linspace(-imageBounds*2,imageBounds*2, 200)
@@ -124,7 +126,7 @@ else:
 	
 tic = time.time()
 print("Starting plotting...")
-x,y,z,grad,depositDF = loadData()
+x,y,z,gradX,gradY,depositDF = loadData()
 x_bins = np.linspace(-imageBounds,imageBounds,200)
 y_bins = np.linspace(-imageBounds,imageBounds,200)
 #Use cython to accelerate histogram generation
