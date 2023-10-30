@@ -91,21 +91,27 @@ def generateFigure(imageBounds):
 		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=15)
 		if index == 0:
 			
-			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
-           			 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
+			im = ax[0].imshow(H_x.T, origin='lower',  cmap='plasma',
+           			 extent=[xedges_x[0], xedges_x[-1], yedges_x[0], yedges_x[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
 			cbar.set_label(f"K/μm")
 			#axis.add_patch(circles[index])
 			
 		if index == 1:
-			ax[1].grid(True)	
-			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
-			axis.add_patch(circles[index])
+			im = ax[1].imshow(H_z.T, origin='lower',  cmap='plasma',
+           			 extent=[xedges_z[0], xedges_z[-1], yedges_z[0], yedges_z[-1]])
+			cbar = plt.colorbar(im,ax=ax[1])
+			cbar.set_label(f"K/μm")
+
 		if index == 2:
-			X,Y,Z = generateLaserProfile(spatialPeriodicity)
-			laserImage = ax[2].contourf(X,Y,Z,50)
-			cbar2 = plt.colorbar(laserImage,ax=ax[2])
-			cbar2.set_label(" I(x) / $\mathrm{I}_0$")
+			ax[2].grid(True)	
+			ax[2].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
+			axis.add_patch(circles[1])
+				
+			#X,Y,Z = generateLaserProfile(spatialPeriodicity)
+			#laserImage = ax[2].contourf(X,Y,Z,50)
+			#cbar2 = plt.colorbar(laserImage,ax=ax[2])
+			#cbar2.set_label(" I(x) / $\mathrm{I}_0$")
 			
 		
 		index+=1
@@ -126,11 +132,12 @@ else:
 	
 tic = time.time()
 print("Starting plotting...")
-x,y,z,gradX,gradY,depositDF = loadData()
+x,y,z,gradX,gradZ,depositDF = loadData()
 x_bins = np.linspace(-imageBounds,imageBounds,200)
 y_bins = np.linspace(-imageBounds,imageBounds,200)
 #Use cython to accelerate histogram generation
-H, xedges, yedges = histogram2d_cython(x, z, grad, x_bins, y_bins)
+H_x, xedges_x, yedges_x = histogram2d_cython(x, z, gradX, x_bins, y_bins)
+H_z, xedges_z, yedges_z = histogram2d_cython(x, z, gradZ, x_bins, y_bins)
 generateFigure(imageBounds)
 
 #Save figure to figures directory

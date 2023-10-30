@@ -70,7 +70,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	
 def generateFigure(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles = [f"$∇T_r$ for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
+	axisTitles = [f"$∇T$ for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
@@ -91,9 +91,10 @@ def generateFigure(imageBounds):
 
 		if index == 0:
 			axis.add_patch(circles[index])
+	
 			#x y z u v w grad are all incrimented in steps of 3, so to subsample(fewer arrows),
 			#  your subsampling factor would need to be a multiple of 3, 48 for example.
-			subsampling_factor = 28
+			subsampling_factor = 114
 			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
 							      w[::subsampling_factor],u[::subsampling_factor],r[::subsampling_factor],
 							 
@@ -106,27 +107,27 @@ def generateFigure(imageBounds):
 			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm")
 			axis.add_patch(circles[index])
-			ax[0].set_facecolor('black')
+			ax[0].set_facecolor('white')
 			
 		if index == 1:
 
-			#ax[1].grid(True)	
-			#ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
-			#axis.add_patch(circles[index])
+			ax[1].grid(True)	
+			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
+			axis.add_patch(circles[index])
 	
-			ax[1] = fig.add_subplot(projection='3d')
-			ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)
+			#ax[1] = fig.add_subplot(projection='3d')
+			#ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)
 			ax[1].set_xlim(-imageBounds,imageBounds)
 			ax[1].set_ylim(-imageBounds,imageBounds)
-			ax[1].set_zlim(-imageBounds,imageBounds)
+			#ax[1].set_zlim(-imageBounds,imageBounds)
 			ax[1].set_xlabel(axisLabelsX[index])
 			ax[1].set_ylabel(axisLabelsY[index])
 			ax[1].set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 			ax[1].set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-			ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+			#ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 			ax[1].set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
 			ax[1].set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
-			ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+			#ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 
 
 		if index == 2:
@@ -157,11 +158,11 @@ print("Starting plotting...")
 x,y,z,gradX,gradZ,depositDF = loadData()
 
 #Scale the sizes with grad valuessqrt
-
-r     = (gradX + gradZ)
+r     = np.sqrt(gradX**2 + gradZ**2) 
+tot   = gradX + gradZ
 theta = np.arctan2(z,x)
-w     = r*np.sin(theta + pi/2 )
-u     = r*np.cos(theta + pi/2 )
+w     = -r*np.sin(theta + pi/2 )
+u     = -r*np.cos(theta + pi/2 )
 
 generateFigure(imageBounds)
 
