@@ -23,7 +23,7 @@ circle2.set(fill=False,linestyle='--',alpha=0.2)
 
 imageBounds 	   = float(sys.argv[4])*1e-6
 spatialPeriodicity = float(sys.argv[5])*1e-9
-periodicity = float(sys.argv[5])/1000
+periodicity 	   = float(sys.argv[5])/1000
 
 def pandasToNumpy(column):
     return column.to_numpy()
@@ -69,7 +69,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	
 def generateFigure(imageBounds):
 	fig, ax     = plt.subplots(1, 3, figsize=(21, 5))
-	axisTitles  = [f"∇T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
+	axisTitles  = [f"∇xT",f"∇zT ",f"Positions for {nDeposits} deposits"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]

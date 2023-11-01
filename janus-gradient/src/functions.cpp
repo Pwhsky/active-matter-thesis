@@ -12,6 +12,8 @@ using namespace std;
 std::random_device rd;
 std::mt19937 gen(rd());
 
+
+
 	
 //Standard deposit generation:
 void generateDeposits(vector<Point> &deposits, int nDeposits) {
