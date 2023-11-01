@@ -98,10 +98,8 @@ def generateFigure(imageBounds):
 			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
 							      w[::subsampling_factor],u[::subsampling_factor],r[::subsampling_factor],
 							 
-								
 								cmap='plasma',
-							
-								pivot = 'tail')
+								pivot = 'tip')
 
 
 			cbar = plt.colorbar(quiver,ax=ax[0])
@@ -161,8 +159,10 @@ x,y,z,gradX,gradZ,depositDF = loadData()
 r     = np.sqrt(gradX**2 + gradZ**2) 
 tot   = gradX + gradZ
 theta = np.arctan2(z,x)
-w     = -r*np.sin(theta + pi/2 )
-u     = -r*np.cos(theta + pi/2 )
+#w     = r*np.sin(theta)
+w = gradX
+u = gradZ
+#u     = r*np.cos(theta)
 
 generateFigure(imageBounds)
 
