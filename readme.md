@@ -2,21 +2,21 @@
 ![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/janus-gradient/figures/quiver3.png?raw=true)
 
 # Requirements:
-G++, Pandas, Matplotlib, FFmpeg for movie creation, pyarrow, and whatever other packages i forgot to list here that python will complain about
+G++, Pandas, Matplotlib, pyarrow, and whatever other packages I forgot to list here that python will complain about...
 
 
-The program takes in 5 arguments as of now, you must specify them or the program will not run.
+
+
+ # Arguments:
+ The program takes in 4 arguments as of now, you must specify them or the program will not run.
+ The arguments are as follows:
 ```console
    $ python3 temperature.py <nDeposits> <generateData> <bounds> <periodicity>
 ```
- 
-
-  nDeposits    (integer): Specifies the number of deposits to be createdin the particle, it can go anywhere from 1 to 10000.
-  generateData (boolean): Specifies whether or not to create new datapoints and overwrite the old data, true or false.    
-  bounds       (double) : Specifies the size of the simulation box, setting it to 4 gives 4 micrometer length per side
-  periodicity  (double) : Specifies the laser periodicity in nanometers, I commonly use 80000
-
-
+- nDeposits    (int): Specifies the number of deposits to be createdin the particle, it can go anywhere from 1 to 10000.
+- generateData (str): Specifies whether or not to create new datapoints and overwrite the old data, true or false.    
+- bounds       (float): Specifies the size of the simulation box, setting it to 4 gives 4x4 micrometer sized box.
+- periodicity  (float): Specifies the laser periodicity in nanometers, I commonly use 80000
 
 
 
