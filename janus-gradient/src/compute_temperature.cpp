@@ -3,7 +3,7 @@
 #include <vector>
 #include <omp.h>
 #include "functions.h"
-#include <cstring>
+
 
 
 using namespace std;
@@ -11,7 +11,8 @@ using namespace std;
 	double lambda;
 	double stepSize;
 	double dv;
-	int 	    nDeposits;	
+	int    nDeposits;	
+
 
 double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
@@ -35,10 +36,10 @@ int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
 
 	//Parse input arguments:
-	bounds    = stold(argv[3])  * pow(10,-6); //size of simulation box
-	stepSize  = bounds/(stof(argv[1]));       //step size based off of resolution parameter, 200 = 25 nm step size, 300 = 
-	nDeposits = stof(argv[2]);				  //number of deposits to initialize
-	lambda	  = stold(argv[4])  * pow(10,-9); //Spatial periodicity of laser 
+	bounds    = stold(argv[2])  * pow(10,-6); //size of simulation box
+	stepSize  = bounds/(double)(300);       //step size based off of bounds parameter
+	nDeposits = stof(argv[1]);				  //number of deposits to initialize
+	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity of laser 
     dv        = stepSize*stepSize*stepSize;   //volume element for integral
 	
 	
@@ -48,10 +49,8 @@ int main(int argc, char** argv) {
 
 
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
-	 vector< double> linspace;
-	 for (double coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
-          	 linspace.push_back(coordinate);
-      	 }
+	 vector<double> linspace = arange(-1*bounds,bounds,stepSize);
+
      const vector<double> z = linspace;
 	 const vector<double> x = linspace;
  	 vector<double>       y = {0.0};

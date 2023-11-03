@@ -21,23 +21,23 @@ circle1.set(fill=False, linestyle='--', alpha=0.2)
 circle2 = Circle((0,0), 2e-6)
 circle2.set(fill=False,linestyle='--',alpha=0.2)
 
-imageBounds 	   = float(sys.argv[4])*1e-6
-spatialPeriodicity = float(sys.argv[5])*1e-9
-periodicity 	   = float(sys.argv[5])/1000
+imageBounds 	   = float(sys.argv[3])*1e-6
+spatialPeriodicity = float(sys.argv[4])*1e-9
+periodicity 	   = float(sys.argv[4])/1000
 
 def pandasToNumpy(column):
     return column.to_numpy()
 
 def parseArgs():
-	generateData    	       = str(sys.argv[3])
-	resolution 	        	   = sys.argv[1] 
-	nDeposits                  = str(sys.argv[2])
+	generateData    	       = str(sys.argv[2])
+	resolution 	        	   = 300 
+	nDeposits                  = str(sys.argv[1])
 	return resolution,nDeposits,generateData
 	
 def generateNewData():
 	print("Generating new data...\n")
 	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
-	subprocess.run(["./sim",resolution,nDeposits,sys.argv[4], sys.argv[5]])
+	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
 def loadData():
 	df = pd.read_csv("gradient.csv",engine="pyarrow")

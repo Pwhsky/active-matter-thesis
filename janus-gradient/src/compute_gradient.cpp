@@ -3,7 +3,7 @@
 #include <vector>
 #include <omp.h>
 #include "functions.h"
-#include <cstring>
+
 
 using namespace std;
  	double  bounds;
@@ -12,6 +12,8 @@ using namespace std;
 	double  dv;
 	int 	nDeposits;	
 	int	nSteps;
+
+
 
 double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
@@ -34,39 +36,25 @@ double integral(double x, double y, double z,std::vector<Point> deposits){
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
-	bounds    = stold(argv[3])  * pow(10,-6); 
-	stepSize  = bounds/(stof(argv[1]));		  //Step size, based off of resolution parameter
-	nDeposits = stof(argv[2]);				  //number of deposits to initialize
+	bounds    = stold(argv[2])  * pow(10,-6); 
+	stepSize  = bounds/(double)(300);		  //Step size, based off of bounds parameter
+	nDeposits = stof(argv[1]);				  //number of deposits to initialize
 	//size of simulation box
-	lambda	  = stold(argv[4])  * pow(10,-9); //Spatial periodicity
+	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
     dv        = stepSize*stepSize*stepSize;  //volume element for integral
-        
+    
+	Point centerOfParticle = {0.0,0.0,particleRadius}; 
+	Particle particle(centerOfParticle,particleRadius);
      ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
-	vector<Point> deposits;
-	vector<Point> boundaryPoints;
-	generateDeposits(deposits,nDeposits);
+	particle.generateDeposits(particle.deposits,nDeposits);
+
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
-	vector< double> linspace;
-	vector<double> theta;
-	double coordinate;
-	vector<double> y;
-	for (coordinate = -bounds; coordinate <= bounds; coordinate += stepSize) {
-          	 linspace.push_back(coordinate);
-    }
-
-	for (coordinate = 0; coordinate <= twoPi; coordinate += twoPi/500) {
-			Point point;
-			point.x = cos(coordinate)*particleRadius;
-			point.z = sin(coordinate)*particleRadius;
-			point.y = 0.0;
-			boundaryPoints.push_back(point);
-    }
-
+	vector<double> linspace = arange(-bounds,bounds,stepSize);
+	vector<double> y = {0.0};
     vector<double> z = linspace;
 	vector<double> x = linspace;
-	//y= linspace;
-	y = {0.0}; 
+
    
  	cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
  	//////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,10 +75,11 @@ int main(int argc, char** argv) {
     	for(size_t j = 0; j<y.size(); j++){
     		for(size_t k = 1; k<nSteps-1; k++){		
     			//Check if outside particle:
-				if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
+				Point point = {x[i],y[j],z[k]};
+				if (particle.isOutside(point)){
 
-					double back   			  = integral(x[i-1],y[j],z[k],deposits);
-					double forward			  = integral(x[i+1],y[j],z[k],deposits);
+					double back   			  = integral(x[i-1],y[j],z[k],particle.deposits);
+					double forward			  = integral(x[i+1],y[j],z[k],particle.deposits);
 					double central_difference = (forward - back)/(2*stepSize);
 					xGrad[i][j][k] 			  = central_difference*25/1000;		//Converts to Kelvin/micrometer 
       			}
@@ -116,9 +105,11 @@ int main(int argc, char** argv) {
     	for(size_t j = 0; j<y.size(); j++){
     		for(size_t k = 1; k<nSteps-1; k++){		
     			//Check if outside particle:
-				if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared)	{
-					double back   			  = integral(x[i],y[j],z[k-1],deposits);
-					double forward 			  = integral(x[i],y[j],z[k+1],deposits);
+				Point point = {x[i],y[j],z[k]};
+
+				if (particle.isOutside(point)){
+					double back   			  = integral(x[i],y[j],z[k-1],particle.deposits);
+					double forward 			  = integral(x[i],y[j],z[k+1],particle.deposits);
 					double central_difference = (forward - back)/(2*stepSize);
 					zGrad[i][j][k] 			  = central_difference*25/1000;	//Converts to Kelvin/micrometer 	
       			}
@@ -141,7 +132,7 @@ int main(int argc, char** argv) {
     //////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<endl;
 	writeGradToCSV(x,y,z,xGrad,zGrad);
-	writeDepositToCSV(deposits);
+	writeDepositToCSV(particle.deposits);
 	
 	//////////////////////////////////////////////////////////////////
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
@@ -153,6 +144,3 @@ int main(int argc, char** argv) {
 	//////////////////END PROGRAM/////////////////////////////////////
 	return 0;
 }	
-
-
-

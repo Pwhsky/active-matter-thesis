@@ -21,24 +21,24 @@ circle1.set(fill=False, linestyle='--', alpha=0.2)
 circle2 = Circle((0,0), 2e-6)
 circle2.set(fill=False,linestyle='--',alpha=0.2)
 
-imageBounds 	   = float(sys.argv[4])*1e-6
-spatialPeriodicity = float(sys.argv[5])*1e-9
+imageBounds 	   = float(sys.argv[3])*1e-6
+spatialPeriodicity = float(sys.argv[4])*1e-9
 
-periodicity = float(sys.argv[5])/1000
+periodicity = float(sys.argv[4])/1000
 
 def dfToNumpy(column):
     return column.to_numpy()
 
 def parseArgs():
-	generateData    		   = str(sys.argv[3])
-	resolution 	               = sys.argv[1] 
-	nDeposits                  = str(sys.argv[2])
+	generateData    		   = str(sys.argv[2])
+	resolution 	               = 300
+	nDeposits                  = str(sys.argv[1])
 	return resolution,nDeposits,generateData
 	
 def generateNewData():
 	print("Generating new data...\n")
 	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
-	subprocess.run(["./sim",resolution,nDeposits,sys.argv[4], sys.argv[5]])
+	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
 def loadData():
 	df = pd.read_csv("gradient.csv",engine="pyarrow")
@@ -113,19 +113,19 @@ def generateFigure(imageBounds):
 			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
 			axis.add_patch(circles[index])
 	
-			#ax[1] = fig.add_subplot(projection='3d')
-			#ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)
+			ax[1] = fig.add_subplot(projection='3d')
+			ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)
 			ax[1].set_xlim(-imageBounds,imageBounds)
 			ax[1].set_ylim(-imageBounds,imageBounds)
-			#ax[1].set_zlim(-imageBounds,imageBounds)
+			ax[1].set_zlim(-imageBounds,imageBounds)
 			ax[1].set_xlabel(axisLabelsX[index])
 			ax[1].set_ylabel(axisLabelsY[index])
 			ax[1].set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 			ax[1].set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-			#ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+			ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 			ax[1].set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
 			ax[1].set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
-			#ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+			ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 
 
 		if index == 2:

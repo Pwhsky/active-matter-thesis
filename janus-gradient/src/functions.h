@@ -23,7 +23,20 @@ struct Point{
 	double z;
 };
 
-void generateDeposits(std::vector<Point> &deposits,int nDeposits);
+class Particle{
+	public:
+		Point particleCenter;
+		double radius;
+		std::vector<Point> deposits;
+		Particle(Point center,double r){
+			particleCenter = center;
+			radius = r;
+		}  // Constructor with parameters
+		bool isOutside(Point r);
+		void generateDeposits(std::vector<Point> &deposits,int nDeposits);
+};
+
+std::vector<double> arange(double start, double stop, double stepSize);
 void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration
 void writeDepositToCSV(std::vector<Point> &deposits);
 void writeFieldToCSV(const std::vector<double>& x, 
