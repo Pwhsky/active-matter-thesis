@@ -18,7 +18,7 @@ The program takes in 5 arguments as of now, you must specify them or the program
 
 
 
-Examples (be in janus-gradient directory):
+# Examples: 
 
   $ python3 gradient_quiver.py 600 true 3 80000
   $ python3 temperature.py 2000 true 4 80000
@@ -29,9 +29,5 @@ Note: even if you put in false, you still have to specify the bounds as this wil
 functions used to initiate deposits are in:
 functions.cpp
 
-Constants are in:
+Constants and class declarations are in:
 functions.h
-
-
-The step-size can be computed by dividing the bounds parameter with 300.
-
