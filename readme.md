@@ -6,23 +6,26 @@ G++, Pandas, Matplotlib, FFmpeg for movie creation, pyarrow, and whatever other 
 
 
 The program takes in 5 arguments as of now, you must specify them or the program will not run.
+```console
+   $ python3 temperature.py <nDeposits> <generateData> <bounds> <periodicity>
+```
+ 
 
-  $ python3 temperature.py nDeposits newData bounds periodicity
-
-  nDeposits   (integer): Specifies the number of deposits to be createdin the particle, it can go anywhere from 1 to 10000.
-  newData     (boolean): Specifies whether or not to create new datapoints and overwrite the old data, true or false.    
-  bounds      (double) : Specifies the size of the simulation box, setting it to 4 gives 4 micrometer length per side
-  periodicity (double) : Specifies the laser periodicity in nanometers, I commonly use 80000
+  nDeposits    (integer): Specifies the number of deposits to be createdin the particle, it can go anywhere from 1 to 10000.
+  generateData (boolean): Specifies whether or not to create new datapoints and overwrite the old data, true or false.    
+  bounds       (double) : Specifies the size of the simulation box, setting it to 4 gives 4 micrometer length per side
+  periodicity  (double) : Specifies the laser periodicity in nanometers, I commonly use 80000
 
 
 
 
 
 # Examples: 
-
+```console
   $ python3 gradient_quiver.py 600 true 3 80000
   $ python3 temperature.py 2000 true 4 80000
   $ python3 gradient.py 600 false 3 80000
+```
 
 Note: even if you put in false, you still have to specify the bounds as this will change the plotting properties as well.
 
