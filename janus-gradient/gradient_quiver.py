@@ -147,6 +147,7 @@ os.chdir("src")
 resolution,nDeposits,generateData = parseArgs()
 
 if (generateData == "true"):
+	print("Generating new data...\n")
 	generateNewData()
 else:
 	print("No new data will be generated, starting plotting... \n")
@@ -155,14 +156,17 @@ tic = time.time()
 print("Starting plotting...")
 x,y,z,gradX,gradZ,depositDF = loadData()
 
-#Scale the sizes with grad valuessqrt
+#Scale the sizes with r
 r     = np.sqrt(gradX**2 + gradZ**2) 
-tot   = gradX + gradZ
-theta = np.arctan2(z,x)
-#w     = r*np.sin(theta)
 w = gradX
 u = gradZ
+
+
+#unused stuff:
+#theta = np.arctan2(z,x)
+#w     = r*np.sin(theta)
 #u     = r*np.cos(theta)
+#tot   = gradX + gradZ
 
 generateFigure(imageBounds)
 
