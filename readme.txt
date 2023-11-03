@@ -1,3 +1,4 @@
+![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/janus-gradient/figures/quiver3.png?raw=true)
 
 #Requirements:
 G++, Pandas, Matplotlib, FFmpeg for movie creation, pyarrow, and whatever other packages i forgot to list here that python will complain about
