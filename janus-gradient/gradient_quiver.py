@@ -36,7 +36,6 @@ def parseArgs():
 	return resolution,nDeposits,generateData
 	
 def generateNewData():
-	print("Generating new data...\n")
 	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
@@ -94,12 +93,14 @@ def generateFigure(imageBounds):
 	
 			#x y z u v w grad are all incrimented in steps of 3, so to subsample(fewer arrows),
 			#  your subsampling factor would need to be a multiple of 3, 48 for example.
+			#subsampling_factor = 114
 			subsampling_factor = 114
 			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
 							      w[::subsampling_factor],u[::subsampling_factor],r[::subsampling_factor],
 							 
 								cmap='plasma',
 								pivot = 'tip')
+		
 
 
 			cbar = plt.colorbar(quiver,ax=ax[0])
@@ -157,15 +158,18 @@ print("Starting plotting...")
 x,y,z,gradX,gradZ,depositDF = loadData()
 
 #Scale the sizes with r
-r     = np.sqrt(gradX**2 + gradZ**2) 
+r     = np.sqrt(gradX**2 + gradZ**2)
+#theta = np.arctan2(gradX,gradZ)
+
+
 w = gradX
 u = gradZ
 
 
 #unused stuff:
-#theta = np.arctan2(z,x)
-#w     = r*np.sin(theta)
-#u     = r*np.cos(theta)
+
+#w     = r*np.sin(theta+pi/2)
+#u     = r*np.cos(theta+pi/2)
 #tot   = gradX + gradZ
 
 generateFigure(imageBounds)

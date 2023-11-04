@@ -11,15 +11,16 @@ using namespace std;
 	double  stepSize;
 	double  dv;
 	int 	nDeposits;	
-	int	    nPoints;
+	int	nSteps;
 
 
 
 double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
-	//ContributionSum will sum up contributions from all deposits
+	//ContributionSum will sum up contributions
 	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
 	double laserPower	           = I0 + I0*cos(twoPi*(x)/lambda);	
+
 	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
 	double contributionSum 		   = 0.0;
 		//Since the values scale with the inverse square distance, this is the only heavy computation.
@@ -42,6 +43,7 @@ int main(int argc, char** argv) {
 	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
     dv        = stepSize*stepSize*stepSize;  //volume element for integral
     
+
 	Point centerOfParticle = {0.0,0.0,0.0}; 
 	Particle particle(centerOfParticle,particleRadius);
      ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
@@ -59,36 +61,28 @@ int main(int argc, char** argv) {
  	//////////////////////////////////////////////////////////////////////////////////////////////
  	////////////////////////  INTEGRAL ///////////////////////////////////////////////////////////
 
-	nPoints = x.size();
-	vector<vector<vector<double>>> xGrad(nPoints, vector<vector<double>>(nPoints, vector<double>(nPoints)));
-    vector<vector<vector<double>>> zGrad(nPoints, vector<vector<double>>(nPoints, vector<double>(nPoints)));
+	nSteps = x.size();
+	vector<vector<vector<double>>> xGrad(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));
+    vector<vector<vector<double>>> zGrad(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));
       
-    const int totalIterations = nPoints*nPoints*y.size();
+    const int totalIterations = nSteps*nSteps*y.size();
 	size_t currentIteration = 0;
 
 	/////////////////////////////////
 	//Compute gradient in X-direction
 	/////////////////////////////////
-	double dl = stepSize*stepSize;
 	#pragma omp parallel for
-    for (size_t i = 1; i < nPoints-1; i++){
+    for (size_t i = 1; i < nSteps-1; i++){
     	for(size_t j = 0; j<y.size(); j++){
-    		for(size_t k = 1; k<nPoints-1; k++){		
+    		for(size_t k = 1; k<nSteps-1; k++){		
     			//Check if outside particle:
 				Point point = {x[i],y[j],z[k]};
-				double d = particle.getRadialDistance(point);
-				if (d > pow(particle.radius,2)+ stepSize*stepSize*0.00001){
-					
-					//double back   			  = integral(x[i-1],y[j],z[k],particle.deposits);
-					//double forward			  = integral(x[i+1],y[j],z[k],particle.deposits);
+				if (particle.getRadialDistance(point) > pow(particle.radius,2)){
 
-					double back   			  = integral(x[i]-dl,y[j],z[k],particle.deposits);
-					double forward			  = integral(x[i]+dl,y[j],z[k],particle.deposits);
-
+					double back   			  = integral(x[i-1],y[j],z[k],particle.deposits);
+					double forward			  = integral(x[i+1],y[j],z[k],particle.deposits);
 					double central_difference = (forward - back)/(2*stepSize);
-					double perpendicular      = central_difference*x[i]*x[i]/d;
-					double tangential         = central_difference - perpendicular;
-					xGrad[i][j][k] 			  = tangential*25/1000;		//Converts to Kelvin/micrometer 
+					xGrad[i][j][k] 			  = central_difference*25/1000;		//Converts to Kelvin/micrometer 
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -108,20 +102,17 @@ int main(int argc, char** argv) {
 	//Compute gradient in Z-direction
 	/////////////////////////////////
 	#pragma omp parallel for
-    for (size_t i = 1; i < nPoints-1; i++){
+    for (size_t i = 1; i < nSteps-1; i++){
     	for(size_t j = 0; j<y.size(); j++){
-    		for(size_t k = 1; k<nPoints-1; k++){		
+    		for(size_t k = 1; k<nSteps-1; k++){		
     			//Check if outside particle:
 				Point point = {x[i],y[j],z[k]};
-				double d = particle.getRadialDistance(point);
-				if (d > pow(particle.radius,2)+stepSize*stepSize*0.00001){
-					
-					double back   			  = integral(x[i],y[j],z[k]-dl,particle.deposits);
-					double forward 			  = integral(x[i],y[j],z[k]+dl,particle.deposits);
+
+				if (particle.getRadialDistance(point) > pow(particle.radius,2)){
+					double back   			  = integral(x[i],y[j],z[k-1],particle.deposits);
+					double forward 			  = integral(x[i],y[j],z[k+1],particle.deposits);
 					double central_difference = (forward - back)/(2*stepSize);
-					double perpendicular      = central_difference*z[k]*z[k]/d;
-					double tangential         = central_difference - perpendicular;
-					zGrad[i][j][k] 			  = tangential*25/1000;	//Converts to Kelvin/micrometer 	
+					zGrad[i][j][k] 			  = central_difference*25/1000;	//Converts to Kelvin/micrometer 	
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at

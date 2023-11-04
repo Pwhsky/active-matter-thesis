@@ -17,7 +17,7 @@ void Particle::generateDeposits(vector<Point> &deposits, int nDeposits) {
 	//To adjust the areas of initialization, play around with the phi and costheta parameters.
 	//u is commonly set (0.9,1) so the deposits are near the surface.
 
-    uniform_real_distribution<double> phi(0.0,pi/4); 
+    uniform_real_distribution<double> phi(0.0,twoPi); 
     uniform_real_distribution<double> costheta(0.1,1);
     uniform_real_distribution<double> u(0.8,1);
 
@@ -28,9 +28,9 @@ void Particle::generateDeposits(vector<Point> &deposits, int nDeposits) {
 		double r 	 = (this->radius)*u(gen);
 
 		//Convert to cartesian:
-    	double x = r*sin(theta) * cos(phi(gen)) + this->particleCenter.x; 
-    	double y = r*sin(theta) * sin(phi(gen)) + this->particleCenter.y;
-    	double z = r*cos(theta)					+ this->particleCenter.z;
+    	double x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
+    	double y = r*sin(theta) * sin(phi(gen)) + this->center.y;
+    	double z = r*cos(theta)					+ this->center.z;
    		
 		//Add to deposits list
     	deposits.emplace_back(Point{x,y,z});
@@ -46,14 +46,10 @@ void Particle::generateDeposits(vector<Point> &deposits, int nDeposits) {
 	//costheta(0.5,0.7)
 	//u(0.9,1)
 }
-bool Particle::isOutside(Point r){
-	if ((pow(this->particleCenter.x-r.x,2) + 
-		pow(this->particleCenter.y-r.y,2) +
-		pow(this->particleCenter.z-r.z,2) )> (pow(this->radius,2) )) {
-		return true;
-	} else{
-		return false;
-	}
+double Particle::getRadialDistance(Point r){
+		double norm = pow(this->center.x-r.x,2) + pow(this->center.y-r.y,2) + pow(this->center.z-r.z,2);
+	   return norm;
+
 
 }
 
@@ -75,6 +71,8 @@ void writeGradToCSV(const std::vector<double>& x,
 	 }
 	outputFile.close();
 }
+
+
 //Writes the computed integral to a .csv file
 void writeFieldToCSV(const std::vector<double>& x, 
 		     const std::vector<double>& y, 

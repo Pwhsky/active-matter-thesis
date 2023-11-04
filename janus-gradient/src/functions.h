@@ -25,14 +25,14 @@ struct Point{
 
 class Particle{
 	public:
-		Point particleCenter;
+		Point  center;
 		double radius;
 		std::vector<Point> deposits;
-		Particle(Point center,double r){
-			particleCenter = center;
+		Particle(Point particleCenter,double r){
+			center = particleCenter;
 			radius = r;
 		}  // Constructor with parameters
-		bool isOutside(Point r);
+		double getRadialDistance(Point r);
 		void generateDeposits(std::vector<Point> &deposits,int nDeposits);
 };
 
