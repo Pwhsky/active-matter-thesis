@@ -16,9 +16,10 @@ from cython_functions import histogram2d_cython, gradient_cython
 
 
 pi = 3.14159
-circle1 = Circle((0, 0), 2e-6)
+particleRadius = 2e-6
+circle1 = Circle((0, 0), particleRadius)
 circle1.set(fill=False, linestyle='--', alpha=0.2)
-circle2 = Circle((0,0), 2e-6)
+circle2 = Circle((-1.05*particleRadius,0), particleRadius)
 circle2.set(fill=False,linestyle='--',alpha=0.2)
 
 imageBounds 	   = float(sys.argv[3])*1e-6
@@ -105,14 +106,15 @@ def generateFigure(imageBounds):
 
 			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm")
-			axis.add_patch(circles[index])
+			axis.add_patch(circles[0])
+		#	axis.add_patch(circles[1])
 			ax[0].set_facecolor('white')
 			
 		if index == 1:
 
 			ax[1].grid(True)	
 			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
-			axis.add_patch(circles[index])
+			
 	
 			ax[1] = fig.add_subplot(projection='3d')
 			ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)

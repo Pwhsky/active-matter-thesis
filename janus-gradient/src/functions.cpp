@@ -10,7 +10,7 @@ std::mt19937 gen(rd());
 
 	
 
-void Particle::generateDeposits(vector<Point> &deposits, int nDeposits) {
+void Particle::generateDeposits(int nDeposits) {
 	//Create random number generators, with certain intervals.
 	//to create a janus-particle distribution, costheta parameter should be between 0 and 1 (corresponding to z axis).
 	//If one wants a completely covered particle, set costheta to (-1,1).
@@ -33,7 +33,7 @@ void Particle::generateDeposits(vector<Point> &deposits, int nDeposits) {
     	double z = r*cos(theta)					+ this->center.z;
    		
 		//Add to deposits list
-    	deposits.emplace_back(Point{x,y,z});
+    	(this->deposits).emplace_back(Point{x,y,z});
     	
     }
 
@@ -51,6 +51,17 @@ double Particle::getRadialDistance(Point r){
 	   return norm;
 
 
+}
+
+void Particle::writeDepositToCSV() {
+    std::ofstream outputFile("deposits.csv");
+    outputFile << "x,y,z" << "\n";
+    	
+	for (size_t i = 0; i < size(deposits); i++) {
+	        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
+	}
+
+    outputFile.close();
 }
 
 void writeGradToCSV(const std::vector<double>& x, 
@@ -93,16 +104,7 @@ void writeFieldToCSV(const std::vector<double>& x,
 }
 
 //This will write the position of all deposits to a .csv file so that it may be plotted.
-void writeDepositToCSV(vector<Point> &deposits) {
-    std::ofstream outputFile("deposits.csv");
-    outputFile << "x,y,z" << "\n";
-    	
-	for (size_t i = 0; i < size(deposits); i++) {
-	        outputFile << deposits[i].x << "," << deposits[i].y  << "," << deposits[i].z  << "\n";
-	}
 
-    outputFile.close();
-}
  std::vector<double> arange(double start, double stop, double stepSize){
  	std::vector<double> array;
 

@@ -33,7 +33,8 @@ class Particle{
 			radius = r;
 		}  // Constructor with parameters
 		double getRadialDistance(Point r);
-		void generateDeposits(std::vector<Point> &deposits,int nDeposits);
+		void generateDeposits(int nDeposits);
+		void writeDepositToCSV();
 };
 
 std::vector<double> arange(double start, double stop, double stepSize);

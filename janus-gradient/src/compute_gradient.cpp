@@ -39,13 +39,20 @@ int main(int argc, char** argv) {
 	stepSize  = bounds/(double)(300);		  //Step size, based off of bounds parameter
 	nDeposits = stof(argv[1]);				  //number of deposits to initialize
 	//size of simulation box
-	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
-    dv        = stepSize*stepSize*stepSize;  //volume element for integral
-    
-	Point centerOfParticle = {0.0,0.0,0.0}; 
-	Particle particle(centerOfParticle,particleRadius);
+	lambda	       = stold(argv[3])  * pow(10,-9); //Spatial periodicity
+    dv       	   = stepSize*stepSize*stepSize;  //volume element for integral
+	
+	int nParticles =1;
+
+	Point centerOfParticle1 = {0.0,0.0,0.0}; 
+	Point centerOfParticle2 = {-1.05*particleRadius,0.0,0.0}; 
+	Particle particle1(centerOfParticle1,particleRadius);
+	Particle particle2(centerOfParticle2,particleRadius);
+	vector<Particle> particles = {particle1,particle2};
      ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
-	particle.generateDeposits(particle.deposits,nDeposits);
+	 for(int i = 0; i<nParticles; i++ ){
+		particles[i].generateDeposits(nDeposits);
+	 }
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
@@ -70,25 +77,31 @@ int main(int argc, char** argv) {
 	//Compute gradient in X-direction
 	/////////////////////////////////
 	double dl = stepSize*stepSize;
+for(int n = 0; n < nParticles;n++){
+
+	
 	#pragma omp parallel for
     for (size_t i = 1; i < nPoints-1; i++){
     	for(size_t j = 0; j<y.size(); j++){
     		for(size_t k = 1; k<nPoints-1; k++){		
     			//Check if outside particle:
 				Point point = {x[i],y[j],z[k]};
-				double d = particle.getRadialDistance(point);
-				if (d > pow(particle.radius,2)+ stepSize*stepSize*0.00001){
+				double d = particles[n].getRadialDistance(point);
+				if (d > pow(particles[n].radius,2)){
 					
 					//double back   			  = integral(x[i-1],y[j],z[k],particle.deposits);
 					//double forward			  = integral(x[i+1],y[j],z[k],particle.deposits);
 
-					double back   			  = integral(x[i]-dl,y[j],z[k],particle.deposits);
-					double forward			  = integral(x[i]+dl,y[j],z[k],particle.deposits);
+					double back   			  = integral(x[i]-dl,y[j],z[k],particles[n].deposits);
+					double forward			  = integral(x[i]+dl,y[j],z[k],particles[n].deposits);
 
 					double central_difference = (forward - back)/(2*stepSize);
+
 					double perpendicular      = central_difference*x[i]*x[i]/d;
+
 					double tangential         = central_difference - perpendicular;
-					xGrad[i][j][k] 			  = tangential*25/1000;		//Converts to Kelvin/micrometer 
+					//xGrad[i][j][k] 			  += perpendicular*25/1000;	
+					xGrad[i][j][k] 			  += tangential*25/1000;		//Converts to Kelvin/micrometer 
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -113,15 +126,18 @@ int main(int argc, char** argv) {
     		for(size_t k = 1; k<nPoints-1; k++){		
     			//Check if outside particle:
 				Point point = {x[i],y[j],z[k]};
-				double d = particle.getRadialDistance(point);
-				if (d > pow(particle.radius,2)+stepSize*stepSize*0.00001){
+				double d = particles[n].getRadialDistance(point);
+				if (d > pow(particles[n].radius,2)){
 					
-					double back   			  = integral(x[i],y[j],z[k]-dl,particle.deposits);
-					double forward 			  = integral(x[i],y[j],z[k]+dl,particle.deposits);
+					double back   			  = integral(x[i],y[j],z[k]-dl,particles[n].deposits);
+					double forward 			  = integral(x[i],y[j],z[k]+dl,particles[n].deposits);
 					double central_difference = (forward - back)/(2*stepSize);
+
 					double perpendicular      = central_difference*z[k]*z[k]/d;
 					double tangential         = central_difference - perpendicular;
-					zGrad[i][j][k] 			  = tangential*25/1000;	//Converts to Kelvin/micrometer 	
+
+					//zGrad[i][j][k] 		  	  += perpendicular*25/1000;	
+					zGrad[i][j][k] 			  += tangential*25/1000;	//Converts to Kelvin/micrometer 	
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -137,12 +153,13 @@ int main(int argc, char** argv) {
 			}
     	}
     }
+	particles[n].writeDepositToCSV();
+}
 
     //////////////////////////////////////////////////////////////////
     //////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<endl;
 	writeGradToCSV(x,y,z,xGrad,zGrad);
-	writeDepositToCSV(particle.deposits);
 	
 	//////////////////////////////////////////////////////////////////
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
