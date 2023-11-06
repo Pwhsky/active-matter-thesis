@@ -94,13 +94,14 @@ def generateFigure(imageBounds):
 	
 			#x y z u v w grad are all incrimented in steps of 3, so to subsample(fewer arrows),
 			#  your subsampling factor would need to be a multiple of 3, 48 for example.
-			#subsampling_factor = 114
 			subsampling_factor = 114
+			#subsampling_factor = 49
 			quiver = ax[0].quiver(x[::subsampling_factor],z[::subsampling_factor],
 							      w[::subsampling_factor],u[::subsampling_factor],r[::subsampling_factor],
 							 
 								cmap='plasma',
-								pivot = 'tip')
+								pivot = 'tip'
+								)
 		
 
 
@@ -163,10 +164,8 @@ x,y,z,gradX,gradZ,depositDF = loadData()
 r     = np.sqrt(gradX**2 + gradZ**2)
 #theta = np.arctan2(gradX,gradZ)
 
-
 w = gradX
 u = gradZ
-
 
 #unused stuff:
 

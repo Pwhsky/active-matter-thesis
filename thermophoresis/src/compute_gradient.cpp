@@ -19,17 +19,18 @@ double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
 	//ContributionSum will sum up contributions from all deposits
 	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
-	double laserPower	           = I0 + I0*cos(twoPi*(x)/lambda);	
-	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
+				double laserPower	           = I0 + I0*cos(twoPi*(x)/lambda);	
+				double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
 	double contributionSum 		   = 0.0;
 		//Since the values scale with the inverse square distance, this is the only heavy computation.
     	for (size_t i = 0; i < deposits.size(); i++){
+
     		double inverse_squareroot_distance = 1.0/sqrt(pow(x-deposits[i].x,2)+
-												 pow(y-deposits[i].y,2)+
-												 pow(z-deposits[i].z,2));
+														  pow(y-deposits[i].y,2)+
+														  pow(z-deposits[i].z,2));
 			contributionSum +=  inverse_squareroot_distance;
 		}
-    return contributionSum*dv*absorbtionTerm/(4*pi*waterConductivity); 
+    return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
 
@@ -79,7 +80,7 @@ int main(int argc, char** argv) {
 	double dl = stepSize*stepSize;
 for(int n = 0; n < nParticles;n++){
 
-	
+	double thickness = pow(100*stepSize,2);
 	#pragma omp parallel for
     for (size_t i = 1; i < nPoints-1; i++){
     	for(size_t j = 0; j<y.size(); j++){
@@ -100,8 +101,8 @@ for(int n = 0; n < nParticles;n++){
 					double perpendicular      = central_difference*x[i]*x[i]/d;
 
 					double tangential         = central_difference - perpendicular;
-					//xGrad[i][j][k] 			  += perpendicular*25/1000;	
-					xGrad[i][j][k] 			  += tangential*25/1000;		//Converts to Kelvin/micrometer 
+					//xGrad[i][j][k] 	      += perpendicular*25/1000;	
+					xGrad[i][j][k] 			  -= tangential*25/1000;		//Converts to Kelvin/micrometer 
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -136,7 +137,7 @@ for(int n = 0; n < nParticles;n++){
 					double perpendicular      = central_difference*z[k]*z[k]/d;
 					double tangential         = central_difference - perpendicular;
 
-					//zGrad[i][j][k] 		  	  += perpendicular*25/1000;	
+				//	zGrad[i][j][k] 		  	  += perpendicular*25/1000;	
 					zGrad[i][j][k] 			  += tangential*25/1000;	//Converts to Kelvin/micrometer 	
       			}
 				currentIteration++;
