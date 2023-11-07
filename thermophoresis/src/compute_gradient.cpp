@@ -78,67 +78,42 @@ int main(int argc, char** argv) {
 	//Compute gradient in X-direction
 	/////////////////////////////////
 	double dl = stepSize*stepSize;
+	double thickness = pow(25*stepSize,2);
+	double surfaceX = 0.0;
+	double surfaceZ = 0.0;
 for(int n = 0; n < nParticles;n++){
 
-	double thickness = pow(100*stepSize,2);
+	
 	#pragma omp parallel for
-    for (size_t i = 1; i < nPoints-1; i++){
+    for (size_t i = 0; i < nPoints; i++){
     	for(size_t j = 0; j<y.size(); j++){
-    		for(size_t k = 1; k<nPoints-1; k++){		
+    		for(size_t k = 0; k<nPoints; k++){		
     			//Check if outside particle:
 				Point point = {x[i],y[j],z[k]};
 				double d = particles[n].getRadialDistance(point);
-				if (d > pow(particles[n].radius,2)){
-					
-					//double back   			  = integral(x[i-1],y[j],z[k],particle.deposits);
-					//double forward			  = integral(x[i+1],y[j],z[k],particle.deposits);
+				if (d > pow(particles[n].radius,2)){// && d < pow(particles[n].radius,2)+thickness){
 
-					double back   			  = integral(x[i]-dl,y[j],z[k],particles[n].deposits);
-					double forward			  = integral(x[i]+dl,y[j],z[k],particles[n].deposits);
+					double backX   			  = integral(x[i]-dl,y[j],z[k],particles[n].deposits);
+					double forwardX			  = integral(x[i]+dl,y[j],z[k],particles[n].deposits);
+					double backZ   			  = integral(x[i],y[j],z[k]-dl,particles[n].deposits);
+					double forwardZ			  = integral(x[i],y[j],z[k]+dl,particles[n].deposits);
 
-					double central_difference = (forward - back)/(2*stepSize);
+					double central_differenceX = (forwardX - backX)/(2*dl);	
+					double central_differenceZ = (forwardZ - backZ)/(2*dl);
 
-					double perpendicular      = central_difference*x[i]*x[i]/d;
+					double perpendicularX      = (central_differenceX*x[i]+central_differenceZ*z[k])*x[i]/d;
+					double tangentialX         = (central_differenceX - perpendicularX);
 
-					double tangential         = central_difference - perpendicular;
-					//xGrad[i][j][k] 	      += perpendicular*25/1000;	
-					xGrad[i][j][k] 			  -= tangential*25/1000;		//Converts to Kelvin/micrometer 
-      			}
-				currentIteration++;
-         		// Calculate progress percentage so that the user has something to look at
-          		if(currentIteration % 500 == 0) {
-            	  	float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
-            		 // Print progress bar
-            		 #pragma omp critical
-            		{
-            		 		cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
-            	  	 		cout.flush();
-            	 	}
-            	}
-			}
-    	}
-    }
-	/////////////////////////////////
-	//Compute gradient in Z-direction
-	/////////////////////////////////
-	#pragma omp parallel for
-    for (size_t i = 1; i < nPoints-1; i++){
-    	for(size_t j = 0; j<y.size(); j++){
-    		for(size_t k = 1; k<nPoints-1; k++){		
-    			//Check if outside particle:
-				Point point = {x[i],y[j],z[k]};
-				double d = particles[n].getRadialDistance(point);
-				if (d > pow(particles[n].radius,2)){
-					
-					double back   			  = integral(x[i],y[j],z[k]-dl,particles[n].deposits);
-					double forward 			  = integral(x[i],y[j],z[k]+dl,particles[n].deposits);
-					double central_difference = (forward - back)/(2*stepSize);
+					double perpendicularZ      = (central_differenceX*x[i]+central_differenceZ*z[k])*z[k]/d;
+					double tangentialZ         = (central_differenceZ - perpendicularZ);
 
-					double perpendicular      = central_difference*z[k]*z[k]/d;
-					double tangential         = central_difference - perpendicular;
+					//xGrad[i][j][k] 	       += perpendicular*25/1000;	
+					//zGrad[i][j][k] 		   += perpendicular*25/1000;	
+					xGrad[i][j][k] 			   += tangentialX*25/1000;		
+					zGrad[i][j][k]   		   += tangentialZ*25/1000;
 
-				//	zGrad[i][j][k] 		  	  += perpendicular*25/1000;	
-					zGrad[i][j][k] 			  += tangential*25/1000;	//Converts to Kelvin/micrometer 	
+					surfaceX		   += tangentialX*dl ;
+					surfaceZ			+= tangentialZ*dl;
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -170,5 +145,10 @@ for(int n = 0; n < nParticles;n++){
   	std::cout << "Program completed after: " << elapsed_seconds << " seconds" << std::endl;
 	//////////////////////////////////////////////////////////////////	
 	//////////////////END PROGRAM/////////////////////////////////////
+	surfaceX = surfaceX/(4*pi*particleRadius*particleRadius);
+	surfaceZ = surfaceZ/(4*pi*particleRadius*particleRadius);
+	double total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
+
+	std::cout<<surfaceX<<"\n" << surfaceZ<<"\n" << "magnitude = "<<total << "\n";
 	return 0;
 }	

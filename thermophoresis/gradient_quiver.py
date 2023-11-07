@@ -116,20 +116,24 @@ def generateFigure(imageBounds):
 			ax[1].grid(True)	
 			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
 			
-	
+			
+			
+			
 			ax[1] = fig.add_subplot(projection='3d')
+			ax[1].view_init(azim=30, elev=10)
+			ax[1].set_box_aspect([1, 1, 1])
 			ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)
 			ax[1].set_xlim(-imageBounds,imageBounds)
 			ax[1].set_ylim(-imageBounds,imageBounds)
 			ax[1].set_zlim(-imageBounds,imageBounds)
 			ax[1].set_xlabel(axisLabelsX[index])
 			ax[1].set_ylabel(axisLabelsY[index])
-			ax[1].set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
-			ax[1].set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-			ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-			ax[1].set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
-			ax[1].set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
-			ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+			#ax[1].set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
+			#ax[1].set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+			#ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
+			#ax[1].set_xticklabels([round(min(x)*1e6),round(min(x)/2*1e6),0,round(max(x)/2*1e6), round(max(x)*1e6)],fontsize=15)
+			#ax[1].set_yticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
+			#ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 
 
 		if index == 2:

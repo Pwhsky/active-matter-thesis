@@ -19,7 +19,7 @@ void Particle::generateDeposits(int nDeposits) {
 
     uniform_real_distribution<double> phi(0.0,twoPi); 
     uniform_real_distribution<double> costheta(-0.1,1);
-    uniform_real_distribution<double> u(0.5,1);
+    uniform_real_distribution<double> u(0.8,1);
 
 	//Initiate deposits
 	for(int i = 0; i<nDeposits; i++){
@@ -49,8 +49,6 @@ void Particle::generateDeposits(int nDeposits) {
 double Particle::getRadialDistance(Point r){
 		double norm = pow(this->center.x-r.x,2) + pow(this->center.y-r.y,2) + pow(this->center.z-r.z,2);
 	   return norm;
-
-
 }
 
 void Particle::writeDepositToCSV() {
