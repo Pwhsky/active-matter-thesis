@@ -101,10 +101,12 @@ for(int n = 0; n < nParticles;n++){
 					double central_differenceX = (forwardX - backX)/(2*dl);	
 					double central_differenceZ = (forwardZ - backZ)/(2*dl);
 
-					double perpendicularX      = (central_differenceX*x[i]+central_differenceZ*z[k])*x[i]/d;
-					double tangentialX         = (central_differenceX - perpendicularX);
-
+					//Project on normal vector:
 					double perpendicularZ      = (central_differenceX*x[i]+central_differenceZ*z[k])*z[k]/d;
+					double perpendicularX      = (central_differenceX*x[i]+central_differenceZ*z[k])*x[i]/d;
+
+					//Subtract to get tangential component
+					double tangentialX         = (central_differenceX - perpendicularX);
 					double tangentialZ         = (central_differenceZ - perpendicularZ);
 
 					//xGrad[i][j][k] 	       += perpendicular*25/1000;	
@@ -112,8 +114,8 @@ for(int n = 0; n < nParticles;n++){
 					xGrad[i][j][k] 			   += tangentialX*25/1000;		
 					zGrad[i][j][k]   		   += tangentialZ*25/1000;
 
-					surfaceX		   += tangentialX*dl ;
-					surfaceZ			+= tangentialZ*dl;
+					surfaceX		    += tangentialX*dl*dl;
+					surfaceZ			+= tangentialZ*dl*dl;
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -145,8 +147,8 @@ for(int n = 0; n < nParticles;n++){
   	std::cout << "Program completed after: " << elapsed_seconds << " seconds" << std::endl;
 	//////////////////////////////////////////////////////////////////	
 	//////////////////END PROGRAM/////////////////////////////////////
-	surfaceX = surfaceX/(4*pi*particleRadius*particleRadius);
-	surfaceZ = surfaceZ/(4*pi*particleRadius*particleRadius);
+	surfaceX = surfaceX/(2*pi*particleRadius);
+	surfaceZ = surfaceZ/(2*pi*particleRadius);
 	double total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
 
 	std::cout<<surfaceX<<"\n" << surfaceZ<<"\n" << "magnitude = "<<total << "\n";
