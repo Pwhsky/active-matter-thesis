@@ -12,17 +12,18 @@ using namespace std;
 	double  dv;
 	int 	nDeposits;	
 	int	    nPoints;
-
+	double dl;
 
 
 double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
 	//ContributionSum will sum up contributions from all deposits
 	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
-				double laserPower	           = I0 + I0*cos(twoPi*(x)/lambda);	
-				double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
+	double laserPower	           = I0 + I0*cos(twoPi*(x)/lambda);	
+	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
 	double contributionSum 		   = 0.0;
-		//Since the values scale with the inverse square distance, this is the only heavy computation.
+	
+	//Since the values scale with the inverse square distance.
     	for (size_t i = 0; i < deposits.size(); i++){
 
     		double inverse_squareroot_distance = 1.0/sqrt(pow(x-deposits[i].x,2)+
@@ -33,20 +34,22 @@ double integral(double x, double y, double z,std::vector<Point> deposits){
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
+double central_difference(double x1,double y1,double z1,double x2, double y2, double z2, vector<Point> deposits);
 
 int main(int argc, char** argv) {
+	   
 	auto startTimer = std::chrono::high_resolution_clock::now();
 	bounds    = stold(argv[2])  * pow(10,-6); 
 	stepSize  = bounds/(double)(300);		  //Step size, based off of bounds parameter
 	nDeposits = stof(argv[1]);				  //number of deposits to initialize
 	//size of simulation box
-	lambda	       = stold(argv[3])  * pow(10,-9); //Spatial periodicity
-    dv       	   = stepSize*stepSize*stepSize;  //volume element for integral
+	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
+    	dv	  = stepSize*stepSize*stepSize;  //volume element for integral
 	
 	int nParticles =1;
 
 	Point centerOfParticle1 = {0.0,0.0,0.0}; 
-	Point centerOfParticle2 = {-1.05*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {-particleRadius,0.0,0.0}; 
 	Particle particle1(centerOfParticle1,particleRadius);
 	Particle particle2(centerOfParticle2,particleRadius);
 	vector<Particle> particles = {particle1,particle2};
@@ -77,7 +80,7 @@ int main(int argc, char** argv) {
 	/////////////////////////////////
 	//Compute gradient in X-direction
 	/////////////////////////////////
-	double dl = stepSize*stepSize;
+	dl = stepSize*stepSize;
 	double thickness = pow(25*stepSize,2);
 	double surfaceX = 0.0;
 	double surfaceZ = 0.0;
@@ -93,29 +96,29 @@ for(int n = 0; n < nParticles;n++){
 				double d = particles[n].getRadialDistance(point);
 				if (d > pow(particles[n].radius,2)){// && d < pow(particles[n].radius,2)+thickness){
 
-					double backX   			  = integral(x[i]-dl,y[j],z[k],particles[n].deposits);
-					double forwardX			  = integral(x[i]+dl,y[j],z[k],particles[n].deposits);
-					double backZ   			  = integral(x[i],y[j],z[k]-dl,particles[n].deposits);
-					double forwardZ			  = integral(x[i],y[j],z[k]+dl,particles[n].deposits);
-
-					double central_differenceX = (forwardX - backX)/(2*dl);	
-					double central_differenceZ = (forwardZ - backZ)/(2*dl);
+					double central_differenceX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],z[k],particles[n].deposits);
+					
+					double central_differenceZ = central_difference(x[i],x[i],y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
+	
 
 					//Project on normal vector:
-					double perpendicularZ      = (central_differenceX*x[i]+central_differenceZ*z[k])*z[k]/d;
-					double perpendicularX      = (central_differenceX*x[i]+central_differenceZ*z[k])*x[i]/d;
+					double u = x[i]-particles[n].center.x;
+					double w = z[k]-particles[n].center.z;
+
+					double perpendicularZ      = (central_differenceX*u+central_differenceZ*w)*w/d;
+					double perpendicularX      = (central_differenceX*u+central_differenceZ*w)*u/d;
 
 					//Subtract to get tangential component
 					double tangentialX         = (central_differenceX - perpendicularX);
 					double tangentialZ         = (central_differenceZ - perpendicularZ);
 
-					//xGrad[i][j][k] 	       += perpendicular*25/1000;	
-					//zGrad[i][j][k] 		   += perpendicular*25/1000;	
+					//xGrad[i][j][k] 	       += perpendicularX*25/1000;	
+					//zGrad[i][j][k] 		   += perpendicularZ*25/1000;	
 					xGrad[i][j][k] 			   += tangentialX*25/1000;		
 					zGrad[i][j][k]   		   += tangentialZ*25/1000;
 
-					surfaceX		    += tangentialX*dl*dl;
-					surfaceZ			+= tangentialZ*dl*dl;
+					surfaceX		  	 += tangentialX*dl;
+					surfaceZ			 += tangentialZ*dl;
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -147,10 +150,17 @@ for(int n = 0; n < nParticles;n++){
   	std::cout << "Program completed after: " << elapsed_seconds << " seconds" << std::endl;
 	//////////////////////////////////////////////////////////////////	
 	//////////////////END PROGRAM/////////////////////////////////////
-	surfaceX = surfaceX/(2*pi*particleRadius);
-	surfaceZ = surfaceZ/(2*pi*particleRadius);
+	surfaceX = surfaceX/(4*pi*particleRadius*particleRadius);
+	surfaceZ = surfaceZ/(4*pi*particleRadius*particleRadius);
 	double total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
 
-	std::cout<<surfaceX<<"\n" << surfaceZ<<"\n" << "magnitude = "<<total << "\n";
+	std::cout<<"Vx = "<< surfaceX<<"\n" << "Vz = "<< surfaceZ<<"\n" << "Vtot = "<<total << "\n";
 	return 0;
 }	
+
+double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, vector<Point> deposits){
+	double back   		= integral(x1,y1,z1,deposits);
+	double forward		= integral(x2,y2,z2,deposits);
+	return (forward - back)/(2*dl);
+}
+

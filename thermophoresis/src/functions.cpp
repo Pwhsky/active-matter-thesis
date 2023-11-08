@@ -52,9 +52,8 @@ double Particle::getRadialDistance(Point r){
 }
 
 void Particle::writeDepositToCSV() {
-    std::ofstream outputFile("deposits.csv");
+	std::ofstream outputFile("deposits.csv");
     outputFile << "x,y,z" << "\n";
-    	
 	for (size_t i = 0; i < size(deposits); i++) {
 	        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
 	}

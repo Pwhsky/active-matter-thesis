@@ -37,9 +37,9 @@ class Particle{
 		void writeDepositToCSV();
 };
 
+
 std::vector<double> arange(double start, double stop, double stepSize);
 void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration
-void writeDepositToCSV(std::vector<Point> &deposits);
 void writeFieldToCSV(const std::vector<double>& x, 
 			    const std::vector<double>& y,
 			    const std::vector<double>& z,

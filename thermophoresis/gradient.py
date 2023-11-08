@@ -6,6 +6,8 @@ import os
 import time 
 import subprocess
 import sys
+
+os.chdir("src")
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
 
@@ -123,7 +125,7 @@ def generateFigure(imageBounds):
 
 #Main() below:
 #Navigate to folder containing c++ program
-os.chdir("src")
+
 resolution,nDeposits,generateData = parseArgs()
 if (generateData == "true"):
 	generateNewData()
