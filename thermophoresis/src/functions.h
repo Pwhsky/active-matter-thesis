@@ -35,20 +35,19 @@ class Particle{
 		double getRadialDistance(Point r);
 		void generateDeposits(int nDeposits);
 		void writeDepositToCSV();
+		void rotate(double theta);
 };
 
 
 std::vector<double> arange(double start, double stop, double stepSize);
-void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration
-void writeFieldToCSV(const std::vector<double>& x, 
-			    const std::vector<double>& y,
-			    const std::vector<double>& z,
-			    std::vector<std::vector<std::vector<double>>>& field);
-void writeGradToCSV(const std::vector<double>& x, 
-			    const std::vector<double>& y,
-			    const std::vector<double>& z,
-			    std::vector<std::vector<std::vector<double>>>& xGrad,
-				std::vector<std::vector<std::vector<double>>>& yGrad);
+
+void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration (NOT IN USE)
+
+//Writes temperature increase!
+void writeFieldToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, std::vector<std::vector<std::vector<double>>>& field);
+
+//Writes X and Z gradient!
+void writeGradToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, std::vector<std::vector<std::vector<double>>>& xGrad, std::vector<std::vector<std::vector<double>>>& yGrad);
 
 
 

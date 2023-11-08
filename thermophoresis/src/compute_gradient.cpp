@@ -33,7 +33,6 @@ double integral(double x, double y, double z,std::vector<Point> deposits){
 		}
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
-
 double central_difference(double x1,double y1,double z1,double x2, double y2, double z2, vector<Point> deposits);
 
 int main(int argc, char** argv) {
@@ -42,22 +41,23 @@ int main(int argc, char** argv) {
 	bounds    = stold(argv[2])  * pow(10,-6); 
 	stepSize  = bounds/(double)(300);		  //Step size, based off of bounds parameter
 	nDeposits = stof(argv[1]);				  //number of deposits to initialize
-	//size of simulation box
 	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
-    	dv	  = stepSize*stepSize*stepSize;  //volume element for integral
+    dv	      = stepSize*stepSize*stepSize;  //volume element for integral
 	
-	int nParticles =1;
 
-	Point centerOfParticle1 = {0.0,0.0,0.0}; 
+	int nParticles =2;
+	Point centerOfParticle1 = {1.1*particleRadius,0.0,0.0}; 
 	Point centerOfParticle2 = {-particleRadius,0.0,0.0}; 
 	Particle particle1(centerOfParticle1,particleRadius);
 	Particle particle2(centerOfParticle2,particleRadius);
 	vector<Particle> particles = {particle1,particle2};
+
      ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
 	 for(int i = 0; i<nParticles; i++ ){
 		particles[i].generateDeposits(nDeposits);
 	 }
-
+	//particles[0].rotate(pi/4);
+	//particles[1].rotate(-pi/8); 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
 	vector<double> linspace = arange(-bounds,bounds,stepSize);
@@ -142,19 +142,20 @@ for(int n = 0; n < nParticles;n++){
 	cout<<"Simulation finished, writing to csv..."<<endl;
 	writeGradToCSV(x,y,z,xGrad,zGrad);
 	
+	//Print surface integral (self-propulsion velocity in X and Z components.)
+	surfaceX = surfaceX/(4*pi*particleRadius*particleRadius);
+	surfaceZ = surfaceZ/(4*pi*particleRadius*particleRadius);
+	double total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
+	std::cout<<"Vx = "<< surfaceX<<"\n" << "Vz = "<< surfaceZ<<"\n" << "Vtot = "<<total << "\n";
 	//////////////////////////////////////////////////////////////////
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
    	auto endTimer = std::chrono::high_resolution_clock::now();
    	std::chrono::duration<double> duration = endTimer - startTimer;
 	double elapsed_seconds = duration.count();
-  	std::cout << "Program completed after: " << elapsed_seconds << " seconds" << std::endl;
+  	std::cout << "Program completed after: " << elapsed_seconds << " seconds" << "\n";
 	//////////////////////////////////////////////////////////////////	
 	//////////////////END PROGRAM/////////////////////////////////////
-	surfaceX = surfaceX/(4*pi*particleRadius*particleRadius);
-	surfaceZ = surfaceZ/(4*pi*particleRadius*particleRadius);
-	double total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
 
-	std::cout<<"Vx = "<< surfaceX<<"\n" << "Vz = "<< surfaceZ<<"\n" << "Vtot = "<<total << "\n";
 	return 0;
 }	
 
