@@ -56,17 +56,30 @@ void Particle::rotate(double theta){
 	for(int i = 0;i< (this->deposits).size();i++){
 		double distance = getRadialDistance(deposits[i]);
 	
-		 (this->deposits)[i].x = this->center.x -cos(theta) * (this->deposits)[i].x - sin(theta) * (this->deposits)[i].z;
-        (this->deposits)[i].z = this->center.z - sin(theta) * (this->deposits)[i].x + cos(theta) * (this->deposits)[i].z;
+		 (this->deposits)[i].x = this->deposits[i].x- this->center.x -cos(theta) * (this->deposits)[i].x - sin(theta) * (this->deposits)[i].z;
+        (this->deposits)[i].z = this->deposits[i].z -this->center.z - sin(theta) * (this->deposits)[i].x + cos(theta) * (this->deposits)[i].z;
 	}
 }
 
 void Particle::writeDepositToCSV() {
-	std::ofstream outputFile("deposits.csv");
-    outputFile << "x,y,z" << "\n";
-	for (size_t i = 0; i < size(deposits); i++) {
-	        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
-	}
+    static bool isFirstRun = true;
+
+    std::ofstream outputFile;
+
+    if (isFirstRun) {
+        // If it's the first run, create a new file with the header
+        outputFile.open("deposits.csv");
+        outputFile << "x,y,z" << "\n";
+        isFirstRun = false;
+    } else {
+        // If it's not the first run, open the file in append mode
+        outputFile.open("deposits.csv", std::ios::app);
+    }
+
+    // Write data to the file
+    for (size_t i = 0; i < size(deposits); i++) {
+        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
+    }
 
     outputFile.close();
 }
@@ -97,8 +110,8 @@ void writeFieldToCSV(const std::vector<double>& x,
 		     const std::vector<double>& z, 
 		     std::vector<std::vector<std::vector<double>>>& field){
 
-	std::ofstream outputFile("gradient.csv");
-	outputFile << "x,y,z,gradientValue" << "\n";
+	std::ofstream outputFile("temperature.csv");
+	outputFile << "x,y,z,temperature" << "\n";
 
 	for (size_t i = 0; i < x.size()-1; i+=2) {
 	    	for (size_t j = 0; j < y.size(); j++) {

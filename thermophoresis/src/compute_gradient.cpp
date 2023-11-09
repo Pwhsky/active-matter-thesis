@@ -13,7 +13,7 @@ using namespace std;
 	int 	nDeposits;	
 	int	    nPoints;
 	double dl;
-
+	bool onlyTangential = true;
 
 double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
 	 for(int i = 0; i<nParticles; i++ ){
 		particles[i].generateDeposits(nDeposits);
 	 }
+
 	//particles[0].rotate(pi/4);
 	//particles[1].rotate(-pi/8); 
 	//////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,10 +113,15 @@ for(int n = 0; n < nParticles;n++){
 					double tangentialX         = (central_differenceX - perpendicularX);
 					double tangentialZ         = (central_differenceZ - perpendicularZ);
 
-					//xGrad[i][j][k] 	       += perpendicularX*25/1000;	
-					//zGrad[i][j][k] 		   += perpendicularZ*25/1000;	
+					if (onlyTangential == true){
+					xGrad[i][j][k] 			   += tangentialX*25/1000;		
+					zGrad[i][j][k]   		   += tangentialZ*25/1000;			
+					}else{
+					xGrad[i][j][k] 	       += perpendicularX*25/1000;	
+					zGrad[i][j][k] 		   += perpendicularZ*25/1000;	
 					xGrad[i][j][k] 			   += tangentialX*25/1000;		
 					zGrad[i][j][k]   		   += tangentialZ*25/1000;
+					}
 
 					surfaceX		  	 += tangentialX*dl;
 					surfaceZ			 += tangentialZ*dl;
@@ -141,11 +147,15 @@ for(int n = 0; n < nParticles;n++){
     //////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<endl;
 	writeGradToCSV(x,y,z,xGrad,zGrad);
+	double total;
+	if(onlyTangential == true){
+
 	
 	//Print surface integral (self-propulsion velocity in X and Z components.)
 	surfaceX = surfaceX/(4*pi*particleRadius*particleRadius);
 	surfaceZ = surfaceZ/(4*pi*particleRadius*particleRadius);
-	double total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
+	total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
+	}
 	std::cout<<"Vx = "<< surfaceX<<"\n" << "Vz = "<< surfaceZ<<"\n" << "Vtot = "<<total << "\n";
 	//////////////////////////////////////////////////////////////////
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////

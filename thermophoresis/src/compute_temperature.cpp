@@ -42,11 +42,17 @@ int main(int argc, char** argv) {
 	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity of laser 
     dv        = stepSize*stepSize*stepSize;   //volume element for integral
 	
-	
-	///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
-	vector<Point> deposits;
-	generateDeposits(deposits,nDeposits);
+	int nParticles =2;
+	Point centerOfParticle1 = {1.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {-particleRadius,0.0,0.0}; 
+	Particle particle1(centerOfParticle1,particleRadius);
+	Particle particle2(centerOfParticle2,particleRadius);
+	vector<Particle> particles = {particle1,particle2};
 
+     ///////////GENERATE DEPOSITS//////////////////////////////////////////////////////////////////
+	 for(int i = 0; i<nParticles; i++ ){
+		particles[i].generateDeposits(nDeposits);
+	 }
 
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
 	 vector<double> linspace = arange(-1*bounds,bounds,stepSize);
@@ -62,18 +68,20 @@ int main(int argc, char** argv) {
 	int nSteps = x.size();
 	//Initialize empty 3D space of points which will contain the integral values.
 	 vector<vector<vector<double>>> temperature(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));  
-	const int totalIterations = nSteps*nSteps;
+	const int totalIterations = nSteps*nSteps*y.size();
    	size_t currentIteration = 0;
 
 	//The 3 nested for-loops will call integral() for all points in 3D space.
+	for(int n = 0;n<nParticles;n++){
  	#pragma omp parallel for
     	for (size_t i = 0; i < nSteps; i++){
     		for(size_t j = 0; j<y.size(); j++){
     			for(size_t k = 0; k<nSteps; k++){
-    			
+					Point point = {x[i],y[j],z[k]};
+					double d = particles[n].getRadialDistance(point);
     				//Check if outside particle:
-					if (x[i]*x[i] + y[j]*y[j] + z[k]*z[k] > particleRadiusSquared){
-						temperature[i][j][k] = integral(x[i],y[j],z[k],deposits);	
+					if (d > pow(particles[n].radius,2)){
+						temperature[i][j][k] += integral(x[i],y[j],z[k],particles[n].deposits);	
        				}
 
 					// Display progress bar so that the user has something to look at
@@ -90,12 +98,12 @@ int main(int argc, char** argv) {
 				}
     		}
     	}
-
+		particles[n].writeDepositToCSV();
+	}
 
     //////////////////////WRITE TO FILE///////////////////////////////
 		cout<<"Simulation finished, writing to csv..."<<endl;
-		writeFieldToCSV(x,y,z,temperature);
-		writeDepositToCSV(deposits);	
+		writeFieldToCSV(x,y,z,temperature);	
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
    		auto endTimer = std::chrono::high_resolution_clock::now();
    		std::chrono::duration<double> duration = endTimer - startTimer;
