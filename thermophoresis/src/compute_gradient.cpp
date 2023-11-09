@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
     dv	      = stepSize*stepSize*stepSize;  //volume element for integral
 	
 
-	int nParticles =2;
-	Point centerOfParticle1 = {1.1*particleRadius,0.0,0.0}; 
+	int nParticles =1;
+	Point centerOfParticle1 = {0.0*particleRadius,0.0,0.0}; 
 	Point centerOfParticle2 = {-particleRadius,0.0,0.0}; 
 	Particle particle1(centerOfParticle1,particleRadius);
 	Particle particle2(centerOfParticle2,particleRadius);
@@ -95,7 +95,7 @@ for(int n = 0; n < nParticles;n++){
     			//Check if outside particle:
 				Point point = {x[i],y[j],z[k]};
 				double d = particles[n].getRadialDistance(point);
-				if (d > pow(particles[n].radius,2)){// && d < pow(particles[n].radius,2)+thickness){
+				if (d > pow(particles[n].radius,2) && d < pow(particles[n].radius,2)+thickness){
 
 					double central_differenceX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],z[k],particles[n].deposits);
 					
