@@ -42,8 +42,8 @@ int main(int argc, char** argv) {
 	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity of laser 
     dv        = stepSize*stepSize*stepSize;   //volume element for integral
 	
-	int nParticles =2;
-	Point centerOfParticle1 = {1.1*particleRadius,0.0,0.0}; 
+	int nParticles =1;
+	Point centerOfParticle1 = {0*particleRadius,0.0,0.0}; 
 	Point centerOfParticle2 = {-particleRadius,0.0,0.0}; 
 	Particle particle1(centerOfParticle1,particleRadius);
 	Particle particle2(centerOfParticle2,particleRadius);

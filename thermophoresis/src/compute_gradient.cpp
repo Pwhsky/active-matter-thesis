@@ -4,7 +4,7 @@
 #include <omp.h>
 #include "functions.h"
 
-
+double Dt = 
 using namespace std;
  	double  bounds;
 	double  lambda;
@@ -13,7 +13,7 @@ using namespace std;
 	int 	nDeposits;	
 	int	    nPoints;
 	double dl;
-	bool onlyTangential = true;
+	bool onlyTangential = false;
 
 double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
@@ -114,17 +114,17 @@ for(int n = 0; n < nParticles;n++){
 					double tangentialZ         = (central_differenceZ - perpendicularZ);
 
 					if (onlyTangential == true){
-					xGrad[i][j][k] 			   += tangentialX*25/1000;		
-					zGrad[i][j][k]   		   += tangentialZ*25/1000;			
+						xGrad[i][j][k] 			   += tangentialX*25/1000;		
+						zGrad[i][j][k]   		   += tangentialZ*25/1000;			
 					}else{
-					xGrad[i][j][k] 	       += perpendicularX*25/1000;	
-					zGrad[i][j][k] 		   += perpendicularZ*25/1000;	
-					xGrad[i][j][k] 			   += tangentialX*25/1000;		
-					zGrad[i][j][k]   		   += tangentialZ*25/1000;
+						xGrad[i][j][k] 	     	   += perpendicularX*25/1000;	
+						zGrad[i][j][k] 			   += perpendicularZ*25/1000;	
+						xGrad[i][j][k] 			   += tangentialX*25/1000;		
+						zGrad[i][j][k]   		   += tangentialZ*25/1000;
 					}
 
-					surfaceX		  	 += tangentialX*dl;
-					surfaceZ			 += tangentialZ*dl;
+					surfaceX		  	 += tangentialX*dl*dl;
+					surfaceZ			 += tangentialZ*dl*dl;
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -149,12 +149,10 @@ for(int n = 0; n < nParticles;n++){
 	writeGradToCSV(x,y,z,xGrad,zGrad);
 	double total;
 	if(onlyTangential == true){
-
-	
-	//Print surface integral (self-propulsion velocity in X and Z components.)
-	surfaceX = surfaceX/(4*pi*particleRadius*particleRadius);
-	surfaceZ = surfaceZ/(4*pi*particleRadius*particleRadius);
-	total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
+		//Print surface integral (self-propulsion velocity in X and Z components.)
+		surfaceX = surfaceX;
+		surfaceZ = surfaceZ;
+		total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
 	}
 	std::cout<<"Vx = "<< surfaceX<<"\n" << "Vz = "<< surfaceZ<<"\n" << "Vtot = "<<total << "\n";
 	//////////////////////////////////////////////////////////////////

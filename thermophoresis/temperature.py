@@ -33,7 +33,7 @@ def generateNewData():
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
 def loadData():
-	df = pd.read_csv("gradient.csv",engine="pyarrow")
+	df = pd.read_csv("temperature.csv",engine="pyarrow")
 	depositDF = pd.read_csv('deposits.csv')
 	df.sort_values(by=['z'])
 
@@ -43,7 +43,7 @@ def loadData():
         	executor.submit(dfToNumpy, df['x']),
         	executor.submit(dfToNumpy, df['y']),
       		executor.submit(dfToNumpy, df['z']),
-       		executor.submit(dfToNumpy, df['gradientValue'])
+       		executor.submit(dfToNumpy, df['temperature'])
        		]
 	x    = futures[0].result()
 	y    = futures[1].result()
