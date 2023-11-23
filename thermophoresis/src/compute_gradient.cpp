@@ -4,7 +4,7 @@
 #include <omp.h>
 #include "functions.h"
 
-double Dt = 
+
 using namespace std;
  	double  bounds;
 	double  lambda;
@@ -13,7 +13,10 @@ using namespace std;
 	int 	nDeposits;	
 	int	    nPoints;
 	double dl;
-	bool onlyTangential = false;
+
+	//When only computing tangential flow and self-propulsion:
+	double thickness = pow(15*stepSize,2);
+	bool onlyTangential = true;
 
 double integral(double x, double y, double z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
@@ -82,23 +85,24 @@ int main(int argc, char** argv) {
 	//Compute gradient in X-direction
 	/////////////////////////////////
 	dl = stepSize*stepSize;
-	double thickness = pow(25*stepSize,2);
+
 	double surfaceX = 0.0;
 	double surfaceZ = 0.0;
+	double counter = 0;
 for(int n = 0; n < nParticles;n++){
 
 	
 	#pragma omp parallel for
     for (size_t i = 0; i < nPoints; i++){
     	for(size_t j = 0; j<y.size(); j++){
-    		for(size_t k = 0; k<nPoints; k++){		
+    		for(size_t k = 0; k<nPoints; k++){	
+					
     			//Check if outside particle:
 				Point point = {x[i],y[j],z[k]};
 				double d = particles[n].getRadialDistance(point);
 				if (d > pow(particles[n].radius,2) && d < pow(particles[n].radius,2)+thickness){
 
 					double central_differenceX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],z[k],particles[n].deposits);
-					
 					double central_differenceZ = central_difference(x[i],x[i],y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
 	
 
@@ -112,19 +116,18 @@ for(int n = 0; n < nParticles;n++){
 					//Subtract to get tangential component
 					double tangentialX         = (central_differenceX - perpendicularX);
 					double tangentialZ         = (central_differenceZ - perpendicularZ);
+					xGrad[i][j][k] 			   += tangentialX*25/1000.0;		
+					zGrad[i][j][k]   		   += tangentialZ*25/1000.0;
 
-					if (onlyTangential == true){
-						xGrad[i][j][k] 			   += tangentialX*25/1000;		
-						zGrad[i][j][k]   		   += tangentialZ*25/1000;			
-					}else{
-						xGrad[i][j][k] 	     	   += perpendicularX*25/1000;	
-						zGrad[i][j][k] 			   += perpendicularZ*25/1000;	
-						xGrad[i][j][k] 			   += tangentialX*25/1000;		
-						zGrad[i][j][k]   		   += tangentialZ*25/1000;
+					if (onlyTangential == false){
+						xGrad[i][j][k] 	     	   += perpendicularX*25/1000.0;	
+						zGrad[i][j][k] 			   += perpendicularZ*25/1000.0;				
 					}
-
-					surfaceX		  	 += tangentialX*dl*dl;
-					surfaceZ			 += tangentialZ*dl*dl;
+					double theta = atan2(sqrt(x[i]*x[i] + z[k]*z[k]), y[j]);
+					double phi = atan(z[k]/x[i]);
+					surfaceX		  	 += tangentialX*sin(theta)*cos(phi)*pi*pi;
+					surfaceZ			 += tangentialZ*sin(theta)*cos(phi)*pi*pi;
+					counter++;
       			}
 				currentIteration++;
          		// Calculate progress percentage so that the user has something to look at
@@ -148,11 +151,14 @@ for(int n = 0; n < nParticles;n++){
 	cout<<"Simulation finished, writing to csv..."<<endl;
 	writeGradToCSV(x,y,z,xGrad,zGrad);
 	double total;
+	double thermoDiffusion = 2.8107e-6; //meters^2 / kelvin*second
 	if(onlyTangential == true){
 		//Print surface integral (self-propulsion velocity in X and Z components.)
-		surfaceX = surfaceX;
-		surfaceZ = surfaceZ;
+		
+		surfaceX = surfaceX * thermoDiffusion/counter;
+		surfaceZ = surfaceZ * thermoDiffusion/counter;
 		total = sqrt(pow(surfaceX,2)+pow(surfaceZ,2));
+		cout<<"Computed "<<counter<<" points\n"<<"\n";
 	}
 	std::cout<<"Vx = "<< surfaceX<<"\n" << "Vz = "<< surfaceZ<<"\n" << "Vtot = "<<total << "\n";
 	//////////////////////////////////////////////////////////////////
