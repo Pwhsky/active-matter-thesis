@@ -9,6 +9,7 @@ import sys
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
 
+font = 17
 pi = 3.14159
 circle1 = Circle((0, 0), 2e-6)
 circle1.set(fill=False, linestyle='--', alpha=0.2)
@@ -67,7 +68,7 @@ def generateFigure(imageBounds):
 	
 	index = 0
 	for axis in ax:
-		axis.set_title(axisTitles[index],fontsize=16)
+		axis.set_title(axisTitles[index],fontsize=font)
 		axis.axis('equal')
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
@@ -78,8 +79,8 @@ def generateFigure(imageBounds):
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 		
-		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=15)
-		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=15)
+		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=font)
+		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=font)
 		if index == 0:
 			axis.add_patch(circles[index])
 			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',

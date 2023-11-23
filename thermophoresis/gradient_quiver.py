@@ -14,7 +14,7 @@ from cython_functions import histogram2d_cython, gradient_cython
 #When resolution = 200 (for most simulations) that equals 25 nanometers!
 #Convert accordingly.
 
-
+font = 17
 pi = 3.14159
 particleRadius = 2e-6
 circle1 = Circle((0, 0), particleRadius)
@@ -69,7 +69,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
-	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
+	fig, ax = plt.subplots(1, 3, figsize=(21, 6))
 	axisTitles = [f"$∇T$ for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
@@ -77,17 +77,17 @@ def generateFigure(imageBounds):
 	
 	index = 0
 	for axis in ax:
-		axis.set_title(axisTitles[index],fontsize=16)
+		axis.set_title(axisTitles[index],fontsize=font)
 		axis.axis('equal')
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
 
-		axis.set_xlabel(axisLabelsX[index])
-		axis.set_ylabel(axisLabelsY[index])
+		axis.set_xlabel(axisLabelsX[index],fontsize=font-3)
+		axis.set_ylabel(axisLabelsY[index],fontsize=font-3)
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=15)
-		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=15)
+		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=font)
+		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=font)
 
 		if index == 0:
 			axis.add_patch(circles[index])

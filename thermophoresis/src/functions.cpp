@@ -56,10 +56,12 @@ void Particle::rotate(double theta){
 	for(int i = 0;i< (this->deposits).size();i++){
 		double distance = getRadialDistance(deposits[i]);
 	
-		 (this->deposits)[i].x = this->deposits[i].x- this->center.x -cos(theta) * (this->deposits)[i].x - sin(theta) * (this->deposits)[i].z;
+		(this->deposits)[i].x = this->deposits[i].x- this->center.x - cos(theta) * (this->deposits)[i].x - sin(theta) * (this->deposits)[i].z;
         (this->deposits)[i].z = this->deposits[i].z -this->center.z - sin(theta) * (this->deposits)[i].x + cos(theta) * (this->deposits)[i].z;
 	}
 }
+
+
 
 void Particle::writeDepositToCSV() {
     static bool isFirstRun = true;

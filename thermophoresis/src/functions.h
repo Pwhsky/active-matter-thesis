@@ -27,15 +27,19 @@ class Particle{
 	public:
 		Point  center;
 		double radius;
+		double selfPropulsion[2];
 		std::vector<Point> deposits;
-		Particle(Point particleCenter,double r){
+		Particle(Point particleCenter,double r,double velocity){
 			center = particleCenter;
 			radius = r;
+			selfPropulsion[0] = velocity;
+			selfPropulsion[1] = velocity;
 		}  // Constructor with parameters
 		double getRadialDistance(Point r);
 		void generateDeposits(int nDeposits);
 		void writeDepositToCSV();
 		void rotate(double theta);
+
 };
 
 
