@@ -37,7 +37,7 @@ def parseArgs():
 	return resolution,nDeposits,generateData
 	
 def generateNewData():
-	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-O3", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
 def loadData():
@@ -100,7 +100,7 @@ def generateFigure(imageBounds):
 							      w[::subsampling_factor],u[::subsampling_factor],r[::subsampling_factor],
 							 
 								cmap='plasma',
-								pivot = 'tip'
+								pivot = 'mid'
 								)
 		
 

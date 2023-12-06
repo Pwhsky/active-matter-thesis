@@ -38,7 +38,7 @@ def parseArgs():
 	
 def generateNewData():
 	print("Generating new data...\n")
-	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-O3", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
 def loadData():
