@@ -5,9 +5,19 @@
 #include <random>
 
 using namespace std;
+	constexpr double particleRadius   		  = 2    *pow(10,-6);
 
 
-	
+//Places particles next to each other	
+std::vector<Particle> initializeParticles(){
+	Point centerOfParticle1 = {1.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {-1.1*particleRadius,0.0,0.0}; 
+	Particle particle1(centerOfParticle1,particleRadius,0.0);
+	Particle particle2(centerOfParticle2,particleRadius,0.0);
+	vector<Particle> particles = {particle1,particle2};
+	return particles;
+}
+
 
 void writeGradToCSV(const std::vector<double>& x, 
 		     const std::vector<double>& y, 
