@@ -38,7 +38,7 @@ def parseArgs():
 	
 def generateNewData():
 	print("Generating new data...\n")
-	subprocess.run(["g++","functions.cpp","compute_gradient.cpp","-o","sim","-O3", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","particle.cpp","compute_gradient.cpp","-o","sim","-O3", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
 def loadData():
@@ -119,7 +119,6 @@ def generateFigure(imageBounds):
 		index+=1
 	
 	#Labels & Legend	
-	fig.legend([ "Particle boundary"],loc='lower left')
 	fig.suptitle(f"Silica microparticle temperature gradient",fontsize=20)
 
 

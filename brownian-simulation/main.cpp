@@ -13,7 +13,7 @@ std::mt19937 gen(rd());
 
 
 //Constants:
-	const double pi			    = 3.14159265358979323846;
+	const double pi			    		= 3.14159265358979323846;
 	const double temperature            = 300;
 	const double particleRadius         = 1*pow(10,-6); 			   //1 micrometer sized particle
 	const double cutoff_distance	    = 8*pow(10,-6);
@@ -108,8 +108,6 @@ int main(int argc, char** argv) {
 	
 	return 0;
 }
-
-
 
 
 std::vector<Particle> initialize_particles(int nHot, int nCold) {
