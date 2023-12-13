@@ -68,7 +68,7 @@ void Particle::rotate(double angle) {
 	//Rotation only works for small angle increments, so therefore it is done in 100 increments.
 	//during the simulation, the maximum angle of rotation will be small either way.
 	for(int l = 0; l<100;l++){
-		double theta =  angle/100.0;
+		double theta =  angle*0.01;
 
     	for (int i = 0; i < this->deposits.size(); i++) {
        		double distance = getRadialDistance(deposits[i]);

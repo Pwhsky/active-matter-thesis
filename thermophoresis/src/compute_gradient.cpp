@@ -19,6 +19,7 @@
 	constexpr double waterConductivity	 	  = 0.606;
 	constexpr double thermoDiffusion 		  = 2.8107e-6; 
 
+
 using namespace std;
  	double  bounds;
 	double  lambda;
@@ -30,12 +31,14 @@ using namespace std;
 	double  thickness; 
 	bool    onlyTangential = false;
 
+	vector<double> z;
+	vector<double> x;
+	vector<double> y;
+Particle getSelfPropulsion(Particle particle);
 
-Particle getSelfPropulsion(Particle particle,vector<double> x, 
-						vector<double> y,vector<double> z);
 
+double integral(double _x, double _y,double _z,std::vector<Point> deposits);
 
-double integral(double x, double y, double z,std::vector<Point> deposits);
 double central_difference(double x1,double y1,
 						  double z1,double x2, 
 						  double y2, double z2,
@@ -67,8 +70,9 @@ int main(int argc, char** argv) {
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
 	vector<double> linspace = arange(-bounds,bounds,stepSize);
-	vector<double> z = linspace, x = linspace;
-	vector<double> y = {0.0};
+	z = linspace;
+	x = linspace;
+	y = {0.0};
 
 	nPoints = x.size();
    
@@ -82,12 +86,12 @@ int main(int argc, char** argv) {
 
 	dl = stepSize*stepSize;
 	thickness = pow(25*stepSize,2);
-
+	cout<<thickness<<"\n";
 	
 
 	for(int n = 0; n < nParticles;n++){
 
-		particles[n] = getSelfPropulsion(particles[n],x,y,z);
+		particles[n] = getSelfPropulsion(particles[n]);
 		double Qx = particles[n].center.x;
 		double Qy = particles[n].center.y;
 		double Qz = particles[n].center.z;
@@ -150,7 +154,7 @@ int main(int argc, char** argv) {
 		particles[n].center.x += particles[n].selfPropulsion[0]*1e-6*0.01; //Micrometer scale
 		particles[n].center.y += particles[n].selfPropulsion[1]*1e-6*0.01;
 
-		particles[n].rotate(pi/2);
+		particles[n].rotate(-pi/2);
 		particles[n].writeDepositToCSV();
 		
         writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
@@ -174,32 +178,32 @@ int main(int argc, char** argv) {
 	return 0;
 }	
 
-double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, vector<Point> deposits){
+inline double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, vector<Point> deposits){
 	double back   		= integral(x1,y1,z1,deposits);
 	double forward		= integral(x2,y2,z2,deposits);
 	return (forward - back)/(2*dl);
 }
 
-double integral(double x, double y, double z,std::vector<Point> deposits){
+inline double integral(double _x,double _y,double _z,std::vector<Point> deposits){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
 	//ContributionSum will sum up contributions from all deposits
 	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
-	double laserPower	           = I0 + I0*cos(twoPi*(x)/lambda);	
+	double laserPower	           = I0 + I0*cos(twoPi*(_x)/lambda);	
 	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
 	double contributionSum 		   = 0.0;
 	
 	//Since the values scale with the inverse square distance.
     	for (size_t i = 0; i < deposits.size(); i++){
 
-    		double inverse_squareroot_distance = 1.0/sqrt(pow(x-deposits[i].x,2)+
-														  pow(y-deposits[i].y,2)+
-														  pow(z-deposits[i].z,2));
+    		double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
+														  pow(_y-deposits[i].y,2)+
+														  pow(_z-deposits[i].z,2));
 			contributionSum +=  inverse_squareroot_distance;
 		}
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
-Particle getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,vector<double> z){
+Particle getSelfPropulsion(Particle particle){
 	//This will compute the tangential component in a thin layer around the particle
 	//And then do a surface integral to get self propulsion in X and Z direction.
 
@@ -207,7 +211,7 @@ Particle getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,
 	double Qy = particle.center.y;
 	double Qz = particle.center.z;
 	int counter = 1;
-
+	/*
 	#pragma omp parallel for
 		for (size_t i = 0; i < nPoints; i++){
 			for(size_t j = 0; j<y.size(); j++){
@@ -233,7 +237,6 @@ Particle getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,
 						double tangentialZ         = (gradientZ - perpendicularZ);
 
 						double theta = atan2(sqrt((Qx-x[i])*(Qx-x[i]) + (Qz-z[k])*(Qz-z[k])), sqrt((Qy-y[j]) *(Qy-y[j]) ));
-						
 						double phi   = atan((Qz-z[k])/(Qx-x[i]));
 						particle.selfPropulsion[0] += tangentialX*sin(theta)*cos(phi);
 						particle.selfPropulsion[1] += tangentialZ*sin(theta)*cos(phi);
@@ -243,6 +246,44 @@ Particle getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,
 				}
 			}
 		}
+		*/
+
+		#pragma omp parallel for
+		for (auto i:x){
+			for(auto j:y){
+				for(auto k:z){		
+					
+					Point point = {i,j,k};
+					double d = particle.getRadialDistance(point);
+					//Compute only the points near the surface
+					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
+						
+						double gradientX = central_difference(i-dl,i+dl,j,j,k,k,particle.deposits);
+						double gradientZ = central_difference(i,i,j,j,k-dl,k+dl,particle.deposits);
+
+						//Project on normal vector:
+						double u				   = i-particle.center.x;
+						double w 				   = k-particle.center.z;
+
+						double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
+						double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
+
+						//Subtract to get tangential component
+						double tangentialX         = (gradientX - perpendicularX);
+						double tangentialZ         = (gradientZ - perpendicularZ);
+
+						double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
+						double phi   = atan((Qz-k)/(Qx-i));
+						particle.selfPropulsion[0] += tangentialX*sin(theta)*cos(phi);
+						particle.selfPropulsion[1] += tangentialZ*sin(theta)*cos(phi);
+						counter++;
+					}
+					
+				}
+			}
+		}
+
+		
 		//Scale with diffusion coefficient
 	for(int i = 0; i<1;i++){
 		particle.selfPropulsion[i] *= pi*pi*thermoDiffusion/(double)counter;

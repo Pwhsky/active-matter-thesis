@@ -1,10 +1,10 @@
-#include <iostream>
+
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
 #include <vector>
 #include <cmath>
-
+#include <iostream>
 
 struct Point{
 	double x;
