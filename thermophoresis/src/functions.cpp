@@ -10,12 +10,16 @@ using namespace std;
 
 //Places particles next to each other	
 std::vector<Particle> initializeParticles(){
-	Point centerOfParticle1 = {1.1*particleRadius,0.0,0.0}; 
+
+	Point centerOfParticle1 = {1.5*particleRadius,0.0,0.0}; 
 	Point centerOfParticle2 = {-1.1*particleRadius,0.0,0.0}; 
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
 	vector<Particle> particles = {particle1,particle2};
+
+	
 	return particles;
+	
 }
 
 

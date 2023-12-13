@@ -1,4 +1,5 @@
 #include <chrono>
+#include <fstream>
 #include <cmath>
 #include <vector>
 #include <omp.h>
@@ -16,7 +17,7 @@
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
-
+	constexpr double thermoDiffusion 		  = 2.8107e-6; 
 
 using namespace std;
  	double  bounds;
@@ -25,12 +26,12 @@ using namespace std;
 	double  dv;
 	int 	nDeposits;	
 	int	    nPoints;
-	double dl;
-	double thickness; 
-	bool onlyTangential = false;
+	double  dl;
+	double  thickness; 
+	bool    onlyTangential = false;
 
-double thermoDiffusion = 2.8107e-6; 
-void getSelfPropulsion(Particle particle,vector<double> x, 
+
+Particle getSelfPropulsion(Particle particle,vector<double> x, 
 						vector<double> y,vector<double> z);
 
 
@@ -48,13 +49,16 @@ int main(int argc, char** argv) {
 	nDeposits = stof(argv[1]);				  //number of deposits to initialize
 	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
     dv	      = stepSize*stepSize*stepSize;  //volume element for integral
-	
+
+	std::ofstream writePositions("positions.csv");
+	writePositions << "x,y,z"<<"\n";
 
 	
 
 	vector<Particle> particles = initializeParticles();
 
 	int nParticles = particles.size();
+	
 	for(int i = 0; i<nParticles; i++ )
 		particles[i].generateDeposits(nDeposits);
 
@@ -63,9 +67,9 @@ int main(int argc, char** argv) {
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
 	vector<double> linspace = arange(-bounds,bounds,stepSize);
+	vector<double> z = linspace, x = linspace;
 	vector<double> y = {0.0};
-    vector<double> z = linspace;
-	vector<double> x = linspace;
+
 	nPoints = x.size();
    
  	cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
@@ -79,9 +83,11 @@ int main(int argc, char** argv) {
 	dl = stepSize*stepSize;
 	thickness = pow(25*stepSize,2);
 
+	
+
 	for(int n = 0; n < nParticles;n++){
 
-		getSelfPropulsion(particles[n],x,y,z);
+		particles[n] = getSelfPropulsion(particles[n],x,y,z);
 		double Qx = particles[n].center.x;
 		double Qy = particles[n].center.y;
 		double Qz = particles[n].center.z;
@@ -90,28 +96,28 @@ int main(int argc, char** argv) {
 		int counter = 0;
 		#pragma omp parallel for
 		for (size_t i = 0; i < nPoints; i++){
-
 			for(size_t j = 0; j<y.size(); j++){
-				for(size_t k = 0; k<nPoints; k++){		
+				for(size_t k = 0; k<nPoints; k++){
+
 					//Check if outside particle:
 					Point point = {x[i],y[j],z[k]};
 					double d = particles[n].getRadialDistance(point);
 					if (d > pow(particles[n].radius,2)){
 
-						double central_differenceX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],z[k],particles[n].deposits);
-						double central_differenceZ = central_difference(x[i],x[i],y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
+						double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits);
+						double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
 		
 
 						//Project on normal vector:
-						double u = x[i]-particles[n].center.x;
-						double w = z[k]-particles[n].center.z;
-
-						double perpendicularZ      = (central_differenceX*u+central_differenceZ*w)*w/d;
-						double perpendicularX      = (central_differenceX*u+central_differenceZ*w)*u/d;
+						double u 				   = x[i]-Qx;
+						double w 				   = z[k]-Qz;
+						
+						double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
+						double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
 
 						//Subtract to get tangential component
-						double tangentialX         = (central_differenceX - perpendicularX);
-						double tangentialZ         = (central_differenceZ - perpendicularZ);
+						double tangentialX         = (gradientX - perpendicularX);
+						double tangentialZ         = (gradientZ - perpendicularZ);
 
 						if (onlyTangential == true){
 							xGrad[i][j][k] 			   += tangentialX*25/1000;		
@@ -140,14 +146,18 @@ int main(int argc, char** argv) {
 				}
 			}
 		}
-		particles[n].writeDepositToCSV();
+		
+		particles[n].center.x += particles[n].selfPropulsion[0]*1e-6*0.01; //Micrometer scale
+		particles[n].center.y += particles[n].selfPropulsion[1]*1e-6*0.01;
+		
+        writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
+		//particles[n].writeDepositToCSV();
 
-			
 	}
 
     //////////////////////////////////////////////////////////////////
     //////////////////////WRITE TO FILE///////////////////////////////
-	cout<<"Simulation finished, writing to csv..."<<endl;
+	cout<<"Simulation finished, writing to csv..."<<"\n";
 	writeGradToCSV(x,y,z,xGrad,zGrad);
 	//////////////////////////////////////////////////////////////////
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
@@ -186,7 +196,10 @@ double integral(double x, double y, double z,std::vector<Point> deposits){
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
-void getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,vector<double> z){
+Particle getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,vector<double> z){
+	//This will compute the tangential component in a thin layer around the particle
+	//And then do a surface integral to get self propulsion in X and Z direction.
+
 	double Qx = particle.center.x;
 	double Qy = particle.center.y;
 	double Qz = particle.center.z;
@@ -201,23 +214,20 @@ void getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,vect
 					double d = particle.getRadialDistance(point);
 					//Compute only the points near the surface
 					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
-
-						double central_differenceX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],z[k],particle.deposits);
-						double central_differenceZ = central_difference(x[i],x[i],y[j],y[j],z[k]-dl,z[k]+dl,particle.deposits);
+						
+						double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],z[k],particle.deposits);
+						double gradientZ = central_difference(x[i],x[i],y[j],y[j],z[k]-dl,z[k]+dl,particle.deposits);
 
 						//Project on normal vector:
-						double u = x[i]-particle.center.x;
-						double w = z[k]-particle.center.z;
+						double u				   = x[i]-particle.center.x;
+						double w 				   = z[k]-particle.center.z;
 
-						double perpendicularZ      = (central_differenceX*u+central_differenceZ*w)*w/d;
-						double perpendicularX      = (central_differenceX*u+central_differenceZ*w)*u/d;
+						double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
+						double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
 
 						//Subtract to get tangential component
-						double tangentialX         = (central_differenceX - perpendicularX);
-						double tangentialZ         = (central_differenceZ - perpendicularZ);
-		
-		
-						//Surface integral to compute self-propulsion
+						double tangentialX         = (gradientX - perpendicularX);
+						double tangentialZ         = (gradientZ - perpendicularZ);
 
 						double theta = atan2(sqrt((Qx-x[i])*(Qx-x[i]) + (Qz-z[k])*(Qz-z[k])), sqrt((Qy-y[j]) *(Qy-y[j]) ));
 						
@@ -235,5 +245,6 @@ void getSelfPropulsion(Particle particle, vector<double> x,vector<double> y,vect
 		particle.selfPropulsion[i] *= pi*pi*thermoDiffusion/(double)counter;
 		//cout<<"\n"<<particle.selfPropulsion[i]<<"\n";
 	}
-		
+
+	return particle;		
 }
