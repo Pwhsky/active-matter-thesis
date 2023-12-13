@@ -149,6 +149,9 @@ int main(int argc, char** argv) {
 		
 		particles[n].center.x += particles[n].selfPropulsion[0]*1e-6*0.01; //Micrometer scale
 		particles[n].center.y += particles[n].selfPropulsion[1]*1e-6*0.01;
+
+		particles[n].rotate(pi/2);
+		particles[n].writeDepositToCSV();
 		
         writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
 		//particles[n].writeDepositToCSV();

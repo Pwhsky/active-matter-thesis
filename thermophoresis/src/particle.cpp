@@ -63,13 +63,19 @@ double Particle::getRadialDistance(Point r){
 }
 
 
-//Work in progress
-void Particle::rotate(double theta){
-	for(int i = 0;i< (this->deposits).size();i++){
-		double distance = getRadialDistance(deposits[i]);
-	
-		(this->deposits)[i].x = this->deposits[i].x- this->center.x - cos(theta) * (this->deposits)[i].x - sin(theta) * (this->deposits)[i].z;
-        (this->deposits)[i].z = this->deposits[i].z -this->center.z - sin(theta) * (this->deposits)[i].x + cos(theta) * (this->deposits)[i].z;
+void Particle::rotate(double angle) {
+
+	//Rotation only works for small angle increments, so therefore it is done in 100 increments.
+	//during the simulation, the maximum angle of rotation will be small either way.
+	for(int l = 0; l<100;l++){
+		double theta =  angle/100.0;
+
+    	for (int i = 0; i < this->deposits.size(); i++) {
+       		double distance = getRadialDistance(deposits[i]);
+        	this->deposits[i].x = (this->deposits[i].x - this->center.x) * cos(theta) - (this->deposits[i].z - this->center.z) * sin(theta) + this->center.x;
+        	this->deposits[i].z = (this->deposits[i].x - this->center.x) * sin(theta) + (this->deposits[i].z - this->center.z) * cos(theta) + this->center.z;
+    	}
+
 	}
 }
 
