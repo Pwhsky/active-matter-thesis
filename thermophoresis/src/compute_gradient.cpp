@@ -12,7 +12,6 @@ compute_temperature.cpp contains the computation for the temperature increase.
 #include <omp.h>
 #include "particle.h"
 
-
 	constexpr double pi	      		 	  	  = 3.14159265358979323846;
 	constexpr double twoPi					  = 2*3.14159265358979323846;
 	constexpr double particleRadius   		  = 2    *pow(10,-6);
@@ -60,22 +59,15 @@ int main(int argc, char** argv) {
 	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
     dv	      = stepSize*stepSize*stepSize;  //volume element for integral
 
+	
 	std::ofstream writePositions("positions.csv");
 	writePositions << "x,y,z"<<"\n";
 
-	
-
 	vector<Particle> particles = initializeParticles();
-
 	int nParticles = particles.size();
-	
-	for(int i = 0; i<nParticles; i++ )
-		particles[i].generateDeposits(nDeposits);
+	for(int i = 0; i<nParticles; i++ ) particles[i].generateDeposits(nDeposits);
 
-	//particles[0].rotate(pi/4);
-	//particles[1].rotate(-pi/8); 
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	///////////INITIALIZE LINSPACE VECTORS////////////////////////////////////////////////////////
+	//Generate linspace vectors:
 	vector<double> linspace = arange(-bounds,bounds,stepSize);
 	z = linspace;
 	x = linspace;
@@ -139,12 +131,10 @@ int main(int argc, char** argv) {
 							xGrad[i][j][k] 			   += tangentialX*25/1000;		
 							zGrad[i][j][k]   		   += tangentialZ*25/1000;
 						}
-
-					
 					}
 					currentIteration++;
+
 					// Calculate progress percentage so that the user has something to look at
-					
 					if(currentIteration % 500 == 0) {
 						float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
 						// Print progress bar
@@ -154,6 +144,7 @@ int main(int argc, char** argv) {
 								cout.flush();
 						}
 					}
+
 				}
 			}
 		}
