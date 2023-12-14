@@ -1,6 +1,7 @@
-
+![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/thermophoresis/figures/temperatureIncrease.png?raw=true)
 ![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/thermophoresis/figures/tangential.png?raw=true)
 ![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/thermophoresis/figures/quiver.png?raw=true)
+
 
 # Requirements:
 G++, Pandas, Matplotlib, pyarrow, and whatever other packages I forgot to list here that python will complain about...

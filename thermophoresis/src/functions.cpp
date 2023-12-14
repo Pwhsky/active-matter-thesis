@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "particle.h"
 #include <cmath>
 #include <vector>
 #include <fstream>

@@ -1,10 +1,4 @@
 
-/*
-Alex Lech 2023
-
-This header contains all declarations for the Particle class, as well as 
-other functions used, such as writing to files.
-*/
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 

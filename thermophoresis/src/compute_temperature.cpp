@@ -2,7 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <omp.h>
-#include "functions.h"
+#include "particle.h"
 
 
 	constexpr double pi	      		 	  	  = 3.14159265358979323846;

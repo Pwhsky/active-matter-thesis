@@ -105,12 +105,6 @@ def generateFigure(imageBounds):
 	#Labels & Legend	
 	fig.suptitle(f"Silica microparticle temperature increase",fontsize=20)
 
-	
-	#Colorbar & imshow
-	
-	
-
-	
 
 #Main() below:
 os.chdir("src")

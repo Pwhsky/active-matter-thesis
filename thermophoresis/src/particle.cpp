@@ -1,4 +1,14 @@
-#include "functions.h"
+/*
+Alex Lech 2023	
+
+This file contains the functions source code.
+
+In functions.h the particle class is declared.
+
+*/
+
+
+#include "particle.h"
 #include <cmath>
 #include <vector>
 #include <fstream>
