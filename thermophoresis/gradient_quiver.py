@@ -14,7 +14,7 @@ from cython_functions import histogram2d_cython, gradient_cython
 #When resolution = 200 (for most simulations) that equals 25 nanometers!
 #Convert accordingly.
 
-font = 17
+font = 19
 pi = 3.14159
 particleRadius = 2e-6
 
@@ -66,7 +66,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
-	fig, ax = plt.subplots(1, 3, figsize=(21, 6))
+	fig, ax = plt.subplots(1, 3, figsize=(26, 6))
 	axisTitles = [f"$∇T$ for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
@@ -75,9 +75,9 @@ def generateFigure(imageBounds):
 
 	circle1 = Circle((df['x'][0], df['z'][0]), particleRadius)
 	circle1.set(fill=False, linestyle='--', alpha=0.2)
-	circle2 = Circle((df['x'][1],df['z'][1]), particleRadius)
-	circle2.set(fill=False,linestyle='--',alpha=0.2)
-	circles	    = [circle1,circle2]
+	#circle2 = Circle((df['x'][1],df['z'][1]), particleRadius)
+	#circle2.set(fill=False,linestyle='--',alpha=0.2)
+	circles	    = [circle1]
 	
 	index = 0
 	for axis in ax:
@@ -86,8 +86,8 @@ def generateFigure(imageBounds):
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
 
-		axis.set_xlabel(axisLabelsX[index],fontsize=font-3)
-		axis.set_ylabel(axisLabelsY[index],fontsize=font-3)
+		axis.set_xlabel(axisLabelsX[index],fontsize=font-1)
+		axis.set_ylabel(axisLabelsY[index],fontsize=font-1)
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=font)
@@ -110,9 +110,9 @@ def generateFigure(imageBounds):
 
 
 			cbar = plt.colorbar(quiver,ax=ax[0])
-			cbar.set_label(f"K/μm")
+			cbar.set_label(f"K/μm",fontsize=font-5)
 			axis.add_patch(circles[0])
-			axis.add_patch(circles[1])
+			#axis.add_patch(circles[1])
 			ax[0].set_facecolor('white')
 			
 		if index == 1:
@@ -121,15 +121,18 @@ def generateFigure(imageBounds):
 			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
 			
 			
-			ax[1] = fig.add_subplot(projection='3d')
-			ax[1].view_init(azim=90, elev=10)
-			ax[1].set_box_aspect([1, 1, 1])
-			ax[1].scatter(depositDF['x'], depositDF['y'], depositDF['z'], label='_nolegend_',s=10)
+			#ax[1] = fig.add_subplot(projection='3d')
+			#ax[1].view_init(azim=90, elev=10)
+			#ax[1].set_box_aspect([1, 1, 1])
+			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10,color='C0')
 			ax[1].set_xlim(-imageBounds,imageBounds)
 			ax[1].set_ylim(-imageBounds,imageBounds)
-			ax[1].set_zlim(-imageBounds,imageBounds)
+			#ax[1].set_zlim(-imageBounds,imageBounds)
 			ax[1].set_xlabel(axisLabelsX[index])
 			ax[1].set_ylabel(axisLabelsY[index])
+			circle3 = Circle((df['x'][0], df['z'][0]), particleRadius)
+			circle3.set(fill=False, linestyle='--', alpha=0.2)
+			ax[1].add_patch(circle3)
 			#ax[1].set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 			#ax[1].set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 			#ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
@@ -142,7 +145,7 @@ def generateFigure(imageBounds):
 			X,Y,Z = generateLaserProfile(spatialPeriodicity)
 			laserImage = ax[2].contourf(X,Y,Z,50)
 			cbar2 = plt.colorbar(laserImage,ax=ax[2])
-			cbar2.set_label(" I(x) / $\mathrm{I}_0$")
+			cbar2.set_label(" I(x) / $\mathrm{I}_0$",fontsize=font-5)
 			
 		
 		index+=1

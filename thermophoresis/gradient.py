@@ -16,7 +16,7 @@ from cython_functions import histogram2d_cython, gradient_cython
 #When resolution = 200 (for most simulations) that equals 25 nanometers!
 #Convert accordingly.
 
-font = 18
+font = 19
 pi = 3.14159
 circle1 = Circle((0, 0), 2e-6)
 circle1.set(fill=False, linestyle='--', alpha=0.2)
@@ -70,7 +70,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
-	fig, ax     = plt.subplots(1, 3, figsize=(21, 5))
+	fig, ax     = plt.subplots(1, 3, figsize=(26, 6))
 	axisTitles  = [f"∇xT",f"∇zT ",f"Positions for {nDeposits} deposits"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
@@ -83,8 +83,8 @@ def generateFigure(imageBounds):
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
 		
-		axis.set_xlabel(axisLabelsX[index])
-		axis.set_ylabel(axisLabelsY[index])
+		axis.set_xlabel(axisLabelsX[index],fontsize=font-1)
+		axis.set_ylabel(axisLabelsY[index],fontsize=font-1)
 		
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
@@ -96,14 +96,14 @@ def generateFigure(imageBounds):
 			im = ax[0].imshow(H_x.T, origin='lower',  cmap='plasma',
            			 extent=[xedges_x[0], xedges_x[-1], yedges_x[0], yedges_x[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
-			cbar.set_label(f"K/μm")
+			cbar.set_label(f"K/μm",fontsize=font-5)
 			#axis.add_patch(circles[index])
 			
 		if index == 1:
 			im = ax[1].imshow(H_z.T, origin='lower',  cmap='plasma',
            			 extent=[xedges_z[0], xedges_z[-1], yedges_z[0], yedges_z[-1]])
 			cbar = plt.colorbar(im,ax=ax[1])
-			cbar.set_label(f"K/μm")
+			cbar.set_label(f"K/μm",fontsize=font-5)
 
 		if index == 2:
 			ax[2].grid(True)	

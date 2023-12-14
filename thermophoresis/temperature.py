@@ -9,7 +9,7 @@ import sys
 from matplotlib.patches import Circle
 from cython_functions import histogram2d_cython, gradient_cython
 
-font = 17
+font = 19
 pi = 3.14159
 circle1 = Circle((0, 0), 2e-6)
 circle1.set(fill=False, linestyle='--', alpha=0.2)
@@ -60,7 +60,7 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
-	fig, ax = plt.subplots(1, 3, figsize=(21, 5))
+	fig, ax = plt.subplots(1, 3, figsize=(26, 6))
 	axisTitles = [f"$\Delta$T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
@@ -73,8 +73,8 @@ def generateFigure(imageBounds):
 		axis.set_xlim(-imageBounds,imageBounds)
 		axis.set_ylim(-imageBounds,imageBounds)
 		
-		axis.set_xlabel(axisLabelsX[index])
-		axis.set_ylabel(axisLabelsY[index])
+		axis.set_xlabel(axisLabelsX[index],fontsize=font-1)
+		axis.set_ylabel(axisLabelsY[index],fontsize=font-1)
 		
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
@@ -86,7 +86,7 @@ def generateFigure(imageBounds):
 			im = ax[0].imshow(H.T, origin='lower',  cmap='plasma',
            			 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
-			cbar.set_label(f"$\Delta$T [K]")
+			cbar.set_label(f"$\Delta$T [K]",fontsize=font-5)
 			axis.add_patch(circles[index])
 			
 		if index == 1:
@@ -97,13 +97,12 @@ def generateFigure(imageBounds):
 			X,Y,Z = generateLaserProfile(spatialPeriodicity)
 			laserImage = ax[2].contourf(X,Y,Z,50)
 			cbar2 = plt.colorbar(laserImage,ax=ax[2])
-			cbar2.set_label(" I(x) / $\mathrm{I}_0$")
+			cbar2.set_label(" I(x) / $\mathrm{I}_0$",fontsize=font-5)
 			
 		
 		index+=1
 
 	#Labels & Legend	
-	fig.legend([ "Particle boundary"],loc='lower left')
 	fig.suptitle(f"Silica microparticle temperature increase",fontsize=20)
 
 	

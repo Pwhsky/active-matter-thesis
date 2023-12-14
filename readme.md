@@ -1,5 +1,5 @@
 
-![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/thermophoresis/figures/quiver3.png?raw=true)
+![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/thermophoresis/figures/tangential.png?raw=true)
 ![alt text](https://raw.githubusercontent.com/Pwhsky/active-matter-thesis/main/thermophoresis/figures/quiver.png?raw=true)
 
 # Requirements:
