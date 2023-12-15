@@ -29,10 +29,14 @@ class Particle{
 			selfPropulsion[0] = velocity;
 			selfPropulsion[1] = velocity;
 		}  // Constructor with parameters
+		//Kinematics
+		void updatePosition();
 		double getRadialDistance(Point r);
+		void rotate(double theta);
+
 		void generateDeposits(int nDeposits);
 		void writeDepositToCSV();
-		void rotate(double theta);
+		
 
 };
 

@@ -72,7 +72,16 @@ double Particle::getRadialDistance(Point r){
 	   return norm;
 }
 
+void Particle::updatePosition(){
+	//Update positions of deposits and center of particle based on self propulsion and external force.
+	for(int i = 0; i< this->deposits.size(); i++){
+		this->deposits[i].x += (this->selfPropulsion)[0];
+		this->deposits[i].z += (this->selfPropulsion)[1];
+	}
+	this->center.x += (this->selfPropulsion)[0];
+	this->center.z += (this->selfPropulsion)[1];
 
+}
 void Particle::rotate(double angle) {
 
 	//Rotation only works for small angle increments, so therefore it is done in 100 increments.

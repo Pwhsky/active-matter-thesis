@@ -85,79 +85,87 @@ int main(int argc, char** argv) {
 
 	dl = stepSize*stepSize;
 	thickness = pow(25*stepSize,2);
-	cout<<thickness<<"\n";
+
 	
-
-	for(int n = 0; n < nParticles;n++){
-
-		particles[n] = getSelfPropulsion(particles[n]);
-		double Qx = particles[n].center.x;
-		double Qy = particles[n].center.y;
-		double Qz = particles[n].center.z;
+	for(int n = 0; n<nParticles;n++){
+		particles[0].writeDepositToCSV();
+		particles[0] = getSelfPropulsion(particles[0]);
+	}
 
 
-		int counter = 0;
-		#pragma omp parallel for
-		for (size_t i = 0; i < nPoints; i++){
-			for(size_t j = 0; j<y.size(); j++){
-				for(size_t k = 0; k<nPoints; k++){
+	for(int time = 0; time < 50; time ++){
+		for(int n = 0; n < nParticles;n++){
+			
+			
+			double Qx = particles[n].center.x;
+			double Qy = particles[n].center.y;
+			double Qz = particles[n].center.z;
 
-					//Check if outside particle:
-					Point point = {x[i],y[j],z[k]};
-					double d = particles[n].getRadialDistance(point);
-					if (d > pow(particles[n].radius,2)){
 
-						double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits);
-						double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
-		
+			int counter = 0;
+			#pragma omp parallel for
+			for (size_t i = 0; i < nPoints; i++){
+				for(size_t j = 0; j<y.size(); j++){
+					for(size_t k = 0; k<nPoints; k++){
 
-						//Project on normal vector:
-						double u 				   = x[i]-Qx;
-						double w 				   = z[k]-Qz;
+						//Check if outside particle:
+						Point point = {x[i],y[j],z[k]};
+						double d = particles[n].getRadialDistance(point);
+						if (d > pow(particles[n].radius,2)){
+
+							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits);
+							double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
+			
+
+							//Project on normal vector:
+							double u 				   = x[i]-Qx;
+							double w 				   = z[k]-Qz;
+							
+							double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
+							double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
+
+							//Subtract to get tangential component
+							double tangentialX         = (gradientX - perpendicularX);
+							double tangentialZ         = (gradientZ - perpendicularZ);
+
+							if (onlyTangential == true){
+								xGrad[i][j][k] 			   += tangentialX*25/1000;		
+								zGrad[i][j][k]   		   += tangentialZ*25/1000;			
+							}else{
+								xGrad[i][j][k] 	     	   += perpendicularX*25/1000;	
+								zGrad[i][j][k] 			   += perpendicularZ*25/1000;	
+								xGrad[i][j][k] 			   += tangentialX*25/1000;		
+								zGrad[i][j][k]   		   += tangentialZ*25/1000;
+							}
+						}
+						currentIteration++;
+						/*
 						
-						double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
-						double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
-
-						//Subtract to get tangential component
-						double tangentialX         = (gradientX - perpendicularX);
-						double tangentialZ         = (gradientZ - perpendicularZ);
-
-						if (onlyTangential == true){
-							xGrad[i][j][k] 			   += tangentialX*25/1000;		
-							zGrad[i][j][k]   		   += tangentialZ*25/1000;			
-						}else{
-							xGrad[i][j][k] 	     	   += perpendicularX*25/1000;	
-							zGrad[i][j][k] 			   += perpendicularZ*25/1000;	
-							xGrad[i][j][k] 			   += tangentialX*25/1000;		
-							zGrad[i][j][k]   		   += tangentialZ*25/1000;
+						
+						// Calculate progress percentage so that the user has something to look at
+						if(currentIteration % 500 == 0) {
+							float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
+							// Print progress bar
+							#pragma omp critical
+							{
+									cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
+									cout.flush();
+							}
 						}
-					}
-					currentIteration++;
+						*/
 
-					// Calculate progress percentage so that the user has something to look at
-					if(currentIteration % 500 == 0) {
-						float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
-						// Print progress bar
-						#pragma omp critical
-						{
-								cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
-								cout.flush();
-						}
 					}
-
 				}
 			}
+			
+			
+			particles[n].updatePosition();
+		
+			
+			writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
+			//particles[n].writeDepositToCSV();
 		}
-		
-		particles[n].center.x += particles[n].selfPropulsion[0]*1e-6*0.01; //Micrometer scale
-		particles[n].center.y += particles[n].selfPropulsion[1]*1e-6*0.01;
-
-		//particles[n].rotate(-pi/2);
-		particles[n].writeDepositToCSV();
-		
-        writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
-		//particles[n].writeDepositToCSV();
-
+		cout<<"Finished step "<<time<<"\n";
 	}
 
     //////////////////////////////////////////////////////////////////
@@ -209,42 +217,6 @@ Particle getSelfPropulsion(Particle particle){
 	double Qy = particle.center.y;
 	double Qz = particle.center.z;
 	int counter = 1;
-	/*
-	#pragma omp parallel for
-		for (size_t i = 0; i < nPoints; i++){
-			for(size_t j = 0; j<y.size(); j++){
-				for(size_t k = 0; k<nPoints; k++){		
-					
-					Point point = {x[i],y[j],z[k]};
-					double d = particle.getRadialDistance(point);
-					//Compute only the points near the surface
-					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
-						
-						double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],z[k],particle.deposits);
-						double gradientZ = central_difference(x[i],x[i],y[j],y[j],z[k]-dl,z[k]+dl,particle.deposits);
-
-						//Project on normal vector:
-						double u				   = x[i]-particle.center.x;
-						double w 				   = z[k]-particle.center.z;
-
-						double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
-						double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
-
-						//Subtract to get tangential component
-						double tangentialX         = (gradientX - perpendicularX);
-						double tangentialZ         = (gradientZ - perpendicularZ);
-
-						double theta = atan2(sqrt((Qx-x[i])*(Qx-x[i]) + (Qz-z[k])*(Qz-z[k])), sqrt((Qy-y[j]) *(Qy-y[j]) ));
-						double phi   = atan((Qz-z[k])/(Qx-x[i]));
-						particle.selfPropulsion[0] += tangentialX*sin(theta)*cos(phi);
-						particle.selfPropulsion[1] += tangentialZ*sin(theta)*cos(phi);
-						counter++;
-					}
-					
-				}
-			}
-		}
-		*/
 
 		#pragma omp parallel for
 		for (auto i:x){
