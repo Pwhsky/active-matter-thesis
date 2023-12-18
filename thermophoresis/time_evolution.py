@@ -69,9 +69,6 @@ def generateFigure(imageBounds):
 	depositDF = pd.read_csv('deposits.csv')
 	positions = pd.read_csv("positions.csv",engine="pyarrow")
 	fig, ax     = plt.subplots(1, 2, figsize=(15, 5))
-	axisTitles  = [f"∇xT",f"∇zT ",f"Positions for {nDeposits} deposits"] 
-	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
-	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
 	
 
@@ -79,11 +76,12 @@ def generateFigure(imageBounds):
 	ax[1].scatter(depositDF['x'][:],depositDF['z'][:],s=10)
 	for axes in ax:
 		axes.grid(True)
-	ax[1].set_aspect("equal","box")
-
+		axes.set_xlabel('X ($\mu m$)',fontsize=15)
+		axes.set_ylabel('Z ($\mu m$)',fontsize=15)
+		#axes.set_xlim([-imageBounds*1e3,imageBounds*1e3])
+		#axes.set_ylim([-imageBounds*1e3,imageBounds*1e3])
+	#ax[1].set_aspect("equal","box")
 	ax[1].add_patch(circle1)
-
-
 
 	#Labels & Legend	
 	fig.suptitle(f"Particle simulation",fontsize=20)

@@ -11,7 +11,7 @@ compute_temperature.cpp contains the computation for the temperature increase.
 #include <vector>
 #include <omp.h>
 #include "particle.h"
-
+#include <random>
 	constexpr double pi	      		 	  	  = 3.14159265358979323846;
 	constexpr double twoPi					  = 2*3.14159265358979323846;
 	constexpr double particleRadius   		  = 2    *pow(10,-6);
@@ -84,16 +84,17 @@ int main(int argc, char** argv) {
 
 
 	dl = stepSize*stepSize;
-	thickness = pow(25*stepSize,2);
+	thickness = pow(10*stepSize,2);
 
 	
 	for(int n = 0; n<nParticles;n++){
-		particles[0].writeDepositToCSV();
 		particles[0] = getSelfPropulsion(particles[0]);
 	}
+	std::random_device rd;
+	std::mt19937 gen(rd());
 
-
-	for(int time = 0; time < 50; time ++){
+	uniform_real_distribution<double> phi(-pi,pi); 
+	for(int time = 0; time < 10; time ++){
 		for(int n = 0; n < nParticles;n++){
 			
 			
@@ -158,15 +159,15 @@ int main(int argc, char** argv) {
 				}
 			}
 			
-			
 			particles[n].updatePosition();
-		
+			particles[n].rotate(phi(gen));
 			
 			writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
 			//particles[n].writeDepositToCSV();
 		}
 		cout<<"Finished step "<<time<<"\n";
 	}
+	particles[0].writeDepositToCSV();
 
     //////////////////////////////////////////////////////////////////
     //////////////////////WRITE TO FILE///////////////////////////////
@@ -256,7 +257,8 @@ Particle getSelfPropulsion(Particle particle){
 		
 		//Scale with diffusion coefficient
 	for(int i = 0; i<1;i++){
-		particle.selfPropulsion[i] *= pi*pi*thermoDiffusion/(double)counter;
+		particle.selfPropulsion[i] *= thermoDiffusion/(double)counter;
+	
 		//cout<<"\n"<<particle.selfPropulsion[i]<<"\n";
 	}
 

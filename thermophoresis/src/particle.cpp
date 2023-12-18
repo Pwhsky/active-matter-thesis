@@ -73,19 +73,25 @@ double Particle::getRadialDistance(Point r){
 }
 
 void Particle::updatePosition(){
-	//Update positions of deposits and center of particle based on self propulsion and external force.
+
+	double f = 1e-8; //This converts to micrometers/s
+
+	//Update positions of deposits and center of particle based on self propulsion
 	for(int i = 0; i< this->deposits.size(); i++){
-		this->deposits[i].x += (this->selfPropulsion)[0];
-		this->deposits[i].z += (this->selfPropulsion)[1];
+		this->deposits[i].x += (this->selfPropulsion)[0]*f;
+		this->deposits[i].z += (this->selfPropulsion)[1]*f;
 	}
-	this->center.x += (this->selfPropulsion)[0];
-	this->center.z += (this->selfPropulsion)[1];
+	this->center.x += (this->selfPropulsion)[0]*f;
+	this->center.z += (this->selfPropulsion)[1]*f;
+
+	//Todo: Update particle positions based on external force (from other particles)
 
 }
 void Particle::rotate(double angle) {
 
-	//Rotation only works for small angle increments, so therefore it is done in 100 increments.
-	//during the simulation, the maximum angle of rotation will be small either way.
+
+	//Rotation only works for small angle increments when updating the positions of the deposits
+	//during the brownian simulation, the largest possible angle of rotation will be small either way.
 	for(int l = 0; l<100;l++){
 		double theta =  angle*0.01;
 
@@ -94,7 +100,14 @@ void Particle::rotate(double angle) {
         	this->deposits[i].x = (this->deposits[i].x - this->center.x) * cos(theta) - (this->deposits[i].z - this->center.z) * sin(theta) + this->center.x;
         	this->deposits[i].z = (this->deposits[i].x - this->center.x) * sin(theta) + (this->deposits[i].z - this->center.z) * cos(theta) + this->center.z;
     	}
+	}
 
+	double vx = this->selfPropulsion[0];
+	double vy = this->selfPropulsion[1];
+	double magnitude = sqrt(vx*vx + vy*vy);
+	for(int i = 0; i<2; i++){
+		this->selfPropulsion[0] = magnitude*cos(angle);
+		this->selfPropulsion[1] = magnitude*sin(angle);
 	}
 }
 
