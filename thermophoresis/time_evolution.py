@@ -64,24 +64,31 @@ def loadData():
 
 
 def generateFigure(imageBounds):
-	circle1 = Circle((0, 0), 2e-6)
-	circle1.set(fill=False, linestyle='--', alpha=0.2)
+	
 	depositDF = pd.read_csv('deposits.csv')
 	positions = pd.read_csv("positions.csv",engine="pyarrow")
-	fig, ax     = plt.subplots(1, 2, figsize=(15, 5))
-	circles	    = [circle1,circle2]
-	
+	fig, ax     = plt.subplots(1, 2, figsize=(22, 5))
+
 
 	ax[0].plot(positions['x'][:],positions['z'][:])
+
+	positions_reset = positions.reset_index(drop=True)
+
+	lastPos = [positions_reset['x'].iloc[-1],positions_reset['z'].iloc[-1]]
+	xlim = [lastPos[0] - 2e-6, lastPos[0] + 2e-6]
+	ylim = [lastPos[1] - 2e-6, lastPos[1] + 2e-6]
+
 	ax[1].scatter(depositDF['x'][:],depositDF['z'][:],s=10)
+	ax[1].scatter(lastPos[0],lastPos[1],label="Particle Center")
+	ax[1].legend()
 	for axes in ax:
 		axes.grid(True)
 		axes.set_xlabel('X ($\mu m$)',fontsize=15)
 		axes.set_ylabel('Z ($\mu m$)',fontsize=15)
-		#axes.set_xlim([-imageBounds*1e3,imageBounds*1e3])
-		#axes.set_ylim([-imageBounds*1e3,imageBounds*1e3])
 	#ax[1].set_aspect("equal","box")
-	ax[1].add_patch(circle1)
+	ax[1].set_xlim(xlim)
+	ax[1].set_ylim(ylim)
+	ax[1].set_title("Final orientation of particle")
 
 	#Labels & Legend	
 	fig.suptitle(f"Particle simulation",fontsize=20)

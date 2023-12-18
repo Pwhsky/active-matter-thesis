@@ -215,7 +215,7 @@ print("Starting plotting...")
 x,y,z,gradX,gradZ,depositDF = loadData()
 x_bins = np.linspace(-imageBounds,imageBounds,200)
 y_bins = np.linspace(-imageBounds,imageBounds,200)
-#Use cython to accelerate histogram generation
+
 H_x, xedges_x, yedges_x = histogram2d_cython(x, z, gradX, x_bins, y_bins)
 H_z, xedges_z, yedges_z = histogram2d_cython(x, z, gradZ, x_bins, y_bins)
 

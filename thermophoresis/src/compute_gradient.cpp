@@ -158,9 +158,9 @@ int main(int argc, char** argv) {
 					}
 				}
 			}
-			
+			//particles[n].rotate(phi(gen));
 			particles[n].updatePosition();
-			particles[n].rotate(phi(gen));
+			
 			
 			writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
 			//particles[n].writeDepositToCSV();

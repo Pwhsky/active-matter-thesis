@@ -74,7 +74,7 @@ double Particle::getRadialDistance(Point r){
 
 void Particle::updatePosition(){
 
-	double f = 1e-8; //This converts to micrometers/s
+	double f = 1e-9; //This converts to micrometers/s
 
 	//Update positions of deposits and center of particle based on self propulsion
 	for(int i = 0; i< this->deposits.size(); i++){
@@ -100,15 +100,15 @@ void Particle::rotate(double angle) {
         	this->deposits[i].x = (this->deposits[i].x - this->center.x) * cos(theta) - (this->deposits[i].z - this->center.z) * sin(theta) + this->center.x;
         	this->deposits[i].z = (this->deposits[i].x - this->center.x) * sin(theta) + (this->deposits[i].z - this->center.z) * cos(theta) + this->center.z;
     	}
+
 	}
 
 	double vx = this->selfPropulsion[0];
 	double vy = this->selfPropulsion[1];
 	double magnitude = sqrt(vx*vx + vy*vy);
-	for(int i = 0; i<2; i++){
-		this->selfPropulsion[0] = magnitude*cos(angle);
-		this->selfPropulsion[1] = magnitude*sin(angle);
-	}
+	this->selfPropulsion[0] = magnitude*cos(angle);
+	this->selfPropulsion[1] = magnitude*sin(angle);
+	
 }
 
 
