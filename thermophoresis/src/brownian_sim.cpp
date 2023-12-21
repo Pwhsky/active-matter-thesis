@@ -36,19 +36,15 @@ using namespace std;
 	double  dl;
 	double  thickness; 
 	bool    onlyTangential = false;
+	vector<double> z,x,y;
 
-	vector<double> z;
-	vector<double> x;
-	vector<double> y;
 Particle getSelfPropulsion(Particle particle);
-
-
 double integral(double _x, double _y,double _z,std::vector<Point> deposits);
 
-double central_difference(double x1,double y1,
-						  double z1,double x2, 
-						  double y2, double z2,
-						vector<Point> deposits);
+double central_difference(double x_back,double x_forward,
+						  double y_back,double y_forward, 
+						  double z_back, double z_forward,
+						  vector<Point> deposits);
 
 int main(int argc, char** argv) {
 	   
@@ -71,7 +67,7 @@ int main(int argc, char** argv) {
 	vector<double> linspace = arange(-bounds,bounds,stepSize);
 	z = linspace;
 	x = linspace;
-	y = {0.0};
+	y = linspace;
 
 	nPoints = x.size();
    
@@ -80,14 +76,25 @@ int main(int argc, char** argv) {
     vector<vector<vector<double>>> zGrad(nPoints, vector<vector<double>>(nPoints, vector<double>(nPoints)));
       
     const int totalIterations = nPoints*nPoints*y.size();
-	size_t currentIteration = 0;
-
+	size_t currentIteration;
 
 	dl = stepSize*stepSize;
 	thickness = pow(10*stepSize,2);
 
+	
+	for(int n = 0; n<nParticles;n++){
+		particles[0] = getSelfPropulsion(particles[0]);
+	}
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	
+	uniform_real_distribution<double> phi(-pi,pi); 
+	for(int time = 0; time < 100; time ++){
+		currentIteration = 0;
 
-	for(int n = 0; n < nParticles;n++){
+		for(int n = 0; n < nParticles;n++){
+			
+			
 			double Qx = particles[n].center.x;
 			double Qy = particles[n].center.y;
 			double Qz = particles[n].center.z;
@@ -103,34 +110,46 @@ int main(int argc, char** argv) {
 						Point point = {x[i],y[j],z[k]};
 						double d = particles[n].getRadialDistance(point);
 						if (d > pow(particles[n].radius,2)){
-
-							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits);
-							double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
-			
+							/*
+							
+							
+							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],   y[j],   z[k],   z[k],   particles[n].deposits);
+							double gradientY = central_difference(x[i],   x[i],   y[j]-dl,y[j]+dl,z[k],   z[k],   particles[n].deposits);
+							double gradientZ = central_difference(x[i],   x[i],   y[j],   y[j],   z[k]-dl,z[k]+dl,particles[n].deposits);
 
 							//Project on normal vector:
 							double u 				   = x[i]-Qx;
+							double v				   = y[j]-Qy;
 							double w 				   = z[k]-Qz;
 							
-							double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
-							double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
+
+							double perpendicularX      = (gradientX*u + gradientY*v + gradientZ*w)*u/d;
+							double perpendicularY      = (gradientX*u + gradientY*v + gradientZ*w)*v/d;
+							double perpendicularZ      = (gradientX*u + gradientY*v + gradientZ*w)*w/d;
 
 							//Subtract to get tangential component
 							double tangentialX         = (gradientX - perpendicularX);
+							double tangentialY		   = (gradientY - perpendicularY);
 							double tangentialZ         = (gradientZ - perpendicularZ);
-
+							
+							
+						
+							
 							if (onlyTangential == true){
 								xGrad[i][j][k] 			   += tangentialX*25/1000;		
 								zGrad[i][j][k]   		   += tangentialZ*25/1000;			
 							}else{
 								xGrad[i][j][k] 	     	   += perpendicularX*25/1000;	
+								xGrad[i][j][k] 			   += tangentialX*25/1000;	
+
 								zGrad[i][j][k] 			   += perpendicularZ*25/1000;	
-								xGrad[i][j][k] 			   += tangentialX*25/1000;		
 								zGrad[i][j][k]   		   += tangentialZ*25/1000;
 							}
+
+							*/
 						}
 						currentIteration++;
-						/*
+						
 						
 						
 						// Calculate progress percentage so that the user has something to look at
@@ -143,22 +162,26 @@ int main(int argc, char** argv) {
 									cout.flush();
 							}
 						}
-						*/
+						
 
 					}
 				}
 			}
+			//particles[n].rotate(phi(gen));
+			particles[n].updatePosition();
+			
 			
 			writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
+			//particles[n].writeDepositToCSV();
 		}
 		cout<<"Finished step "<<time<<"\n";
-	
+	}
 	particles[0].writeDepositToCSV();
 
     //////////////////////////////////////////////////////////////////
     //////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<"\n";
-	writeGradToCSV(x,y,z,xGrad,zGrad);
+	//writeGradToCSV(x,y,z,xGrad,zGrad);
 	//////////////////////////////////////////////////////////////////
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
    	auto endTimer = std::chrono::high_resolution_clock::now();
@@ -171,9 +194,9 @@ int main(int argc, char** argv) {
 	return 0;
 }	
 
-inline double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, vector<Point> deposits){
-	double back   		= integral(x1,y1,z1,deposits);
-	double forward		= integral(x2,y2,z2,deposits);
+inline double central_difference(double x_back,double x_forward,double y_back,double y_forward, double z_back, double z_forward, vector<Point> deposits){
+	double back   		= integral(x_back,y_back,z_back,deposits);
+	double forward		= integral(x_forward,y_forward,z_forward,deposits);
 	return (forward - back)/(2*dl);
 }
 
@@ -216,23 +239,28 @@ Particle getSelfPropulsion(Particle particle){
 					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
 						
 						double gradientX = central_difference(i-dl,i+dl,j,j,k,k,particle.deposits);
+						double gradientY = central_difference(i,i,j-dl,j+dl,k,k,particle.deposits);
 						double gradientZ = central_difference(i,i,j,j,k-dl,k+dl,particle.deposits);
 
 						//Project on normal vector:
 						double u				   = i-particle.center.x;
+						double v 				   = j-particle.center.y;
 						double w 				   = k-particle.center.z;
 
-						double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
-						double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
+						double perpendicularZ      = (gradientX*u + gradientY*v + gradientZ*w)*w/d;
+						double perpendicularY      = (gradientX*u + gradientY*v + gradientZ*w)*v/d;
+						double perpendicularX      = (gradientX*u + gradientY*v + gradientZ*w)*u/d;
 
 						//Subtract to get tangential component
 						double tangentialX         = (gradientX - perpendicularX);
+						double tangentialY         = (gradientY - perpendicularY);
 						double tangentialZ         = (gradientZ - perpendicularZ);
 
 						double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
 						double phi   = atan((Qz-k)/(Qx-i));
 						particle.selfPropulsion[0] += tangentialX*sin(theta)*cos(phi);
-						particle.selfPropulsion[1] += tangentialZ*sin(theta)*cos(phi);
+						particle.selfPropulsion[1] += tangentialY*sin(theta)*cos(phi);
+						particle.selfPropulsion[2] += tangentialZ*sin(theta)*cos(phi);
 						counter++;
 					}
 					
@@ -242,7 +270,7 @@ Particle getSelfPropulsion(Particle particle){
 
 		
 		//Scale with diffusion coefficient
-	for(int i = 0; i<1;i++){
+	for(int i = 0; i<3;i++){
 		particle.selfPropulsion[i] *= thermoDiffusion/(double)counter;
 	
 		//cout<<"\n"<<particle.selfPropulsion[i]<<"\n";

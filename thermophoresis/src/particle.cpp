@@ -74,15 +74,20 @@ double Particle::getRadialDistance(Point r){
 
 void Particle::updatePosition(){
 
-	double f = 1e-9; //This converts to micrometers/s
+	//Important: dt needs to be small enough for the update to work,
+	//	otherwise the transformation does not preserve lengths and values diverge.
+	double dt = 0.00001; 
 
 	//Update positions of deposits and center of particle based on self propulsion
 	for(int i = 0; i< this->deposits.size(); i++){
-		this->deposits[i].x += (this->selfPropulsion)[0]*f;
-		this->deposits[i].z += (this->selfPropulsion)[1]*f;
+		this->deposits[i].x += (this->selfPropulsion)[0]*dt;
+		this->deposits[i].y += (this->selfPropulsion)[1]*dt;
+		this->deposits[i].z += (this->selfPropulsion)[2]*dt;
 	}
-	this->center.x += (this->selfPropulsion)[0]*f;
-	this->center.z += (this->selfPropulsion)[1]*f;
+	this->center.x += (this->selfPropulsion)[0]*dt;
+	this->center.y += (this->selfPropulsion)[1]*dt;
+	this->center.z += (this->selfPropulsion)[2]*dt;
+
 
 	//Todo: Update particle positions based on external force (from other particles)
 

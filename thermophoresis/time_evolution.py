@@ -40,7 +40,7 @@ def parseArgs():
 def generateNewData():
 	#Compiles and runs the .CPP file
 	print("Generating new data...\n")
-	subprocess.run(["g++","functions.cpp","particle.cpp","compute_gradient.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","particle.cpp","brownian_sim.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
 
 def loadData():
@@ -67,29 +67,36 @@ def generateFigure(imageBounds):
 	
 	depositDF = pd.read_csv('deposits.csv')
 	positions = pd.read_csv("positions.csv",engine="pyarrow")
-	fig, ax     = plt.subplots(1, 2, figsize=(22, 5))
+	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
 
 
-	ax[0].plot(positions['x'][:],positions['z'][:])
-
+	
 	positions_reset = positions.reset_index(drop=True)
 
 	lastPos = [positions_reset['x'].iloc[-1],positions_reset['z'].iloc[-1]]
-	xlim = [lastPos[0] - 2e-6, lastPos[0] + 2e-6]
-	ylim = [lastPos[1] - 2e-6, lastPos[1] + 2e-6]
+	xlim = [lastPos[0] - 2e-5, lastPos[0] + 1e-5]
+	ylim = [lastPos[1] - 2e-5, lastPos[1] + 1e-5]
 
-	ax[1].scatter(depositDF['x'][:],depositDF['z'][:],s=10)
-	ax[1].scatter(lastPos[0],lastPos[1],label="Particle Center")
-	ax[1].legend()
-	for axes in ax:
-		axes.grid(True)
-		axes.set_xlabel('X ($\mu m$)',fontsize=15)
-		axes.set_ylabel('Z ($\mu m$)',fontsize=15)
-	#ax[1].set_aspect("equal","box")
-	ax[1].set_xlim(xlim)
-	ax[1].set_ylim(ylim)
-	ax[1].set_title("Final orientation of particle")
+	ax.scatter(depositDF['x'][:],depositDF['z'][:],s=10)
+	ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
+	ax.scatter(0.0,0.0,label="Starting position") 	
+	ax.plot(positions['x'][:],positions['z'][:],linestyle="--",label="Trajectory")
+	circle1 = Circle((lastPos[0], lastPos[1]), 2e-6)
+	circle1.set(fill=False, alpha=0.5)
+	ax.add_patch(circle1)
+	
+	#2 micrometer length to verify simulation does not diverge.
+	ax.hlines(lastPos[1],lastPos[0],lastPos[0]+2e-6)
+	ax.axis("equal")
 
+	ax.set_title("Final orientation of particle")
+	
+	ax.set_xlim(xlim)
+	ax.set_ylim(ylim)
+	ax.grid(True)
+	ax.set_xlabel('X (m)',fontsize=15)
+	ax.set_ylabel('Z (m)',fontsize=15)
+	ax.legend()
 	#Labels & Legend	
 	fig.suptitle(f"Particle simulation",fontsize=20)
 

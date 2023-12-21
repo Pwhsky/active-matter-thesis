@@ -21,13 +21,14 @@ class Particle{
 	public:
 		Point  center;
 		double radius;
-		double selfPropulsion[2];
+		double selfPropulsion[3];
 		std::vector<Point> deposits;
 		Particle(Point particleCenter,double r,double velocity){
 			center = particleCenter;
 			radius = r;
 			selfPropulsion[0] = velocity;
 			selfPropulsion[1] = velocity;
+			selfPropulsion[2] =velocity;
 		}  // Constructor with parameters
 		//Kinematics
 		void updatePosition();
