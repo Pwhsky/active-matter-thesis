@@ -69,8 +69,6 @@ def generateFigure(imageBounds):
 	positions = pd.read_csv("positions.csv",engine="pyarrow")
 	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
 
-
-	
 	positions_reset = positions.reset_index(drop=True)
 
 	lastPos = [positions_reset['x'].iloc[-1],positions_reset['z'].iloc[-1]]
@@ -100,7 +98,7 @@ def generateFigure(imageBounds):
 	#Labels & Legend	
 	fig.suptitle(f"Particle simulation",fontsize=20)
 
-#Main() below:
+############# Main() below ##################
 
 resolution,nDeposits,generateData = parseArgs()
 if (generateData == "true"):
@@ -113,9 +111,6 @@ print("Starting plotting...")
 x,y,z= loadData()
 
 
-
-
-#Poor programming below, please excuse the spaghetti
 #Saves the figure in the figures directory, then goes back to generate a new figure and 
 #then saves in the figures directory once more.
 generateFigure(imageBounds)

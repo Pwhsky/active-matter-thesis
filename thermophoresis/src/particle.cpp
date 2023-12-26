@@ -80,10 +80,13 @@ void Particle::updatePosition(){
 
 	//Update positions of deposits and center of particle based on self propulsion
 	for(int i = 0; i< this->deposits.size(); i++){
+
 		this->deposits[i].x += (this->selfPropulsion)[0]*dt;
 		this->deposits[i].y += (this->selfPropulsion)[1]*dt;
 		this->deposits[i].z += (this->selfPropulsion)[2]*dt;
 	}
+	
+
 	this->center.x += (this->selfPropulsion)[0]*dt;
 	this->center.y += (this->selfPropulsion)[1]*dt;
 	this->center.z += (this->selfPropulsion)[2]*dt;
@@ -93,12 +96,40 @@ void Particle::updatePosition(){
 
 }
 void Particle::rotate(double angle) {
+	//Rotation only works for small angle increments when updating the positions of the deposits
+	//during the brownian simulation, the largest possible angle of rotation will be small either way.
+
+    for (int i = 0; i < this->deposits.size(); i++) {
+		double Cx = this->deposits[i].x - this->center.x;
+		double Cy = this->deposits[i].y - this->center.y;
+		double Cz = this->deposits[i].z - this->center.z;
+
+        this->deposits[i].x = Cx; 
+		this->deposits[i].y = 
+        this->deposits[i].z = 
+    }
+
+	
+
+	double vx = this->selfPropulsion[0];
+	double vy = this->selfPropulsion[1];
+	double vz = this->selfPropulsion[2];
+
+	double magnitude = sqrt(vx*vx + vy*vy + vz*vz);
+
+	this->selfPropulsion[0] = magnitude*cos(angle);
+	this->selfPropulsion[1] = magnitude*sin(angle);
+	
+}
+
+/*
 
 
+void Particle::rotate(double angle) {
 	//Rotation only works for small angle increments when updating the positions of the deposits
 	//during the brownian simulation, the largest possible angle of rotation will be small either way.
 	for(int l = 0; l<100;l++){
-		double theta =  angle*0.01;
+		double theta =   angle*0.01;
 
     	for (int i = 0; i < this->deposits.size(); i++) {
        		double distance = getRadialDistance(deposits[i]);
@@ -110,12 +141,15 @@ void Particle::rotate(double angle) {
 
 	double vx = this->selfPropulsion[0];
 	double vy = this->selfPropulsion[1];
-	double magnitude = sqrt(vx*vx + vy*vy);
+	double vz = this->selfPropulsion[2];
+
+	double magnitude = sqrt(vx*vx + vy*vy + vz*vz);
+
 	this->selfPropulsion[0] = magnitude*cos(angle);
 	this->selfPropulsion[1] = magnitude*sin(angle);
 	
 }
-
+*/
 
 void Particle::writeDepositToCSV() {
     static bool isFirstRun = true;

@@ -28,8 +28,8 @@ class Particle{
 			radius = r;
 			selfPropulsion[0] = velocity;
 			selfPropulsion[1] = velocity;
-			selfPropulsion[2] =velocity;
-		}  // Constructor with parameters
+			selfPropulsion[2] = velocity;
+		}  
 		//Kinematics
 		void updatePosition();
 		double getRadialDistance(Point r);
@@ -38,19 +38,26 @@ class Particle{
 		void generateDeposits(int nDeposits);
 		void writeDepositToCSV();
 		
-
 };
+
+/*
+Example: to create a particle with velocity 0.0 at origin with radius 1 micron, you do:
+
+	Point center = {0.0,0.0,0.0};
+
+	Particle myParticle(center, 1e-6 , 0.0);
+*/
+
 
 
 std::vector<double> arange(double start, double stop, double stepSize);
 std::vector<Particle> initializeParticles();
 void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration (NOT IN USE)
+void writeFieldToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, 
+							std::vector<std::vector<std::vector<double>>>& field);
 
-//Writes temperature increase!
-void writeFieldToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, std::vector<std::vector<std::vector<double>>>& field);
-
-//Writes X and Z gradient!
-void writeGradToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, std::vector<std::vector<std::vector<double>>>& xGrad, std::vector<std::vector<std::vector<double>>>& yGrad);
+void writeGradToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, 
+							std::vector<std::vector<std::vector<double>>>& xGrad, std::vector<std::vector<std::vector<double>>>& yGrad);
 
 
 
