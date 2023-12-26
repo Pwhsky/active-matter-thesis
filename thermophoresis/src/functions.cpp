@@ -5,19 +5,20 @@
 #include <random>
 
 using namespace std;
-	constexpr double particleRadius   		  = 2    *pow(10,-6);
+	constexpr double particleRadius	= 2*pow(10,-6);
 
 
 //Places particles next to each other	
 std::vector<Particle> initializeParticles(){
-
+	//Create the coordinates
 	Point centerOfParticle1 = {0.0*particleRadius,0.0,0.0}; 
 	Point centerOfParticle2 = {-1.1*particleRadius,0.0,0.0}; 
+
+	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
 	vector<Particle> particles = {particle1};//,particle2};
 
-	
 	return particles;
 	
 }
@@ -71,4 +72,11 @@ void writeFieldToCSV(const std::vector<double>& x,
           	 array.push_back(coordinate);
       	 }
 	return array;
+ }
+ std::vector<double> cross_product(std::vector<double> a,std::vector<double> b){
+	std::vector<double> output = {a[1]*b[2]-a[2]*b[1],
+								  a[2]*b[0]-a[0]*b[2],
+								  a[0]*b[1]-a[1]*b[0]};
+	
+	return output;
  }

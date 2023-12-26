@@ -95,6 +95,9 @@ void Particle::updatePosition(){
 	//Todo: Update particle positions based on external force (from other particles)
 
 }
+
+
+
 void Particle::rotate(double angle) {
 	//Rotation only works for small angle increments when updating the positions of the deposits
 	//during the brownian simulation, the largest possible angle of rotation will be small either way.
@@ -105,11 +108,9 @@ void Particle::rotate(double angle) {
 		double Cz = this->deposits[i].z - this->center.z;
 
         this->deposits[i].x = Cx; 
-		this->deposits[i].y = 
-        this->deposits[i].z = 
+		this->deposits[i].y = Cy;
+        this->deposits[i].z = Cz;
     }
-
-	
 
 	double vx = this->selfPropulsion[0];
 	double vy = this->selfPropulsion[1];

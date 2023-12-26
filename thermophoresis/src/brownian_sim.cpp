@@ -81,26 +81,24 @@ int main(int argc, char** argv) {
 	dl = stepSize*stepSize;
 	thickness = pow(10*stepSize,2);
 
-	
 	for(int n = 0; n<nParticles;n++){
 		particles[0] = getSelfPropulsion(particles[0]);
 	}
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	
-	uniform_real_distribution<double> phi(-pi,pi); 
-	for(int time = 0; time < 100; time ++){
+	cout<<particles[0].selfRotation[0]<<"\n";
+	cout<<particles[0].selfRotation[1]<<"\n";
+	cout<<particles[0].selfRotation[2]<<"\n";
+
+
+	for(int time = 0; time < 1; time ++){ //Loop over timestep
 		currentIteration = 0;
 
-		for(int n = 0; n < nParticles;n++){
-			
-			
+		for(int n = 0; n < nParticles;n++){ //loop over particles
+
+	 		int counter = 0;
 			double Qx = particles[n].center.x;
 			double Qy = particles[n].center.y;
 			double Qz = particles[n].center.z;
 
-
-			int counter = 0;
 			#pragma omp parallel for
 			for (size_t i = 0; i < nPoints; i++){
 				for(size_t j = 0; j<y.size(); j++){
@@ -111,8 +109,7 @@ int main(int argc, char** argv) {
 						double d = particles[n].getRadialDistance(point);
 						if (d > pow(particles[n].radius,2)){
 							/*
-							
-							
+						
 							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],   y[j],   z[k],   z[k],   particles[n].deposits);
 							double gradientY = central_difference(x[i],   x[i],   y[j]-dl,y[j]+dl,z[k],   z[k],   particles[n].deposits);
 							double gradientZ = central_difference(x[i],   x[i],   y[j],   y[j],   z[k]-dl,z[k]+dl,particles[n].deposits);
@@ -121,7 +118,6 @@ int main(int argc, char** argv) {
 							double u 				   = x[i]-Qx;
 							double v				   = y[j]-Qy;
 							double w 				   = z[k]-Qz;
-							
 
 							double perpendicularX      = (gradientX*u + gradientY*v + gradientZ*w)*u/d;
 							double perpendicularY      = (gradientX*u + gradientY*v + gradientZ*w)*v/d;
@@ -131,9 +127,6 @@ int main(int argc, char** argv) {
 							double tangentialX         = (gradientX - perpendicularX);
 							double tangentialY		   = (gradientY - perpendicularY);
 							double tangentialZ         = (gradientZ - perpendicularZ);
-							
-							
-						
 							
 							if (onlyTangential == true){
 								xGrad[i][j][k] 			   += tangentialX*25/1000;		
@@ -148,11 +141,10 @@ int main(int argc, char** argv) {
 
 							*/
 						}
-						currentIteration++;
 						
-						
-						
+
 						// Calculate progress percentage so that the user has something to look at
+						currentIteration++;
 						if(currentIteration % 500 == 0) {
 							float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
 							// Print progress bar
@@ -162,8 +154,6 @@ int main(int argc, char** argv) {
 									cout.flush();
 							}
 						}
-						
-
 					}
 				}
 			}
@@ -238,18 +228,18 @@ Particle getSelfPropulsion(Particle particle){
 					//Compute only the points near the surface
 					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
 						
-						double gradientX = central_difference(i-dl,i+dl,j,j,k,k,particle.deposits);
-						double gradientY = central_difference(i,i,j-dl,j+dl,k,k,particle.deposits);
-						double gradientZ = central_difference(i,i,j,j,k-dl,k+dl,particle.deposits);
+						double gradientX = central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,particle.deposits);
+						double gradientY = central_difference(i   ,i   ,j-dl,j+dl,k   ,k,particle.deposits);
+						double gradientZ = central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,particle.deposits);
 
 						//Project on normal vector:
 						double u				   = i-particle.center.x;
 						double v 				   = j-particle.center.y;
 						double w 				   = k-particle.center.z;
 
-						double perpendicularZ      = (gradientX*u + gradientY*v + gradientZ*w)*w/d;
-						double perpendicularY      = (gradientX*u + gradientY*v + gradientZ*w)*v/d;
 						double perpendicularX      = (gradientX*u + gradientY*v + gradientZ*w)*u/d;
+						double perpendicularY      = (gradientX*u + gradientY*v + gradientZ*w)*v/d;
+						double perpendicularZ      = (gradientX*u + gradientY*v + gradientZ*w)*w/d;
 
 						//Subtract to get tangential component
 						double tangentialX         = (gradientX - perpendicularX);
@@ -258,21 +248,25 @@ Particle getSelfPropulsion(Particle particle){
 
 						double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
 						double phi   = atan((Qz-k)/(Qx-i));
+
 						particle.selfPropulsion[0] += tangentialX*sin(theta)*cos(phi);
 						particle.selfPropulsion[1] += tangentialY*sin(theta)*cos(phi);
 						particle.selfPropulsion[2] += tangentialZ*sin(theta)*cos(phi);
+
+						particle.selfRotation[0]   += tangentialX*sin(theta)*cos(phi)*thermoDiffusion;
+						particle.selfRotation[1]   += tangentialY*sin(theta)*cos(phi)*thermoDiffusion;
+						particle.selfRotation[2]   += tangentialZ*sin(theta)*cos(phi)*thermoDiffusion;
 						counter++;
 					}
 					
 				}
 			}
 		}
-
 		
-		//Scale with diffusion coefficient
+		//Rescale:
 	for(int i = 0; i<3;i++){
 		particle.selfPropulsion[i] *= thermoDiffusion/(double)counter;
-	
+		particle.selfRotation[i] /=(double)counter;
 		//cout<<"\n"<<particle.selfPropulsion[i]<<"\n";
 	}
 
