@@ -19,10 +19,7 @@ from cython_functions import histogram2d_cython, gradient_cython
 font = 19
 pi = 3.14159
 particleRadius = 2e-6
-circle1 = Circle((0, 0), 2e-6)
-circle1.set(fill=False, linestyle='--', alpha=0.2)
-circle2 = Circle((0,0), 2e-6)
-circle2.set(fill=False,linestyle='--',alpha=0.2)
+
 
 imageBounds 	   = float(sys.argv[3])*1e-6
 spatialPeriodicity = float(sys.argv[4])*1e-9
@@ -72,21 +69,21 @@ def generateFigure(imageBounds):
 
 
 	xlim = [final['x'][0] - 2e-5, final['x'][0] + 2e-5]
-	ylim = [final['y'][0] - 2e-5, final['y'][0] + 2e-5]
+	ylim = [final['z'][0] - 2e-5, final['z'][0] + 2e-5]
 
-	circle1 = Circle((final['x'][0], final['y'][0]), 2e-6)
+	circle1 = Circle((final['x'][0], final['z'][0]), 2e-6)
 	circle1.set(fill=False, alpha=0.5)
 
-	circle1 = Circle((final['x'][1], final['y'][1]), 2e-6)
-	circle1.set(fill=False, alpha=0.5)
+	circle2 = Circle((final['x'][1], final['z'][1]), 2e-6)
+	circle2.set(fill=False, alpha=0.5)
 
 	ax.add_patch(circle1)
 	ax.add_patch(circle2)
 	ax.scatter(depositDF['x'][:],depositDF['z'][:],s=10)
 	#ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
 	for i in range(len(initial['x'])):
-		ax.scatter(initial['x'][i],initial['y'][i],label="Starting position")
-		ax.plot([initial['x'][i],final['y'][i]],linestyle="--",label="Trajectory")	
+		ax.scatter(final['x'][i],final['z'][i]				,label="Starting position")
+		ax.plot(initial['x'][i],final['z'][i],linestyle="--",label="Trajectory")	
 	
 	
 	#ax.hlines(lastPos[1],lastPos[0],lastPos[0]+2e-6)

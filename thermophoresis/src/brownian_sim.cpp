@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 		writeInitial << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
 	}
 	
-	for(int time = 0; time < 5; time ++){ //Loop over timestep
+	for(int time = 0; time < 10; time ++){ //Loop over timestep
 
 		for(int n = 0; n<nParticles;n++){
 			particles[n] = getKinematics(particles[n],particles);
@@ -146,15 +146,13 @@ int main(int argc, char** argv) {
 								zGrad[i][j][k] 			   += perpendicularZ*25/1000;	
 								zGrad[i][j][k]   		   += tangentialZ*25/1000;
 							}
-
-							
 						}
 						
 
 						// Calculate progress percentage so that the user has something to look at
 						currentIteration++;
 						if(currentIteration % 500 == 0) {
-							float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
+							float progress = round(static_cast<float>(currentIteration) / (nParticles*totalIterations) * 100.0);
 							// Print progress bar
 							#pragma omp critical
 							{
@@ -303,15 +301,16 @@ Particle getKinematics(Particle particle,std::vector<Particle> particles){
 					double d = particle.getRadialDistance(point);
 					//Compute only the points near the surface
 					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
-						
+						double gradientX = 0;
+						double gradientY = 0;
+						double gradientZ = 0;
+
 						for (auto p:particles){
 
-
-						
-							double gradientX = central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,p.deposits);
-							double gradientY = central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,p.deposits);
-							double gradientZ = central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,p.deposits);
-
+							gradientX += central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,p.deposits);
+							gradientY += central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,p.deposits);
+							gradientZ += central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,p.deposits);
+						}
 							//Project on normal vector:
 							double u				   = i-particle.center.x;
 							double v 				   = j-particle.center.y;
@@ -333,15 +332,11 @@ Particle getKinematics(Particle particle,std::vector<Particle> particles){
 							particle.selfPropulsion[1] += tangentialY*sin(theta)*cos(phi);
 							particle.selfPropulsion[2] += tangentialZ*sin(theta)*cos(phi);
 								
-						//Divide with particle radius to obtain angular velocity.
-						particle.selfRotation[0]   += tangentialX*sin(theta)*cos(phi)*thermoDiffusion/particleRadius; 
-						particle.selfRotation[1]   += tangentialY*sin(theta)*cos(phi)*thermoDiffusion/particleRadius;
-						particle.selfRotation[2]   += tangentialZ*sin(theta)*cos(phi)*thermoDiffusion/particleRadius;
-
+							//Divide with particle radius to obtain angular velocity.
+							particle.selfRotation[0]   += tangentialX*sin(theta)*cos(phi)*thermoDiffusion/particleRadius; 
+							particle.selfRotation[1]   += tangentialY*sin(theta)*cos(phi)*thermoDiffusion/particleRadius;
+							particle.selfRotation[2]   += tangentialZ*sin(theta)*cos(phi)*thermoDiffusion/particleRadius;						
 						
-						}
-					
-
 						counter++;
 
 					}

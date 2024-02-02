@@ -12,7 +12,7 @@ using namespace std;
 std::vector<Particle> initializeParticles(){
 	//Create the coordinates
 	Point centerOfParticle1 = {0.0*particleRadius,0.0,0.0}; 
-	Point centerOfParticle2 = {-2.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {-3.1*particleRadius,0.0,0.0}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
