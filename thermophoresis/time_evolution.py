@@ -64,25 +64,32 @@ def loadData():
 def generateFigure(imageBounds):
 	
 	depositDF = pd.read_csv('deposits.csv')
-	positions = pd.read_csv("positions.csv",engine="pyarrow")
+	initial   = pd.read_csv("initpositions.csv",engine="pyarrow")
+	final     = pd.read_csv("finalpositions.csv",engine="pyarrow")
+
 	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
 	ax.set_title("Final orientation of particle")
 
-	positions_reset = positions.reset_index(drop=True)
-	lastPos = [positions_reset['x'].iloc[-1],positions_reset['z'].iloc[-1]]
-	xlim = [lastPos[0] - 2e-5, lastPos[0] + 1e-5]
-	ylim = [lastPos[1] - 2e-5, lastPos[1] + 1e-5]
 
-	circle1 = Circle((lastPos[0], lastPos[1]), 2e-6)
+	xlim = [final['x'][0] - 2e-5, final['x'][0] + 2e-5]
+	ylim = [final['y'][0] - 2e-5, final['y'][0] + 2e-5]
+
+	circle1 = Circle((final['x'][0], final['y'][0]), 2e-6)
+	circle1.set(fill=False, alpha=0.5)
+
+	circle1 = Circle((final['x'][1], final['y'][1]), 2e-6)
 	circle1.set(fill=False, alpha=0.5)
 
 	ax.add_patch(circle1)
+	ax.add_patch(circle2)
 	ax.scatter(depositDF['x'][:],depositDF['z'][:],s=10)
-	ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
-	ax.scatter(0.0,0.0,label="Starting position")
+	#ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
+	for i in range(len(initial['x'])):
+		ax.scatter(initial['x'][i],initial['y'][i],label="Starting position")
+		ax.plot([initial['x'][i],final['y'][i]],linestyle="--",label="Trajectory")	
 	
-	ax.plot(positions['x'][:],positions['z'][:],linestyle="--",label="Trajectory")
-	ax.hlines(lastPos[1],lastPos[0],lastPos[0]+2e-6)
+	
+	#ax.hlines(lastPos[1],lastPos[0],lastPos[0]+2e-6)
 	ax.axis("equal")
 	ax.set_xlim(xlim)
 	ax.set_ylim(ylim)
@@ -112,4 +119,4 @@ os.chdir("figures")
 plt.savefig("time_evolution.png")
 
 toc = time.time()
-print("Plotting finished after " + str(round(toc-tic)) + " s")
+#print("Plotting finished after " + str(round(toc-tic)) + " s")

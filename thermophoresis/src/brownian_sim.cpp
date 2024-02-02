@@ -39,6 +39,7 @@ using namespace std;
 	vector<double> z,x,y;
 
 Particle getSelfPropulsion(Particle particle);
+Particle getKinematics(Particle particle,std::vector<Particle> particles);
 double integral(double _x, double _y,double _z,std::vector<Point> deposits);
 
 double central_difference(double x_back,double x_forward,
@@ -50,14 +51,17 @@ int main(int argc, char** argv) {
 	   
 	auto startTimer = std::chrono::high_resolution_clock::now();
 	bounds    = stold(argv[2])  * pow(10,-6); 
-	stepSize  = bounds/(double)(300);		  //Step size, based off of bounds parameter
+	stepSize  = bounds/(double)(200);		  //Step size, based off of bounds parameter
 	nDeposits = stof(argv[1]);				  //number of deposits to initialize
 	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
     dv	      = stepSize*stepSize*stepSize;  //volume element for integral
 
 	
-	std::ofstream writePositions("positions.csv");
-	writePositions << "x,y,z"<<"\n";
+	std::ofstream writeInitial("initpositions.csv");
+	std::ofstream writeFinal("finalpositions.csv");
+
+	writeInitial << "x,y,z"<<"\n";
+	writeFinal << "x,y,z"<<"\n";
 
 	vector<Particle> particles = initializeParticles();
 	int nParticles = particles.size();
@@ -81,15 +85,18 @@ int main(int argc, char** argv) {
 	dl = stepSize*stepSize;
 	thickness = pow(10*stepSize,2);
 
-	for(int n = 0; n<nParticles;n++){
-		particles[0] = getSelfPropulsion(particles[0]);
+	
+	//Write initial positions:
+	for(auto p:particles){
+		writeInitial << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
 	}
-	cout<<particles[0].selfRotation[0]<<"\n";
-	cout<<particles[0].selfRotation[1]<<"\n";
-	cout<<particles[0].selfRotation[2]<<"\n";
+	
+	for(int time = 0; time < 5; time ++){ //Loop over timestep
 
+		for(int n = 0; n<nParticles;n++){
+			particles[n] = getKinematics(particles[n],particles);
+		}
 
-	for(int time = 0; time < 1; time ++){ //Loop over timestep
 		currentIteration = 0;
 
 		for(int n = 0; n < nParticles;n++){ //loop over particles
@@ -105,10 +112,11 @@ int main(int argc, char** argv) {
 					for(size_t k = 0; k<nPoints; k++){
 
 						//Check if outside particle:
+
 						Point point = {x[i],y[j],z[k]};
 						double d = particles[n].getRadialDistance(point);
 						if (d > pow(particles[n].radius,2)){
-							/*
+							
 						
 							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],   y[j],   z[k],   z[k],   particles[n].deposits);
 							double gradientY = central_difference(x[i],   x[i],   y[j]-dl,y[j]+dl,z[k],   z[k],   particles[n].deposits);
@@ -139,7 +147,7 @@ int main(int argc, char** argv) {
 								zGrad[i][j][k]   		   += tangentialZ*25/1000;
 							}
 
-							*/
+							
 						}
 						
 
@@ -161,18 +169,22 @@ int main(int argc, char** argv) {
 			particles[n].updatePosition();
 			
 			
-			writePositions << particles[n].center.x << "," << particles[n].center.y << "," << particles[n].center.z << "\n";
 			//particles[n].writeDepositToCSV();
 		}
 		cout<<"Finished step "<<time<<"\n";
 	}
+	//Write final position
+	for(auto p:particles){
+		writeFinal << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
+	}
 	particles[0].writeDepositToCSV();
+	particles[1].writeDepositToCSV();
 
-    //////////////////////////////////////////////////////////////////
-    //////////////////////WRITE TO FILE///////////////////////////////
 	cout<<"Simulation finished, writing to csv..."<<"\n";
+    //////////////////////////////////////////////////////////////////
+
 	//writeGradToCSV(x,y,z,xGrad,zGrad);
-	//////////////////////////////////////////////////////////////////
+
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
    	auto endTimer = std::chrono::high_resolution_clock::now();
    	std::chrono::duration<double> duration = endTimer - startTimer;
@@ -257,6 +269,81 @@ Particle getSelfPropulsion(Particle particle){
 						particle.selfRotation[1]   += tangentialY*sin(theta)*cos(phi)*thermoDiffusion;
 						particle.selfRotation[2]   += tangentialZ*sin(theta)*cos(phi)*thermoDiffusion;
 						counter++;
+					}
+					
+				}
+			}
+		}
+		
+		//Rescale:
+	for(int i = 0; i<3;i++){
+		particle.selfPropulsion[i] *= thermoDiffusion/(double)counter;
+		particle.selfRotation[i] /=(double)counter;
+		//cout<<"\n"<<particle.selfPropulsion[i]<<"\n";
+	}
+
+	return particle;		
+}
+
+Particle getKinematics(Particle particle,std::vector<Particle> particles){
+	//This will compute the tangential component in a thin layer around the particle
+	//And then do a surface integral to get self propulsion in X and Z direction.
+
+	double Qx = particle.center.x;
+	double Qy = particle.center.y;
+	double Qz = particle.center.z;
+	int counter = 1;
+
+		#pragma omp parallel for
+		for (auto i:x){
+			for(auto j:y){
+				for(auto k:z){		
+					
+					Point point = {i,j,k};
+					double d = particle.getRadialDistance(point);
+					//Compute only the points near the surface
+					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
+						
+						for (auto p:particles){
+
+
+						
+							double gradientX = central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,p.deposits);
+							double gradientY = central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,p.deposits);
+							double gradientZ = central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,p.deposits);
+
+							//Project on normal vector:
+							double u				   = i-particle.center.x;
+							double v 				   = j-particle.center.y;
+							double w 				   = k-particle.center.z;
+
+							double perpendicularX      = (gradientX*u + gradientY*v + gradientZ*w)*u/d;
+							double perpendicularY      = (gradientX*u + gradientY*v + gradientZ*w)*v/d;
+							double perpendicularZ      = (gradientX*u + gradientY*v + gradientZ*w)*w/d;
+
+							//Subtract to get tangential component
+							double tangentialX         = (gradientX - perpendicularX);
+							double tangentialY         = (gradientY - perpendicularY);
+							double tangentialZ         = (gradientZ - perpendicularZ);
+
+							double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
+							double phi   = atan((Qz-k)/(Qx-i));
+
+							particle.selfPropulsion[0] += tangentialX*sin(theta)*cos(phi);
+							particle.selfPropulsion[1] += tangentialY*sin(theta)*cos(phi);
+							particle.selfPropulsion[2] += tangentialZ*sin(theta)*cos(phi);
+								
+						//Divide with particle radius to obtain angular velocity.
+						particle.selfRotation[0]   += tangentialX*sin(theta)*cos(phi)*thermoDiffusion/particleRadius; 
+						particle.selfRotation[1]   += tangentialY*sin(theta)*cos(phi)*thermoDiffusion/particleRadius;
+						particle.selfRotation[2]   += tangentialZ*sin(theta)*cos(phi)*thermoDiffusion/particleRadius;
+
+						
+						}
+					
+
+						counter++;
+
 					}
 					
 				}
