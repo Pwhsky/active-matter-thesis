@@ -1,0 +1,4 @@
+How to run brownian simulation:
+in a terminal:
+
+	$ python3 time_evolution.py <deposit number> <timesteps> <arena size> <light periodicity>

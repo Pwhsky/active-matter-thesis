@@ -20,7 +20,6 @@ font = 19
 pi = 3.14159
 particleRadius = 2e-6
 
-
 imageBounds 	   = float(sys.argv[3])*1e-6
 spatialPeriodicity = float(sys.argv[4])*1e-9
 periodicity 	   = float(sys.argv[4])/1000
@@ -29,16 +28,15 @@ def pandasToNumpy(column):
     return column.to_numpy()
 
 def parseArgs():
-	generateData    	       = str(sys.argv[2])
 	resolution 	        	   = 300 
 	nDeposits                  = str(sys.argv[1])
-	return resolution,nDeposits,generateData
+	return resolution,nDeposits
 	
 def generateNewData():
 	#Compiles and runs the .CPP file
-	print("Generating new data...\n")
+	print(f"Producing {sys.argv[2]} steps \n" )
 	subprocess.run(["g++","functions.cpp","particle.cpp","brownian_sim.cpp","-o","sim","-Ofast", "-fopenmp" , "-funroll-all-loops"])
-	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4]])
+	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4],sys.argv[2]])
 
 def loadData():
 	df = pd.read_csv("gradient.csv",engine="pyarrow")
@@ -81,9 +79,15 @@ def generateFigure(imageBounds):
 	ax.add_patch(circle2)
 	ax.scatter(depositDF['x'][:],depositDF['z'][:],s=10)
 	#ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
+
+
+
+		
+	ax.plot([initial['x'][:],final['x'][:]],[initial['z'][:],final['z'][:]],linestyle="--",label="Trajectory")
 	for i in range(len(initial['x'])):
-		ax.scatter(final['x'][i],final['z'][i]				,label="Starting position")
-		ax.plot(initial['x'][i],final['z'][i],linestyle="--",label="Trajectory")	
+		ax.scatter(initial['x'][i],initial['z'][i]				,label="Start")
+		
+		
 	
 	
 	#ax.hlines(lastPos[1],lastPos[0],lastPos[0]+2e-6)
@@ -97,12 +101,9 @@ def generateFigure(imageBounds):
 
 
 
-resolution,nDeposits,generateData = parseArgs()
-if (generateData == "true"):
-	generateNewData()
-else:
-	print("No new data will be generated, starting plotting... \n")
-	
+resolution,nDeposits = parseArgs()
+generateNewData()
+
 tic = time.time()
 print("Starting plotting...")
 x,y,z= loadData()

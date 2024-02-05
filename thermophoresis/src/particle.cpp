@@ -76,7 +76,7 @@ void Particle::updatePosition(){
 
 	//Important: dt needs to be small enough for the update to work,
 	//	otherwise the transformation does not preserve lengths and values diverge.
-	double dt = 0.00001; 
+	double dt = 0.0005; 
 
 	//Update positions of deposits and center of particle based on self propulsion
 	for(int i = 0; i< this->deposits.size(); i++){
