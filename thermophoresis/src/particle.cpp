@@ -29,6 +29,8 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
+	constexpr long double dt = 0.0001; 
+	
 	
 
 void Particle::generateDeposits(int nDeposits) {
@@ -74,22 +76,16 @@ double Particle::getRadialDistance(Point r){
 
 void Particle::updatePosition(){
 
-	//Important: dt needs to be small enough for the update to work,
-	//	otherwise the transformation does not preserve lengths and values diverge.
-	double dt = 0.0005; 
-
 	//Update positions of deposits and center of particle based on self propulsion
 	for(int i = 0; i< this->deposits.size(); i++){
 
-		this->deposits[i].x += (this->selfPropulsion)[0]*dt;
-		this->deposits[i].y += (this->selfPropulsion)[1]*dt;
-		this->deposits[i].z += (this->selfPropulsion)[2]*dt;
+		this->deposits[i].x += (this->velocity)[0]*dt;
+		this->deposits[i].y += (this->velocity)[1]*dt;
+		this->deposits[i].z += (this->velocity)[2]*dt;
 	}
-	
-
-	this->center.x += (this->selfPropulsion)[0]*dt;
-	this->center.y += (this->selfPropulsion)[1]*dt;
-	this->center.z += (this->selfPropulsion)[2]*dt;
+	this->center.x += (this->velocity)[0]*dt;
+	this->center.y += (this->velocity)[1]*dt;
+	this->center.z += (this->velocity)[2]*dt;
 
 
 	//Todo: Update particle positions based on external force (from other particles)
@@ -97,31 +93,65 @@ void Particle::updatePosition(){
 }
 
 
+void Particle::rotation_transform() {
+    double* w = this->selfRotation;
+    double theta = dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 
-void Particle::rotate(double angle) {
-	//Rotation only works for small angle increments when updating the positions of the deposits
-	//during the brownian simulation, the largest possible angle of rotation will be small either way.
+    if (theta != 0) {
+        std::vector<std::vector<double>> theta_x = {
+            { 0, -w[2], w[1] },
+            { w[2], 0, -w[0] },
+            { -w[1], w[0], 0 }
+        };
 
-    for (int i = 0; i < this->deposits.size(); i++) {
-		double Cx = this->deposits[i].x - this->center.x;
-		double Cy = this->deposits[i].y - this->center.y;
-		double Cz = this->deposits[i].z - this->center.z;
+        std::vector<std::vector<double>> theta_x_squared = matmul(theta_x, theta_x);
+        std::vector<std::vector<double>> R = theta_x;
 
-        this->deposits[i].x = Cx; 
-		this->deposits[i].y = Cy;
-        this->deposits[i].z = Cz;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                R[i][j] = sin(theta) / theta * theta_x[i][j] + (1 - cos(theta)) / (theta * theta) * theta_x_squared[i][j];
+            }
+        }
+
+        // Rotate the deposits
+        for (auto &p : this->deposits) {
+            std::vector<double> x = { p.x, p.y, p.z };
+			double norm = get_norm(x);
+			double ratio = norm/particleRadius;
+
+            std::vector<double> temp(3);
+
+            for (int i = 0; i < 3; i++) {
+                double sum = 0.0;
+                for (int j = 0; j < 3; j++) {
+                    sum += R[i][j] * x[j];
+                }
+                temp[i] = sum*ratio;
+            }
+
+            p.x = temp[0];
+            p.y = temp[1];
+            p.z = temp[2];
+        }
+
+        // Rotate the particle itself (center)
+        std::vector<double> x = { this->center.x, this->center.y, this->center.z };
+        std::vector<double> temp(3);
+
+        for (int i = 0; i < 3; i++) {
+            double sum = 0.0;
+            for (int j = 0; j < 3; j++) {
+                sum += R[i][j] * x[j];
+            }
+            temp[i] = sum;
+        }
+
+        this->center.x = temp[0];
+        this->center.y = temp[1];
+        this->center.z = temp[2];
     }
-
-	double vx = this->selfPropulsion[0];
-	double vy = this->selfPropulsion[1];
-	double vz = this->selfPropulsion[2];
-
-	double magnitude = sqrt(vx*vx + vy*vy + vz*vz);
-
-	this->selfPropulsion[0] = magnitude*cos(angle);
-	this->selfPropulsion[1] = magnitude*sin(angle);
-	
 }
+
 
 /*
 
@@ -140,14 +170,14 @@ void Particle::rotate(double angle) {
 
 	}
 
-	double vx = this->selfPropulsion[0];
-	double vy = this->selfPropulsion[1];
-	double vz = this->selfPropulsion[2];
+	double vx = this->velocity[0];
+	double vy = this->velocity[1];
+	double vz = this->velocity[2];
 
 	double magnitude = sqrt(vx*vx + vy*vy + vz*vz);
 
-	this->selfPropulsion[0] = magnitude*cos(angle);
-	this->selfPropulsion[1] = magnitude*sin(angle);
+	this->velocity[0] = magnitude*cos(angle);
+	this->velocity[1] = magnitude*sin(angle);
 	
 }
 */

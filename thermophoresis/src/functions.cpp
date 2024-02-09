@@ -64,6 +64,11 @@ void writeFieldToCSV(const std::vector<double>& x,
 }
 
 //This will write the position of ALL deposits to a .csv file so that it may be plotted.
+double get_norm(std::vector<double> a){
+
+	return sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+}
+
 
  std::vector<double> arange(double start, double stop, double stepSize){
  	std::vector<double> array;
@@ -80,3 +85,20 @@ void writeFieldToCSV(const std::vector<double>& x,
 	
 	return output;
  }
+ std::vector<std::vector<double>> matmul (std::vector<std::vector<double>> a,
+ 										  std::vector<std::vector<double>> b){
+	std::vector<std::vector<double>> output = a;
+
+	for(int i = 0; i<3;i++){
+		for(int j = 0; j<3; j++) {
+			double sum = 0.0;
+			for(int k = 0; k<3; k++){
+				sum += a[i][k]*b[k][j];
+			}
+				output[i][j] = sum;
+		}
+	}
+	return output;					
+
+}
+ 
