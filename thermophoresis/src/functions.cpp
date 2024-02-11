@@ -23,7 +23,7 @@ std::vector<Particle> initializeParticles(){
 	
 }
 
-
+//Writes the computed integral to a .csv file
 void writeGradToCSV(const std::vector<double>& x, 
 		     const std::vector<double>& y, 
 		     const std::vector<double>& z, 
@@ -63,9 +63,8 @@ void writeFieldToCSV(const std::vector<double>& x,
 	outputFile.close();
 }
 
-//This will write the position of ALL deposits to a .csv file so that it may be plotted.
-double get_norm(std::vector<double> a){
 
+double get_norm(std::vector<double> a){
 	return sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 

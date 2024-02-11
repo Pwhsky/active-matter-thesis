@@ -29,7 +29,7 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
-	constexpr long double dt = 0.00001; 
+	constexpr long double dt = 0.001; 
 	
 	
 
@@ -95,7 +95,7 @@ void Particle::updatePosition(){
 
 void Particle::rotation_transform() {
     double* w = this->selfRotation;
-    double theta = 100000*dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+    double theta = 1000*dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 
     if (theta != 0) {
 		cout<<"Performing rotation"<<"\n";
@@ -110,7 +110,7 @@ void Particle::rotation_transform() {
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                R[i][j] = sin(theta) / theta * theta_x[i][j] + (1 - cos(theta)) / (theta * theta) * theta_x_squared[i][j];
+                R[i][j] = (sin(theta) / theta) * theta_x[i][j] + ((1.0 - cos(theta)) / (theta * theta)) * theta_x_squared[i][j];
             }
 			R[i][i] +=1;
         }
