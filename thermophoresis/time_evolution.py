@@ -66,8 +66,8 @@ def generateFigure(imageBounds):
 	ax.set_title("Final orientation of particle")
 
 
-	xlim = [final['x'][0] - 2e-5, final['x'][0] + 2e-5]
-	ylim = [final['z'][0] - 2e-5, final['z'][0] + 2e-5]
+	xlim = [final['x'][1] - 3e-5, final['x'][1] + 3e-5]
+	ylim = [final['z'][1] - 3e-5, final['z'][1] + 3e-5]
 
 	circle1 = Circle((final['x'][0], final['z'][0]), 2e-6)
 	circle1.set(fill=False, alpha=0.5)
@@ -79,7 +79,7 @@ def generateFigure(imageBounds):
 	ax.add_patch(circle2)
 	ax.scatter(depositDF['x'][:],depositDF['z'][:],s=10)
 	#ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
-
+	
 
 
 		
@@ -115,6 +115,18 @@ os.chdir("..")
 os.chdir("figures")
 
 plt.savefig("time_evolution.png")
+os.chdir("..")
+os.chdir("src")
 
+df = pd.read_csv('deposits.csv')
+fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
+ax = fig.add_subplot(projection='3d')
+ax.view_init(azim=50, elev=10)
+ax.set_box_aspect([1, 1, 1])
+ax.scatter3D(df['x'],df['y'],df['z'])
+
+os.chdir("..")
+os.chdir("figures")
+plt.savefig("deposits.png")
 toc = time.time()
 #print("Plotting finished after " + str(round(toc-tic)) + " s")

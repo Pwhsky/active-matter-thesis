@@ -23,6 +23,7 @@ class Particle{
 		double radius;
 		double velocity[3];
 		double selfRotation[3];
+
 		std::vector<Point> deposits;
 		Particle(Point particleCenter,double r,double vel){
 			center = particleCenter;
@@ -34,13 +35,13 @@ class Particle{
 
 		}  
 		//Kinematics
-		void updatePosition();
+		void   updatePosition();
 		double getRadialDistance(Point r);
-		void rotate(double theta);
-		void rotation_transform();
+		void   rotate(double theta);
+		void   rotation_transform();
 
-		void generateDeposits(int nDeposits);
-		void writeDepositToCSV();
+		void   generateDeposits(int nDeposits);
+		void   writeDepositToCSV();
 		
 };
 
@@ -54,20 +55,25 @@ Example: to create a particle with velocity 0.0 at origin with radius 1 micron, 
 
 
 
+std::vector<Particle> initializeParticles();std::vector<double> get_new_coordinates(std::vector<double> omega, std::vector<double> x);
+
+
+
+//Linear algebra
+std::vector<std::vector<double>> mat_mat_mul (std::vector<std::vector<double>> a, std::vector<std::vector<double>> b);
+std::vector<double> mat_vec_mul(std::vector<std::vector<double>> R, std::vector<double> x);
 std::vector<double> arange(double start, double stop, double stepSize);
 std::vector<double> cross_product(std::vector<double> a,std::vector<double> b);
-std::vector<Particle> initializeParticles();std::vector<double> get_new_coordinates(std::vector<double> omega, std::vector<double> x);
-std::vector<std::vector<double>> matmul (std::vector<std::vector<double>> a,
- 										  std::vector<std::vector<double>> b);
+
+
 double get_norm(std::vector<double> a);
 
-void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration (NOT IN USE)
+
 void writeFieldToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, 
 							std::vector<std::vector<std::vector<double>>>& field);
 
 void writeGradToCSV(const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, 
 							std::vector<std::vector<std::vector<double>>>& xGrad, std::vector<std::vector<std::vector<double>>>& yGrad);
 
-
-
+void generateConfiguration(std::vector<Point> &deposits,int nDeposits); //Custom configuration (NOT IN USE)
 #endif

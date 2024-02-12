@@ -29,7 +29,7 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
-	constexpr long double dt = 0.001; 
+	constexpr long double dt = 0.1; 
 	
 	
 
@@ -88,73 +88,97 @@ void Particle::updatePosition(){
 	this->center.z += (this->velocity)[2]*dt;
 
 
-	//Todo: Update particle positions based on external force (from other particles)
+
 
 }
 
+//      This function extensively uses the following formulae for rotation: 
+//          Numerical Simulations of Active Brownian Particles by A. Callegari & G. Volpe
+//          Section 7.4.1
 
 void Particle::rotation_transform() {
     double* w = this->selfRotation;
-    double theta = 1000*dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+    double theta = dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 
     if (theta != 0) {
 		cout<<"Performing rotation"<<"\n";
+
+        //Generate theta_x matrix
         std::vector<std::vector<double>> theta_x = {
             { 0, -w[2], w[1] },
             { w[2], 0, -w[0] },
             { -w[1], w[0], 0 }
         };
 
-        std::vector<std::vector<double>> theta_x_squared = matmul(theta_x, theta_x);
+        std::vector<std::vector<double>> theta_x_squared = mat_mat_mul(theta_x, theta_x);
         std::vector<std::vector<double>> R = theta_x;
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 R[i][j] = (sin(theta) / theta) * theta_x[i][j] + ((1.0 - cos(theta)) / (theta * theta)) * theta_x_squared[i][j];
+
+                if (i == j){
+                    R[i][j] +=1;
+                }
             }
-			R[i][i] +=1;
+			
         }
 
         // Rotate the deposits
+
+        std::vector<double> temp(3);
+        std::vector<double> x(3);
+   
         for (auto &p : this->deposits) {
 
-            std::vector<double> x = { p.x, p.y, p.z };
-            std::vector<double> temp(3);
-
-            for (int i = 0; i < 3; i++) {
-                double sum = 0.0;
-                for (int j = 0; j < 3; j++) {
-                    sum += R[i][j] * x[j];
-                }
-                temp[i] = sum;
-            }
+            x = { p.x, p.y, p.z };
+            temp = mat_vec_mul(R,x);
 
             p.x = temp[0];
             p.y = temp[1];
             p.z = temp[2];
         }
-
+    
+        
         // Rotate the particle itself (center)
-        std::vector<double> x = { this->center.x, this->center.y, this->center.z };
-        std::vector<double> temp(3);
-
-        for (int i = 0; i < 3; i++) {
-            double sum = 0.0;
-            for (int j = 0; j < 3; j++) {
-                sum += R[i][j] * x[j];
-            }
-            temp[i] = sum;
+        x = { this->center.x, this->center.y, this->center.z };
+        std::vector<double> v(this->velocity, this->velocity +3);
+        temp = mat_vec_mul(R,v);
+        for(int i  = 0; i<3; i++){
+            this->velocity[i] = temp[i];
         }
-        this->center.x = temp[0];
-        this->center.y = temp[1];
-        this->center.z = temp[2];
+
     }
 }
 
 
+
+
+void Particle::writeDepositToCSV() {
+    static bool isFirstRun = true;
+
+    std::ofstream outputFile;
+
+    if (isFirstRun) {
+        // If it's the first run, create a new file with the header
+        outputFile.open("deposits.csv");
+        outputFile << "x,y,z" << "\n";
+        isFirstRun = false;
+    } else {
+        // If it's not the first run, open the file in append mode
+        outputFile.open("deposits.csv", std::ios::app);
+    }
+
+    // Write data to the file
+    for (size_t i = 0; i < size(deposits); i++) {
+        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
+    }
+
+    outputFile.close();
+}
+
+//Old rotation function
 /*
-
-
 void Particle::rotate(double angle) {
 	//Rotation only works for small angle increments when updating the positions of the deposits
 	//during the brownian simulation, the largest possible angle of rotation will be small either way.
@@ -180,28 +204,4 @@ void Particle::rotate(double angle) {
 	
 }
 */
-
-void Particle::writeDepositToCSV() {
-    static bool isFirstRun = true;
-
-    std::ofstream outputFile;
-
-    if (isFirstRun) {
-        // If it's the first run, create a new file with the header
-        outputFile.open("deposits.csv");
-        outputFile << "x,y,z" << "\n";
-        isFirstRun = false;
-    } else {
-        // If it's not the first run, open the file in append mode
-        outputFile.open("deposits.csv", std::ios::app);
-    }
-
-    // Write data to the file
-    for (size_t i = 0; i < size(deposits); i++) {
-        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
-    }
-
-    outputFile.close();
-}
-
 

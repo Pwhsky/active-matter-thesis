@@ -10,14 +10,15 @@ using namespace std;
 
 //Places particles next to each other	
 std::vector<Particle> initializeParticles(){
+
 	//Create the coordinates
-	Point centerOfParticle1 = {0.0*particleRadius,0.0,0.0}; 
-	Point centerOfParticle2 = {-3.5*particleRadius,0.0,0.0}; 
+	Point centerOfParticle1 = {3*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {0.0*particleRadius,0.0,0.0}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
-	vector<Particle> particles = {particle1,particle2};//,particle2};
+	vector<Particle> particles = {particle1,particle2};
 
 	return particles;
 	
@@ -84,8 +85,9 @@ double get_norm(std::vector<double> a){
 	
 	return output;
  }
- std::vector<std::vector<double>> matmul (std::vector<std::vector<double>> a,
+ std::vector<std::vector<double>> mat_mat_mul (std::vector<std::vector<double>> a,
  										  std::vector<std::vector<double>> b){
+
 	std::vector<std::vector<double>> output = a;
 
 	for(int i = 0; i<3;i++){
@@ -98,6 +100,17 @@ double get_norm(std::vector<double> a){
 		}
 	}
 	return output;					
-
 }
  
+ std::vector<double> mat_vec_mul(std::vector<std::vector<double>> R, std::vector<double> x){
+
+	std::vector<double> temp(3);
+    for (int i = 0; i < 3; i++) {
+        double sum = 0.0;
+        for (int j = 0; j < 3; j++) {
+            sum += R[i][j] * x[j];
+    	}
+        temp[i] = sum;
+    }
+	return temp;
+}

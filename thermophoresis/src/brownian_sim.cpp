@@ -40,31 +40,32 @@ using namespace std;
 	vector<double> z,x,y;
 	vector<Point> globalDeposits;
 
-Particle getSelfPropulsion(Particle particle);
-inline Particle getKinematics(Particle particle);
-double integral(double _x, double _y,double _z,std::vector<Point> deposits);
 
-double central_difference(double x_back,double x_forward,
-						  double y_back,double y_forward, 
-						  double z_back, double z_forward,
-						  vector<Point> deposits);
+inline Particle getKinematics(Particle particle);
+inline double integral(double _x, double _y,double _z,std::vector<Point> deposits);
+
+inline double central_difference(double x_back,double x_forward,
+						  		double y_back,double y_forward, 
+						  		double z_back, double z_forward,
+						  		vector<Point> deposits);
+
 
 int main(int argc, char** argv) {
 	   
 	auto startTimer = std::chrono::high_resolution_clock::now();
-	bounds    = stold(argv[2])  * pow(10,-6); 
-	stepSize  = bounds/(double)(300);		  //Step size, based off of bounds parameter Set to 100 for now
-	nDeposits = stof(argv[1]);				  //number of deposits to initialize
-	lambda	  = stold(argv[3])  * pow(10,-9); //Spatial periodicity
+	bounds    		= stold(argv[2])  * pow(10,-6); 
+	stepSize  		= bounds/(double)(300);		  //Step size, based off of bounds parameter Set to 100 for now
+	nDeposits 		= stof(argv[1]);				  //number of deposits to initialize
+	lambda	 	    = stold(argv[3])  * pow(10,-9); //Spatial periodicity
 	number_of_steps = (int)stof(argv[4]);
-    dv	      = stepSize*stepSize*stepSize;  //volume element for integral
+    dv	      		= stepSize*stepSize*stepSize;  //volume element for integral
 
 	
 	std::ofstream writeInitial("initpositions.csv");
 	std::ofstream writeFinal("finalpositions.csv");
 
 	writeInitial << "x,y,z"<<"\n";
-	writeFinal << "x,y,z"<<"\n";
+	writeFinal   << "x,y,z"<<"\n";
 
 	vector<Particle> particles = initializeParticles();
 	int nParticles = particles.size();
@@ -102,17 +103,10 @@ int main(int argc, char** argv) {
 	for(int time = 0; time < number_of_steps; time ++){ //Loop over timestep
 
 		for(int n = 0; n<2;n++){
-			Particle tempParticle = particles[n];
-			
-			tempParticle = getKinematics(tempParticle);
-			tempParticle.rotation_transform();
-			//Update the deposit positions:
-
-			tempParticle.updatePosition();
-			
-			particles[n] = tempParticle;
-			//particles[n].rotate(phi(gen));
-			//particles[n].writeDepositToCSV();
+			particles[n] = getKinematics(particles[n]);
+			particles[n].updatePosition();
+			particles[n].rotation_transform();
+		
 		}
 
 		cout<<"Finished step "<<time<<"\n";
@@ -127,8 +121,6 @@ int main(int argc, char** argv) {
 
 	cout<<"Simulation finished, writing to csv..."<<"\n";
     //////////////////////////////////////////////////////////////////
-
-	//writeGradToCSV(x,y,z,xGrad,zGrad);
 
 	///////////////////COMPUTE ELAPSED TIME///////////////////////////
    	auto endTimer = std::chrono::high_resolution_clock::now();
@@ -187,13 +179,17 @@ Particle getKinematics(Particle particle){
 		for (auto i:x){
 			for(auto j:y){
 				for(auto k:z){		
-
-					Point point 	= {i-particle.center.x,
+					
+					Point point 	= { i-particle.center.x,
 										j-particle.center.y,
 										k-particle.center.z};
-					
+
+					//double norm = get_norm({point.x, point.y, point.z});
+					//if (norm > 6*particleRadius){continue;}
 
 					double d = particle.getRadialDistance(point);
+
+
 					//Compute only the points near the surface
 					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
 							
