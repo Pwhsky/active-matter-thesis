@@ -225,7 +225,7 @@ Particle getKinematics(Particle particle){
 							vector<double> rxV = cross_product(r,velocity);
 
 							for(int l = 0; l<3; l++){
-								omega[l] += rxV[l];
+								omega[l] -= rxV[l];
 							}
 
 							counter++;
