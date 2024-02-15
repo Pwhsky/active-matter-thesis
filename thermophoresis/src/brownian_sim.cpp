@@ -27,15 +27,8 @@ compute_temperature.cpp contains the computation for the temperature increase.
 
 
 using namespace std;
-	int     number_of_steps;
- 	double  bounds;
-	double  lambda;
-	double  stepSize;
-	double  dv;
-	int 	nDeposits;	
-	int	    nPoints;
-	double  dl;
-	double  thickness; 
+	int     number_of_steps,nDeposits, nPoints;
+ 	double  bounds, lambda, stepSize, dv, dl, thickness; 
 	bool    onlyTangential = false;
 	vector<double> z,x,y;
 	vector<Point> globalDeposits;
@@ -102,13 +95,12 @@ int main(int argc, char** argv) {
 	
 	for(int time = 0; time < number_of_steps; time ++){ //Loop over timestep
 
-		for(int n = 0; n<2;n++){
-			particles[n] = getKinematics(particles[n]);
-			particles[n].updatePosition();
-			particles[n].rotation_transform();
-		
+		for(auto &particle:particles){
+			particle = getKinematics(particle);
+			particle.updatePosition();
+			particle.rotation_transform();
 		}
-
+			
 		cout<<"Finished step "<<time<<"\n";
 	}
 

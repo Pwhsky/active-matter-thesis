@@ -98,7 +98,7 @@ void Particle::updatePosition(){
 
 void Particle::rotation_transform() {
     double* w = this->selfRotation;
-    double theta = 0.0001*dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+    double theta = dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 
     if (theta != 0) {
 		cout<<"Performing rotation"<<"\n";
@@ -124,14 +124,14 @@ void Particle::rotation_transform() {
 			
         }
 
-        // Rotate the deposits
+        // Rotate the deposits, using the particle center as reference
 
         std::vector<double> temp(3);
         std::vector<double> x(3);
    
         for (auto &p : this->deposits) {
 
-            x = { p.x, p.y, p.z };
+            x = { p.x-this->center.x, p.y-this->center.y, p.z-this->center.z };
             temp = mat_vec_mul(R,x);
 
             p.x = temp[0];
