@@ -35,11 +35,10 @@ class Particle{
 
 		}  
 		//Kinematics
-		void   updatePosition();
 		double getRadialDistance(Point r);
+		void   updatePosition();
 		void   rotate(double theta);
 		void   rotation_transform();
-
 		void   generateDeposits(int nDeposits);
 		void   writeDepositToCSV();
 		

@@ -40,7 +40,7 @@ using namespace std;
 	vector<double> z;
 	vector<double> x;
 	vector<double> y;
-Particle getSelfPropulsion(Particle particle);
+
 
 
 double integral(double _x, double _y,double _z,std::vector<Point> deposits);
@@ -196,57 +196,4 @@ inline double integral(double _x,double _y,double _z,std::vector<Point> deposits
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
-Particle getSelfPropulsion(Particle particle){
-	//This will compute the tangential component in a thin layer around the particle
-	//And then do a surface integral to get self propulsion in X and Z direction.
 
-	double Qx = particle.center.x;
-	double Qy = particle.center.y;
-	double Qz = particle.center.z;
-	int counter = 1;
-
-		#pragma omp parallel for
-		for (auto i:x){
-			for(auto j:y){
-				for(auto k:z){		
-					
-					Point point = {i,j,k};
-					double d = particle.getRadialDistance(point);
-					//Compute only the points near the surface
-					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
-						
-						double gradientX = central_difference(i-dl,i+dl,j,j,k,k,particle.deposits);
-						double gradientZ = central_difference(i,i,j,j,k-dl,k+dl,particle.deposits);
-
-						//Project on normal vector:
-						double u				   = i-particle.center.x;
-						double w 				   = k-particle.center.z;
-
-						double perpendicularZ      = (gradientX*u+gradientZ*w)*w/d;
-						double perpendicularX      = (gradientX*u+gradientZ*w)*u/d;
-
-						//Subtract to get tangential component
-						double tangentialX         = (gradientX - perpendicularX);
-						double tangentialZ         = (gradientZ - perpendicularZ);
-
-						double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
-						double phi   = atan((Qz-k)/(Qx-i));
-						particle.selfPropulsion[0] += tangentialX*sin(theta)*cos(phi);
-						particle.selfPropulsion[1] += tangentialZ*sin(theta)*cos(phi);
-						counter++;
-					}
-					
-				}
-			}
-		}
-
-		
-		//Scale with diffusion coefficient
-	for(int i = 0; i<1;i++){
-		particle.selfPropulsion[i] *= thermoDiffusion/(double)counter;
-	
-		//cout<<"\n"<<particle.selfPropulsion[i]<<"\n";
-	}
-
-	return particle;		
-}
