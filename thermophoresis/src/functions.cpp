@@ -12,12 +12,16 @@ using namespace std;
 std::vector<Particle> initializeParticles(){
 
 	//Create the coordinates
-	Point centerOfParticle1 = {-3.5*particleRadius,0.0,0.0}; 
-	Point centerOfParticle2 = {0.0*particleRadius,0.0,0.0}; 
+	Point centerOfParticle1 = {1.75*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {-1.75*particleRadius,0.0,0.0}; 
+	Point centerOfParticle3 = {0.0,0.0,-1.75*particleRadius}; 
+	Point centerOfParticle4 = {0.0,0.0,1.75*particleRadius}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
+	Particle particle3(centerOfParticle3,particleRadius,0.0);
+	Particle particle4(centerOfParticle4,particleRadius,0.0);
 	vector<Particle> particles = {particle1,particle2};
 
 	return particles;
@@ -101,16 +105,14 @@ double get_norm(std::vector<double> a){
 	}
 	return output;					
 }
- 
- std::vector<double> mat_vec_mul(std::vector<std::vector<double>> R, std::vector<double> x){
-
-	std::vector<double> temp(3);
+std::vector<double> mat_vec_mul(std::vector<std::vector<double>> R, std::vector<double> x){
+    std::vector<double> temp(3);
     for (int i = 0; i < 3; i++) {
         double sum = 0.0;
         for (int j = 0; j < 3; j++) {
-            sum += R[i][j] * x[j];
-    	}
+            sum += R[i][j] * x[j]; // Corrected the indexing here
+        }
         temp[i] = sum;
     }
-	return temp;
+    return temp;
 }

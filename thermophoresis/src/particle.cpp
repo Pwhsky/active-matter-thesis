@@ -29,7 +29,7 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
-	constexpr long double dt = 0.00001; 
+	constexpr long double dt = 0.0005; 
 	
 	
 
@@ -39,7 +39,6 @@ void Particle::generateDeposits(int nDeposits) {
 	//If one wants a completely covered particle, set costheta to (-1,1).
 	//To adjust the areas of initialization, play around with the phi and costheta parameters.
 	//u is commonly set (0.9,1) so the deposits are near the surface.
-
     uniform_real_distribution<double> phi(0.0,twoPi); 
     uniform_real_distribution<double> costheta(-0.1,1);
     uniform_real_distribution<double> u(0.8,1);
@@ -51,9 +50,9 @@ void Particle::generateDeposits(int nDeposits) {
 		double r 	 = (this->radius)*u(gen);
 
 		//Convert to cartesian:
-    	double x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
-    	double y = r*sin(theta) * sin(phi(gen)) + this->center.y;
-    	double z = r*cos(theta)					+ this->center.z;
+    	double x = r*sin(theta) * cos(phi(gen)) ;//+ this->center.x; 
+    	double y = r*sin(theta) * sin(phi(gen)) ;//+ this->center.y;
+    	double z = r*cos(theta)					;//+ this->center.z;
    		
 		//Add to deposits list
     	(this->deposits).emplace_back(Point{x,y,z});
@@ -77,19 +76,21 @@ double Particle::getRadialDistance(Point r){
 void Particle::updatePosition(){
 
 	//Update positions of deposits and center of particle based on self propulsion
+	const double dx = (this->velocity)[0]*dt;
+	const double dy = (this->velocity)[1]*dt;
+	const double dz = (this->velocity)[2]*dt;
+
 	for(int i = 0; i< this->deposits.size(); i++){
-
-		this->deposits[i].x += (this->velocity)[0]*dt;
-		this->deposits[i].y += (this->velocity)[1]*dt;
-		this->deposits[i].z += (this->velocity)[2]*dt;
+		this->deposits[i].x += dx;
+		this->deposits[i].y += dy;
+		this->deposits[i].z += dz;
 	}
-	this->center.x += (this->velocity)[0]*dt;
-	this->center.y += (this->velocity)[1]*dt;
-	this->center.z += (this->velocity)[2]*dt;
-
-
-
-
+	this->center.x += dx;
+	this->center.y += dy;
+	this->center.z += dz;
+}
+void Particle::hard_sphere_correction(){
+	
 }
 
 //      This function extensively uses the following formulae for rotation: 
@@ -105,9 +106,9 @@ void Particle::rotation_transform() {
 
         //Generate theta_x matrix
         std::vector<std::vector<double>> theta_x = {
-            { 0, -w[2], w[1] },
-            { w[2], 0, -w[0] },
-            { -w[1], w[0], 0 }
+            {     0, -w[2],  w[1] },
+            {  w[2],     0, -w[0] },
+            { -w[1],  w[0],     0 }
         };
 
         std::vector<std::vector<double>> theta_x_squared = mat_mat_mul(theta_x, theta_x);
@@ -131,7 +132,7 @@ void Particle::rotation_transform() {
    
         for (auto &p : this->deposits) {
 
-            x = { p.x-this->center.x, p.y-this->center.y, p.z-this->center.z };
+            x = { p.x, p.y,p.z };
             temp = mat_vec_mul(R,x);
 
             p.x = temp[0];
@@ -140,18 +141,18 @@ void Particle::rotation_transform() {
         }
     
         
-        // Rotate the particle itself (center)
+        // Rotate the particle itself
+		/*
         x = { this->center.x, this->center.y, this->center.z };
         std::vector<double> v(this->velocity, this->velocity +3);
         temp = mat_vec_mul(R,v);
         for(int i  = 0; i<3; i++){
             this->velocity[i] = temp[i];
         }
+		*/
 
     }
 }
-
-
 
 
 void Particle::writeDepositToCSV() {
@@ -171,7 +172,7 @@ void Particle::writeDepositToCSV() {
 
     // Write data to the file
     for (size_t i = 0; i < size(deposits); i++) {
-        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
+        outputFile << (this->deposits)[i].x + this->center.x << "," << (this->deposits)[i].y + this->center.y << "," << (this->deposits)[i].z + + this->center.z  << "\n";
     }
 
     outputFile.close();

@@ -41,7 +41,7 @@ class Particle{
 		void   rotation_transform();
 		void   generateDeposits(int nDeposits);
 		void   writeDepositToCSV();
-		
+		void   hard_sphere_correction();
 };
 
 /*
@@ -63,7 +63,6 @@ std::vector<std::vector<double>> mat_mat_mul (std::vector<std::vector<double>> a
 std::vector<double> mat_vec_mul(std::vector<std::vector<double>> R, std::vector<double> x);
 std::vector<double> arange(double start, double stop, double stepSize);
 std::vector<double> cross_product(std::vector<double> a,std::vector<double> b);
-
 
 double get_norm(std::vector<double> a);
 

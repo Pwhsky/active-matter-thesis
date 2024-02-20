@@ -34,7 +34,7 @@ using namespace std;
 	vector<Point> globalDeposits;
 
 
-inline Particle getKinematics(Particle particle);
+inline void getKinematics(Particle& particle);
 inline double integral(double _x, double _y,double _z,std::vector<Point> deposits);
 
 inline double central_difference(double x_back,double x_forward,
@@ -93,12 +93,16 @@ int main(int argc, char** argv) {
 	for(auto p:particles) writeInitial << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
 	
 	
+	
 	for(int time = 0; time < number_of_steps; time ++){ //Loop over timestep
 
 		for(auto &particle:particles){
-			particle = getKinematics(particle);
-			particle.updatePosition();
+			getKinematics(particle);
+		}
+		for(auto &particle:particles){
 			particle.rotation_transform();
+			particle.updatePosition();
+			particle.hard_sphere_correction();
 		}
 			
 		cout<<"Finished step "<<time<<"\n";
@@ -106,7 +110,6 @@ int main(int argc, char** argv) {
 
 	//Write final position
 	for(auto p:particles) writeFinal << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
-	
 
 	particles[0].writeDepositToCSV();
 	particles[1].writeDepositToCSV();
@@ -150,11 +153,11 @@ inline double integral(double _x,double _y,double _z,std::vector<Point> deposits
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
-Particle getKinematics(Particle particle){
+void getKinematics(Particle &particle){
 	//This will compute the tangential component in a thin layer around the particle
 	//And then do a surface integral to get self propulsion in X and Z direction.
 
-	Particle output = particle;
+	
 
 	int counter = 1;
 	vector<double> omega = {0,0,0};
@@ -189,9 +192,7 @@ Particle getKinematics(Particle particle){
 							double v 				   = point.y;
 							double w 				   = point.z;
 
-							vector<double> r		   = {u,v,w};	
-
-
+							vector<double> r		   = {u,v,w};
 							vector<double> gradient = {central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,globalDeposits),
 													   central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,globalDeposits),
 													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits)};
@@ -201,23 +202,24 @@ Particle getKinematics(Particle particle){
 							vector<double> tangential = {0,0,0};
 							vector<double> velocity   = {0,0,0};
 
-							double duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
+							
 							double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
 							double phi   = atan((Qz-k)/(Qx-i));
 							double sincos = sin(theta)*cos(phi);
 
 							//Populate the cartesian vectors with their respective components:
+							double duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
 							for(int l = 0; l<3; l++){
-								radial[l]    	   = duvwr * r[l] / d;
-								tangential[l]	   = gradient[l] - radial[l];
-								velocity[l]        = tangential[l] * sincos;
-								output.velocity[l] = velocity[l];
+							    radial[l]    	     = duvwr * r[l] / d;
+								tangential[l]	     = gradient[l] - radial[l];
+								velocity[l]          = tangential[l] * sincos;
+						        particle.velocity[l] = velocity[l];
 							}
 
 							vector<double> rxV = cross_product(r,velocity);
 
 							for(int l = 0; l<3; l++){
-								omega[l] -= rxV[l];
+								omega[l] += rxV[l];
 							}
 
 							counter++;
@@ -228,14 +230,13 @@ Particle getKinematics(Particle particle){
 			}
 		}
 		//scale with number of points
+	
 	for(int i = 0; i<3;i++){
-		output.velocity[i]    *= thermoDiffusion/(double)counter;
-		output.selfRotation[i] = omega[i]/((double)counter);
-		cout<<output.selfRotation[i]<<"\n";
+		particle.velocity[i]    *= thermoDiffusion/(double)counter;
+		particle.selfRotation[i] = omega[i]/((double)counter);
+		cout<<particle.selfRotation[i]<<"\n";
 		//cout<<output.velocity[i]<<"\n";
-	}
-
-	return output;		
+	}	
 }
 
 
