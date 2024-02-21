@@ -35,7 +35,7 @@ using namespace std;
 	int	    nPoints;
 	double  dl;
 	double  thickness; 
-	bool    onlyTangential = true;
+	bool    onlyTangential = false;
 	vector<Point> globalDeposits;
 
 	vector<double> z;
@@ -66,13 +66,15 @@ int main(int argc, char** argv) {
 
 	vector<Particle> particles = initializeParticles();
 	int nParticles = particles.size();
+
 	for(int i = 0; i<nParticles; i++ ){
 			particles[i].generateDeposits(nDeposits);
-			for(int j = 0; j<nDeposits;j++){
-				globalDeposits.push_back(particles[i].deposits[j]);
-		}
 	} 
-
+	
+	particles[0].rotate(pi/2);
+	particles[1].rotate(3*pi/2);
+	particles[3].rotate(pi);
+	
 	//Generate linspace vectors:
 	vector<double> linspace = arange(-bounds,bounds,stepSize);
 	z = linspace;
@@ -205,5 +207,4 @@ inline double integral(double _x,double _y,double _z,std::vector<Point> deposits
 		}
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
-
 

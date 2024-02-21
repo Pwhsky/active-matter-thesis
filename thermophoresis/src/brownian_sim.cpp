@@ -92,8 +92,6 @@ int main(int argc, char** argv) {
 	//Write initial positions:
 	for(auto p:particles) writeInitial << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
 	
-	
-	
 	for(int time = 0; time < number_of_steps; time ++){ //Loop over timestep
 
 		for(auto &particle:particles){
@@ -105,7 +103,7 @@ int main(int argc, char** argv) {
 			particle.hard_sphere_correction();
 		}
 			
-		cout<<"Finished step "<<time<<"\n";
+		cout<<time<<"/"<<number_of_steps<<"\n";
 	}
 
 	//Write final position
@@ -143,22 +141,19 @@ inline double integral(double _x,double _y,double _z,std::vector<Point> deposits
 	double contributionSum 		   = 0.0;
 	
 	//Since the values scale with the inverse square distance.
-    	for (size_t i = 0; i < deposits.size(); i++){
-
-    		double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
-														  pow(_y-deposits[i].y,2)+
-														  pow(_z-deposits[i].z,2));
-			contributionSum +=  inverse_squareroot_distance;
-		}
+    for (size_t i = 0; i < deposits.size(); i++){
+    	double dx = _x - deposits[i].x;
+        double dy = _y - deposits[i].y;
+        double dz = _z - deposits[i].z;
+        double inverse_squareroot_distance = 1.0 / sqrt(dx * dx + dy * dy + dz * dz);
+		contributionSum +=  inverse_squareroot_distance;
+	}
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
 void getKinematics(Particle &particle){
 	//This will compute the tangential component in a thin layer around the particle
-	//And then do a surface integral to get self propulsion in X and Z direction.
-
-	
-
+	//And then do a surface integral to get self propulsion in XYZ direction.
 	int counter = 1;
 	vector<double> omega = {0,0,0};
 
@@ -186,7 +181,7 @@ void getKinematics(Particle &particle){
 
 
 					//Compute only the points near the surface
-					if (d > pow(particle.radius,2) && d < pow(particle.radius,2)+thickness){
+					if (d > particle.radius*particle.radius && d < particle.radius*particle.radius+thickness){
 							
 							double u				   = point.x;
 							double v 				   = point.y;
@@ -207,7 +202,7 @@ void getKinematics(Particle &particle){
 							double phi   = atan((Qz-k)/(Qx-i));
 							double sincos = sin(theta)*cos(phi);
 
-							//Populate the cartesian vectors with their respective components:
+							//Populate the gradient vectors with their respective components:
 							double duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
 							for(int l = 0; l<3; l++){
 							    radial[l]    	     = duvwr * r[l] / d;
@@ -216,16 +211,14 @@ void getKinematics(Particle &particle){
 						        particle.velocity[l] = velocity[l];
 							}
 
-							vector<double> rxV = cross_product(r,velocity);
+							vector<double> angular_velocity = cross_product(r,velocity);
 
 							for(int l = 0; l<3; l++){
-								omega[l] += rxV[l];
+								omega[l] += angular_velocity[l];
 							}
 
 							counter++;
-
 					}
-					
 				}
 			}
 		}
@@ -234,7 +227,7 @@ void getKinematics(Particle &particle){
 	for(int i = 0; i<3;i++){
 		particle.velocity[i]    *= thermoDiffusion/(double)counter;
 		particle.selfRotation[i] = omega[i]/((double)counter);
-		cout<<particle.selfRotation[i]<<"\n";
+		//cout<<particle.selfRotation[i]<<"\n";
 		//cout<<output.velocity[i]<<"\n";
 	}	
 }

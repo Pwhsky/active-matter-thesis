@@ -22,7 +22,7 @@ std::vector<Particle> initializeParticles(){
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
 	Particle particle3(centerOfParticle3,particleRadius,0.0);
 	Particle particle4(centerOfParticle4,particleRadius,0.0);
-	vector<Particle> particles = {particle1,particle2};
+	vector<Particle> particles = {particle1,particle2};//particle3, particle4};
 
 	return particles;
 	

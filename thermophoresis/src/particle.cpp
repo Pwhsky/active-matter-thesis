@@ -29,7 +29,7 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
-	constexpr long double dt = 0.0005; 
+	constexpr long double dt = 0.0001; 
 	
 	
 
@@ -50,8 +50,8 @@ void Particle::generateDeposits(int nDeposits) {
 		double r 	 = (this->radius)*u(gen);
 
 		//Convert to cartesian:
-    	double x = r*sin(theta) * cos(phi(gen)) ;//+ this->center.x; 
-    	double y = r*sin(theta) * sin(phi(gen)) ;//+ this->center.y;
+    	double x = r*sin(theta) * cos(phi(gen));// + this->center.x; 
+    	double y = r*sin(theta) * sin(phi(gen));// + this->center.y;
     	double z = r*cos(theta)					;//+ this->center.z;
    		
 		//Add to deposits list
@@ -99,10 +99,9 @@ void Particle::hard_sphere_correction(){
 
 void Particle::rotation_transform() {
     double* w = this->selfRotation;
-    double theta = dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+    double theta = dt*dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 
     if (theta != 0) {
-		cout<<"Performing rotation"<<"\n";
 
         //Generate theta_x matrix
         std::vector<std::vector<double>> theta_x = {
@@ -127,29 +126,29 @@ void Particle::rotation_transform() {
 
         // Rotate the deposits, using the particle center as reference
 
-        std::vector<double> temp(3);
-        std::vector<double> x(3);
+        std::vector<double> new_position(3);
+        std::vector<double> old_position(3);
    
         for (auto &p : this->deposits) {
 
-            x = { p.x, p.y,p.z };
-            temp = mat_vec_mul(R,x);
+            old_position = { p.x, p.y,p.z };
+            new_position = mat_vec_mul(R,old_position);
 
-            p.x = temp[0];
-            p.y = temp[1];
-            p.z = temp[2];
+            p.x = new_position[0];
+            p.y = new_position[1];
+            p.z = new_position[2];
         }
     
         
         // Rotate the particle itself
-		/*
-        x = { this->center.x, this->center.y, this->center.z };
+		
+        old_position = { this->center.x, this->center.y, this->center.z };
         std::vector<double> v(this->velocity, this->velocity +3);
-        temp = mat_vec_mul(R,v);
+        new_position = mat_vec_mul(R,v);
         for(int i  = 0; i<3; i++){
-            this->velocity[i] = temp[i];
+            this->velocity[i] = new_position[i];
         }
-		*/
+		
 
     }
 }
@@ -179,12 +178,12 @@ void Particle::writeDepositToCSV() {
 }
 
 //Old rotation function
-/*
+
 void Particle::rotate(double angle) {
 	//Rotation only works for small angle increments when updating the positions of the deposits
 	//during the brownian simulation, the largest possible angle of rotation will be small either way.
-	for(int l = 0; l<100;l++){
-		double theta =   angle*0.01;
+	for(int l = 0; l<1000;l++){
+		double theta =   angle*0.001;
 
     	for (int i = 0; i < this->deposits.size(); i++) {
        		double distance = getRadialDistance(deposits[i]);
@@ -193,16 +192,6 @@ void Particle::rotate(double angle) {
     	}
 
 	}
-
-	double vx = this->velocity[0];
-	double vy = this->velocity[1];
-	double vz = this->velocity[2];
-
-	double magnitude = sqrt(vx*vx + vy*vy + vz*vz);
-
-	this->velocity[0] = magnitude*cos(angle);
-	this->velocity[1] = magnitude*sin(angle);
-	
 }
-*/
+
 
