@@ -19,13 +19,10 @@ from cython_functions import histogram2d_cython, gradient_cython
 font = 19
 pi = 3.14159
 particleRadius = 2e-6
-circle1 = Circle((-1.75*particleRadius, 0), 2e-6)
+circle1 = Circle((0, 0), 2e-6)
 circle1.set(fill=False, linestyle='--', alpha=0.2)
-circle2 = Circle((1.75*particleRadius,0), 2e-6)
+circle2 = Circle((0,0), 2e-6)
 circle2.set(fill=False,linestyle='--',alpha=0.2)
-
-circle3 = Circle((0,-1.75*particleRadius), 2e-6)
-circle3.set(fill=False,linestyle='--',alpha=0.2)
 
 imageBounds 	   = float(sys.argv[3])*1e-6
 spatialPeriodicity = float(sys.argv[4])*1e-9
@@ -75,8 +72,9 @@ def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
 	return X,Y,Z
 	
 def generateFigureGradient(imageBounds):
-	fig, ax     = plt.subplots(1, 3, figsize=(26, 6))
-	axisTitles  = [f"∇xT",f"∇zT ",f"Positions for {nDeposits} deposits"] 
+	fig, ax     = plt.subplots(1, 2, figsize=(21, 7))
+
+	axisTitles  = [f"∇xT",f"∇zT"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
 	circles	    = [circle1,circle2]
@@ -93,7 +91,6 @@ def generateFigureGradient(imageBounds):
 		
 		axis.set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 		axis.set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
-		
 		axis.set_xticklabels([round(min(x)*1e6,1),round(min(x)/2*1e6,1),0,round(max(x)/2*1e6,1), round(max(x)*1e6,1)],fontsize=font)
 		axis.set_yticklabels([round(min(z)*1e6,1),round(min(z)/2*1e6,1),0,round(max(z)/2*1e6,1), round(max(z)*1e6,1)],fontsize=font)
 		if index == 0:
@@ -101,28 +98,31 @@ def generateFigureGradient(imageBounds):
 			im = ax[0].imshow(H_x.T, origin='lower',  cmap='plasma',
            			 extent=[xedges_x[0], xedges_x[-1], yedges_x[0], yedges_x[-1]])
 			cbar = plt.colorbar(im,ax=ax[0])
-			cbar.set_label(f"K/μm",fontsize=font-5)
+			cbar.set_label(f"K/μm",fontsize=16)
+			cbar.ax.tick_params(labelsize=15)
 			#axis.add_patch(circles[index])
 			
 		if index == 1:
 			im = ax[1].imshow(H_z.T, origin='lower',  cmap='plasma',
            			 extent=[xedges_z[0], xedges_z[-1], yedges_z[0], yedges_z[-1]])
 			cbar = plt.colorbar(im,ax=ax[1])
-			cbar.set_label(f"K/μm",fontsize=font-5)
+			cbar.set_label(f"K/μm",fontsize=16)
+			cbar.ax.tick_params(labelsize=15)
+			
 
-		if index == 2:
-			#ax[2].grid(True)	
-			ax[2].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
-			axis.add_patch(circles[1])
+
+		
+		#ax[index].add_patch(Circle((0, 0), 2e-6,color="black"))
+
 				
-			X,Y,Z = generateLaserProfile(spatialPeriodicity)
-			laserImage = ax[2].contourf(X,Y,Z,50)
-			cbar2 = plt.colorbar(laserImage,ax=ax[2])
-			cbar2.set_label(" I(x) / $\mathrm{I}_0$")
+		#X,Y,Z = generateLaserProfile(spatialPeriodicity)
+		#laserImage = ax[2].contourf(X,Y,Z,50)
+		#cbar2 = plt.colorbar(laserImage,ax=ax[2])
+		#cbar2.set_label(" I(x) / $\mathrm{I}_0$")
 		index+=1
 	
 	#Labels & Legend	
-	fig.suptitle(f"Silica microparticle temperature gradient",fontsize=20)
+
 
 def generateFigureQuiver(imageBounds):
 	fig, ax = plt.subplots(1, 3, figsize=(26, 6))
@@ -132,17 +132,12 @@ def generateFigureQuiver(imageBounds):
 
 	df = pd.read_csv("positions.csv",engine="pyarrow")
 
-	circle1 = Circle((-1.75*particleRadius, 0), 2e-6)
+	circle1 = Circle((df['x'][0], df['z'][0]), particleRadius)
 	circle1.set(fill=False, linestyle='--', alpha=0.2)
-	circle2 = Circle((1.75*particleRadius,0), 2e-6)
-	circle2.set(fill=False,linestyle='--',alpha=0.2)
-	circle3 = Circle((0,-1.75*particleRadius), 2e-6)
-	circle3.set(fill=False,linestyle='--',alpha=0.2)
-	circle4 = Circle((0,1.75*particleRadius), 2e-6)
-	circle4.set(fill=False,linestyle='--',alpha=0.2)
-	circles	    = [circle1,circle2,circle3,circle4]
-
-
+	#circle2 = Circle((df['x'][1],df['z'][1]), particleRadius)
+	#circle2.set(fill=False,linestyle='--',alpha=0.2)
+	circles	    = [circle1]
+	
 	index = 0
 	for axis in ax:
 		axis.set_title(axisTitles[index],fontsize=font)
@@ -168,9 +163,6 @@ def generateFigureQuiver(imageBounds):
 			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm",fontsize=font-5)
 			axis.add_patch(circles[0])
-			axis.add_patch(circles[2])
-			axis.add_patch(circles[1])
-			axis.add_patch(circles[3])
 			#axis.add_patch(circles[1])
 			ax[0].set_facecolor('white')
 			
@@ -178,7 +170,7 @@ def generateFigureQuiver(imageBounds):
 
 			ax[1].grid(True)	
 			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
-		
+			
 			
 			#ax[1] = fig.add_subplot(projection='3d')
 			#ax[1].view_init(azim=90, elev=10)
@@ -191,7 +183,7 @@ def generateFigureQuiver(imageBounds):
 			ax[1].set_ylabel(axisLabelsY[index])
 			circle3 = Circle((df['x'][0], df['z'][0]), particleRadius)
 			circle3.set(fill=False, linestyle='--', alpha=0.2)
-			
+			ax[1].add_patch(circle3)
 			#ax[1].set_yticks([min(z),min(z)/2,0,max(z)/2,max(z)])
 			#ax[1].set_xticks([min(x),min(x)/2,0,max(x)/2,max(x)])
 			#ax[1].set_zticks([min(x),min(x)/2,0,max(x)/2,max(x)])
@@ -201,7 +193,7 @@ def generateFigureQuiver(imageBounds):
 
 
 		if index == 2:
-			X,Y,Z = generateLaserProfile(spatialPeriodicity)
+			X,Y,Z = generateLaserProfile(spatialPeriodicity*10)
 			laserImage = ax[2].contourf(X,Y,Z,50)
 			cbar2 = plt.colorbar(laserImage,ax=ax[2])
 			cbar2.set_label(" I(x) / $\mathrm{I}_0$",fontsize=font-5)
@@ -236,14 +228,15 @@ H_z, xedges_z, yedges_z = histogram2d_cython(x, z, gradZ, x_bins, y_bins)
 #then saves in the figures directory once more.
 os.chdir("..")
 os.chdir("figures")
+r = np.sqrt(gradX**2 + gradZ**2)
+w = gradX
+u = gradZ
 generateFigureGradient(imageBounds)
 plt.savefig("temperatureGradient.png")
 os.chdir("..")
 os.chdir("src")
 
-r = np.sqrt(gradX**2 + gradZ**2)
-w = gradX
-u = gradZ
+
 generateFigureQuiver(imageBounds)
 os.chdir("..")
 os.chdir("figures")

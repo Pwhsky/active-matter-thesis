@@ -53,14 +53,14 @@ def loadData():
 	return x,y,z,grad,depositDF
 	
 def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
-	x   = np.linspace(-imageBounds*2,imageBounds*2, 200)
-	y   = np.linspace(-imageBounds*2,imageBounds*2, 200)
+	x   = np.linspace(-imageBounds,imageBounds, 200)
+	y   = np.linspace(-imageBounds,imageBounds, 200)
 	X,Y = np.meshgrid(x,y)	
 	Z = (1+ (np.cos(2*pi*X/spatialPeriodicity)))/2
 	return X,Y,Z
 	
 def generateFigure(imageBounds):
-	fig, ax = plt.subplots(1, 3, figsize=(26, 6))
+	fig, ax = plt.subplots(1, 2, figsize=(19, 7))
 	axisTitles = [f"$\Delta$T for {nDeposits} deposits",f"Position of {nDeposits} deposits",f"Laser intensity for $\Lambda$ = {periodicity} μm"] 
 	axisLabelsX = ['X ($\mu m$)','X ($\mu m$)','X ($\mu m$)']
 	axisLabelsY = ['Z ($\mu m$)','Z ($\mu m$)','Y ($\mu m$)']
@@ -88,22 +88,18 @@ def generateFigure(imageBounds):
 			cbar = plt.colorbar(im,ax=ax[0])
 			cbar.set_label(f"$\Delta$T [K]",fontsize=font-5)
 			axis.add_patch(circles[index])
+			cbar.ax.tick_params(labelsize=15)
 			
 		if index == 1:
 			ax[1].grid(True)	
 			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10)
 			axis.add_patch(circles[index])
-		if index == 2:
-			X,Y,Z = generateLaserProfile(spatialPeriodicity)
-			laserImage = ax[2].contourf(X,Y,Z,50)
-			cbar2 = plt.colorbar(laserImage,ax=ax[2])
-			cbar2.set_label(" I(x) / $\mathrm{I}_0$",fontsize=font-5)
-			
+
 		
 		index+=1
 
 	#Labels & Legend	
-	fig.suptitle(f"Silica microparticle temperature increase",fontsize=20)
+	#fig.suptitle(f"Silica microparticle temperature increase",fontsize=20)
 
 
 #Main() below:
@@ -126,6 +122,15 @@ generateFigure(imageBounds)
 os.chdir("..")
 os.chdir("figures")
 plt.savefig("temperatureIncrease.png")
+
+fig, ax = plt.subplots(1, 2, figsize=(19, 7))
+X,Y,Z = generateLaserProfile(spatialPeriodicity)
+laserImage = ax[0].contourf(X,Y,Z,50)
+cbar2 = plt.colorbar(laserImage,ax=ax[0])
+cbar2.set_label(" I(x) / $\mathrm{I}_0$",fontsize=font-5)
+cbar2.ax.tick_params(labelsize=15)
+plt.savefig("laserProfile.png")
+
 toc = time.time()
 print("Plotting finished after " + str(round(toc-tic)) + " s")
 #os.chdir("..")

@@ -29,7 +29,7 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
-	constexpr long double dt = 0.0001; 
+	constexpr long double dt = 0.00001; 
 	
 	
 
@@ -39,6 +39,7 @@ void Particle::generateDeposits(int nDeposits) {
 	//If one wants a completely covered particle, set costheta to (-1,1).
 	//To adjust the areas of initialization, play around with the phi and costheta parameters.
 	//u is commonly set (0.9,1) so the deposits are near the surface.
+
     uniform_real_distribution<double> phi(0.0,twoPi); 
     uniform_real_distribution<double> costheta(-0.1,1);
     uniform_real_distribution<double> u(0.8,1);
@@ -50,9 +51,9 @@ void Particle::generateDeposits(int nDeposits) {
 		double r 	 = (this->radius)*u(gen);
 
 		//Convert to cartesian:
-    	double x = r*sin(theta) * cos(phi(gen));// + this->center.x; 
-    	double y = r*sin(theta) * sin(phi(gen));// + this->center.y;
-    	double z = r*cos(theta)					;//+ this->center.z;
+    	double x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
+    	double y = r*sin(theta) * sin(phi(gen)) + this->center.y;
+    	double z = r*cos(theta)					+ this->center.z;
    		
 		//Add to deposits list
     	(this->deposits).emplace_back(Point{x,y,z});
@@ -76,21 +77,19 @@ double Particle::getRadialDistance(Point r){
 void Particle::updatePosition(){
 
 	//Update positions of deposits and center of particle based on self propulsion
-	const double dx = (this->velocity)[0]*dt;
-	const double dy = (this->velocity)[1]*dt;
-	const double dz = (this->velocity)[2]*dt;
-
 	for(int i = 0; i< this->deposits.size(); i++){
-		this->deposits[i].x += dx;
-		this->deposits[i].y += dy;
-		this->deposits[i].z += dz;
+
+		this->deposits[i].x += (this->velocity)[0]*dt;
+		this->deposits[i].y += (this->velocity)[1]*dt;
+		this->deposits[i].z += (this->velocity)[2]*dt;
 	}
-	this->center.x += dx;
-	this->center.y += dy;
-	this->center.z += dz;
-}
-void Particle::hard_sphere_correction(){
-	
+	this->center.x += (this->velocity)[0]*dt;
+	this->center.y += (this->velocity)[1]*dt;
+	this->center.z += (this->velocity)[2]*dt;
+
+
+
+
 }
 
 //      This function extensively uses the following formulae for rotation: 
@@ -99,15 +98,16 @@ void Particle::hard_sphere_correction(){
 
 void Particle::rotation_transform() {
     double* w = this->selfRotation;
-    double theta = dt*dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+    double theta = dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 
     if (theta != 0) {
+		cout<<"Performing rotation"<<"\n";
 
         //Generate theta_x matrix
         std::vector<std::vector<double>> theta_x = {
-            {     0, -w[2],  w[1] },
-            {  w[2],     0, -w[0] },
-            { -w[1],  w[0],     0 }
+            { 0, -w[2], w[1] },
+            { w[2], 0, -w[0] },
+            { -w[1], w[0], 0 }
         };
 
         std::vector<std::vector<double>> theta_x_squared = mat_mat_mul(theta_x, theta_x);
@@ -126,32 +126,32 @@ void Particle::rotation_transform() {
 
         // Rotate the deposits, using the particle center as reference
 
-        std::vector<double> new_position(3);
-        std::vector<double> old_position(3);
+        std::vector<double> temp(3);
+        std::vector<double> x(3);
    
         for (auto &p : this->deposits) {
 
-            old_position = { p.x, p.y,p.z };
-            new_position = mat_vec_mul(R,old_position);
+            x = { p.x-this->center.x, p.y-this->center.y, p.z-this->center.z };
+            temp = mat_vec_mul(R,x);
 
-            p.x = new_position[0];
-            p.y = new_position[1];
-            p.z = new_position[2];
+            p.x = temp[0];
+            p.y = temp[1];
+            p.z = temp[2];
         }
     
         
-        // Rotate the particle itself
-		
-        old_position = { this->center.x, this->center.y, this->center.z };
+        // Rotate the particle itself (center)
+        x = { this->center.x, this->center.y, this->center.z };
         std::vector<double> v(this->velocity, this->velocity +3);
-        new_position = mat_vec_mul(R,v);
+        temp = mat_vec_mul(R,v);
         for(int i  = 0; i<3; i++){
-            this->velocity[i] = new_position[i];
+            this->velocity[i] = temp[i];
         }
-		
 
     }
 }
+
+
 
 
 void Particle::writeDepositToCSV() {
@@ -171,19 +171,19 @@ void Particle::writeDepositToCSV() {
 
     // Write data to the file
     for (size_t i = 0; i < size(deposits); i++) {
-        outputFile << (this->deposits)[i].x + this->center.x << "," << (this->deposits)[i].y + this->center.y << "," << (this->deposits)[i].z + + this->center.z  << "\n";
+        outputFile << (this->deposits)[i].x << "," << (this->deposits)[i].y  << "," << (this->deposits)[i].z  << "\n";
     }
 
     outputFile.close();
 }
 
 //Old rotation function
-
+/*
 void Particle::rotate(double angle) {
 	//Rotation only works for small angle increments when updating the positions of the deposits
 	//during the brownian simulation, the largest possible angle of rotation will be small either way.
-	for(int l = 0; l<1000;l++){
-		double theta =   angle*0.001;
+	for(int l = 0; l<100;l++){
+		double theta =   angle*0.01;
 
     	for (int i = 0; i < this->deposits.size(); i++) {
        		double distance = getRadialDistance(deposits[i]);
@@ -192,6 +192,16 @@ void Particle::rotate(double angle) {
     	}
 
 	}
-}
 
+	double vx = this->velocity[0];
+	double vy = this->velocity[1];
+	double vz = this->velocity[2];
+
+	double magnitude = sqrt(vx*vx + vy*vy + vz*vz);
+
+	this->velocity[0] = magnitude*cos(angle);
+	this->velocity[1] = magnitude*sin(angle);
+	
+}
+*/
 

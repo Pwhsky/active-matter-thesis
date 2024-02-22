@@ -5,27 +5,36 @@ import os
 from matplotlib.patches import Circle
 
 
-fig, ax     = plt.subplots(1, 3, figsize=(13, 7))
+
+
+fig, ax     = plt.subplots(1,2 , figsize=(15, 7))
 df = pd.read_csv('deposits.csv')
 x = df['x']
-y=df['y']
-z=df['z']
-ax = fig.add_subplot(projection='3d')
-ax.view_init(azim=60, elev=10)
-ax.set_box_aspect([1, 1, 1])
+y = df['y']
+z = df['z']
+for axes in ax: 
+    axes.grid(True)
+    axes.tick_params(labelsize=18)
+    axes.add_patch(Circle((0, 0), 2e-6,linestyle="--",fill=False))
+    #axes.set_xlim([min(df['x'])-1.5e-6,max(df['x'])+1.5e-6  ])
+    #axes.set_ylim([min(df['y'])-1.5e-6,max(df['y'])+1.5e-6  ])
+    axes.axis('equal')
 
-ax.set_xlim([min(df['x'])-2e-6,max(df['x'])+1e-6  ])
-ax.set_ylim([min(df['y'])-2e-6,max(df['y'])+1e-6  ])
-ax.set_zlim([min(df['z'])-2e-6,max(df['z'])+1e-6  ])
 
-ax.scatter3D(df['x'],df['y'],df['z'])
 
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-ax.set_zlabel("Z")
-ax.set_xticklabels([])
-ax.set_yticklabels([])
-ax.set_zticklabels([])
+ax[0].scatter(df['x'],df['z'])
+ax[0].set_xlabel("X",fontsize=15)
+ax[0].set_ylabel("Z",fontsize=15)
+ax[0].set_xlim(-2.5e-6,2.5e-6)
+ax[0].set_ylim(-2.5e-6,2.5e-6)
+
+ax[1].scatter(df['y'],df['z'])
+ax[1].set_xlabel("Y",fontsize=15)
+ax[1].set_ylabel("Z",fontsize=15)
+ax[1].set_xlim(-2.5e-6,2.5e-6)
+ax[1].set_ylim(-2.5e-6,2.5e-6)
+fig.suptitle("Positions of deposits",fontsize=25)
+
 os.chdir("..")
 os.chdir("figures")
 plt.savefig("deposits.png")
