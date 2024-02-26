@@ -41,9 +41,6 @@ subprocess.run(['g++','main.cpp','particle.cpp','-o','sim','-O4'])
 subprocess.run(['./sim',clusterType,f' {timeSteps}'])
 print("Processing data...")
 
-
-
-
 # Read the CSV files into a pandas dataframe
 with open('hotParticles.csv', 'r') as file:
     dfHot = pd.read_csv(file, header=None, names=['x', 'y'],low_memory=True)
@@ -58,9 +55,8 @@ dfHot['y'] = pd.to_numeric(dfHot['y'],errors='coerce')
 dfCold['x'] = pd.to_numeric(dfCold['x'],errors='coerce')
 dfCold['y'] = pd.to_numeric(dfCold['y'],errors='coerce')
 
-
-
 #%%
+
 
 #Prepare the scatter plot:
 box_size = 100 * 1e-6
