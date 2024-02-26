@@ -17,6 +17,13 @@ struct Point{
 	double z;
 };
 
+double integral(double _x, double _y,double _z,std::vector<Point> deposits);
+
+double central_difference(double x_back,double x_forward,
+						  		double y_back,double y_forward, 
+						  		double z_back, double z_forward,
+						  		std::vector<Point> deposits);
+
 class Particle{
 	public:
 		Point  center;
@@ -41,6 +48,8 @@ class Particle{
 		void   rotation_transform();
 		void   generateDeposits(int nDeposits);
 		void   writeDepositToCSV();
+		void   getKinematics(std::vector<double> x,std::vector<double> y, std::vector<double> z,
+				double thickness,double dl,std::vector<Point> globalDeposits);
 		
 };
 
@@ -63,6 +72,7 @@ std::vector<std::vector<double>> mat_mat_mul (std::vector<std::vector<double>> a
 std::vector<double> mat_vec_mul(std::vector<std::vector<double>> R, std::vector<double> x);
 std::vector<double> arange(double start, double stop, double stepSize);
 std::vector<double> cross_product(std::vector<double> a,std::vector<double> b);
+
 
 
 double get_norm(std::vector<double> a);

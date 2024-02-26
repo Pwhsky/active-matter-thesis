@@ -28,19 +28,14 @@ compute_temperature.cpp contains the computation for the temperature increase.
 
 using namespace std;
 	int     number_of_steps,nDeposits, nPoints;
- 	double  bounds, lambda, stepSize, dv, dl, thickness; 
+ 	double  bounds, lambda, stepSize, dv, dl; 
 	bool    onlyTangential = false;
 	vector<double> z,x,y;
 	vector<Point> globalDeposits;
 
 
-inline Particle getKinematics(Particle particle);
-inline double integral(double _x, double _y,double _z,std::vector<Point> deposits);
+//inline Particle getKinematics(Particle particle);
 
-inline double central_difference(double x_back,double x_forward,
-						  		double y_back,double y_forward, 
-						  		double z_back, double z_forward,
-						  		vector<Point> deposits);
 
 
 int main(int argc, char** argv) {
@@ -54,11 +49,11 @@ int main(int argc, char** argv) {
     dv	      		= stepSize*stepSize*stepSize;  //volume element for integral
 
 	
-	std::ofstream writeInitial("initpositions.csv");
-	std::ofstream writeFinal("finalpositions.csv");
+	std::ofstream p1("particle_1.csv");
+	std::ofstream p2("particle_2.csv");
 
-	writeInitial << "x,y,z"<<"\n";
-	writeFinal   << "x,y,z"<<"\n";
+	p1   << "x,y,z"<<"\n";
+	p2   << "x,y,z"<<"\n";
 
 	vector<Particle> particles = initializeParticles();
 	int nParticles = particles.size();
@@ -80,33 +75,31 @@ int main(int argc, char** argv) {
 	nPoints = x.size();
    
  	cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
-	vector<vector<vector<double>>> xGrad(nPoints, vector<vector<double>>(nPoints, vector<double>(nPoints)));
-    vector<vector<vector<double>>> zGrad(nPoints, vector<vector<double>>(nPoints, vector<double>(nPoints)));
       
     const int totalIterations = nPoints*nPoints*y.size();
 
 	dl = stepSize*stepSize;
-	thickness = pow(10*stepSize,2);
+	double thickness = pow(10*stepSize,2);
 
 	
 	//Write initial positions:
-	for(auto p:particles) writeInitial << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
-	
+	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
+	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 	
 	for(int time = 0; time < number_of_steps; time ++){ //Loop over timestep
 
 		for(auto &particle:particles){
-			particle = getKinematics(particle);
+			particle.getKinematics(x,y,z,thickness,dl,globalDeposits);
 			particle.updatePosition();
 			particle.rotation_transform();
 		}
 			
-		cout<<"Finished step "<<time<<"\n";
+		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
 
 	//Write final position
-	for(auto p:particles) writeFinal << p.center.x << "," << p.center.y << "," << p.center.z << "\n";
-	
+	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
+	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 
 	particles[0].writeDepositToCSV();
 	particles[1].writeDepositToCSV();
@@ -125,7 +118,7 @@ int main(int argc, char** argv) {
 	return 0;
 }	
 
-inline double central_difference(double x_back,double x_forward,double y_back,double y_forward, double z_back, double z_forward, vector<Point> deposits){
+double central_difference(double x_back,double x_forward,double y_back,double y_forward, double z_back, double z_forward, vector<Point> deposits){
 	double back   		= integral(x_back,y_back,z_back,deposits);
 	double forward		= integral(x_forward,y_forward,z_forward,deposits);
 	return (forward - back)/(2*dl);
@@ -150,10 +143,19 @@ inline double integral(double _x,double _y,double _z,std::vector<Point> deposits
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
+
+
+
+
+
+
+
+/*
+
 Particle getKinematics(Particle particle){
 	//This will compute the tangential component in a thin layer around the particle
 	//And then do a surface integral to get self propulsion in X and Z direction.
-
+	
 	Particle output = particle;
 
 	int counter = 1;
@@ -231,12 +233,15 @@ Particle getKinematics(Particle particle){
 	for(int i = 0; i<3;i++){
 		output.velocity[i]    *= thermoDiffusion/(double)counter;
 		output.selfRotation[i] = omega[i]/((double)counter);
-		cout<<output.selfRotation[i]<<"\n";
+		//cout<<output.selfRotation[i]<<"\n";
 		//cout<<output.velocity[i]<<"\n";
 	}
 
 	return output;		
 }
+
+
+*/
 
 
 /*

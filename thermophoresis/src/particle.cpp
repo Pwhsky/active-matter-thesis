@@ -29,7 +29,8 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
 	constexpr double waterConductivity	 	  = 0.606;
-	constexpr long double dt = 0.00001; 
+	constexpr double thermoDiffusion 		  = 2.8107e-6; 
+	constexpr long double dt = 0.1; 
 	
 	
 
@@ -51,9 +52,9 @@ void Particle::generateDeposits(int nDeposits) {
 		double r 	 = (this->radius)*u(gen);
 
 		//Convert to cartesian:
-    	double x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
-    	double y = r*sin(theta) * sin(phi(gen)) + this->center.y;
-    	double z = r*cos(theta)					+ this->center.z;
+    	double x = r*sin(theta) * cos(phi(gen));//; + this->center.x; 
+    	double y = r*sin(theta) * sin(phi(gen));//; + this->center.y;
+    	double z = r*cos(theta)					;//;+ this->center.z;
    		
 		//Add to deposits list
     	(this->deposits).emplace_back(Point{x,y,z});
@@ -87,9 +88,6 @@ void Particle::updatePosition(){
 	this->center.y += (this->velocity)[1]*dt;
 	this->center.z += (this->velocity)[2]*dt;
 
-
-
-
 }
 
 //      This function extensively uses the following formulae for rotation: 
@@ -101,7 +99,6 @@ void Particle::rotation_transform() {
     double theta = dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
 
     if (theta != 0) {
-		cout<<"Performing rotation"<<"\n";
 
         //Generate theta_x matrix
         std::vector<std::vector<double>> theta_x = {
@@ -150,8 +147,92 @@ void Particle::rotation_transform() {
 
     }
 }
+void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::vector<double> z,
+				double thickness,double dl,std::vector<Point> globalDeposits){
+
+	//This will compute the tangential component in a thin layer around the particle
+	//And then do a surface integral to get self propulsion in X and Z direction.
 
 
+	int counter = 1;
+	vector<double> omega = {0,0,0};
+
+	double gradientX;
+	double gradientY;
+	double gradientZ;
+	double Qx = center.x;
+	double Qy = center.y;
+	double Qz = center.z;
+
+	#pragma omp parallel for
+
+		for (auto i:x){
+			for(auto j:y){
+				for(auto k:z){		
+					
+					Point point 	= { i-center.x,
+										j-center.y,
+										k-center.z};
+
+					//double norm = get_norm({point.x, point.y, point.z});
+					//if (norm > 6*particleRadius){continue;}
+
+					double d = getRadialDistance(point);
+
+
+					//Compute only the points near the surface
+					if (d > pow(radius,2) && d < pow(radius,2)+thickness){
+							
+							double u				   = point.x;
+							double v 				   = point.y;
+							double w 				   = point.z;
+
+							vector<double> r		   = {u,v,w};	
+
+
+							vector<double> gradient = {central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,globalDeposits),
+													   central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,globalDeposits),
+													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits)};
+
+	
+							vector<double> radial     = {0,0,0};
+							vector<double> tangential = {0,0,0};
+							vector<double> vel 		  = {0,0,0};
+							double duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
+							double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
+							double phi   = atan((Qz-k)/(Qx-i));
+							double sincos = sin(theta)*cos(phi);
+
+							//Populate the cartesian vectors with their respective components:
+							for(int l = 0; l<3; l++){
+								radial[l]    	   = duvwr * r[l] / d;
+								tangential[l]	   = gradient[l] - radial[l];
+								vel[l]     		   = tangential[l] * sincos;
+								velocity[l] 	   = vel[l];
+							}
+
+							vector<double> rxV = cross_product(r,vel);
+
+							for(int l = 0; l<3; l++){
+								omega[l] -= rxV[l];
+							}
+
+							counter++;
+
+					}
+					
+				}
+			}
+		}
+		//scale with number of points
+	for(int i = 0; i<3;i++){
+		velocity[i]    *= thermoDiffusion/(double)counter;
+		selfRotation[i] = omega[i]/((double)counter);
+		//cout<<output.selfRotation[i]<<"\n";
+		//cout<<output.velocity[i]<<"\n";
+	}
+
+}
 
 
 void Particle::writeDepositToCSV() {
