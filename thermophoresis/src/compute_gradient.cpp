@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
 
 			int counter = 0;
-			#pragma omp parallel for
+			#pragma omp parallel for schedule(dynamic)
 			for (size_t i = 0; i < nPoints; i++){
 				for(size_t j = 0; j<y.size(); j++){
 					for(size_t k = 0; k<nPoints; k++){

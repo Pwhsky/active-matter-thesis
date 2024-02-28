@@ -13,7 +13,7 @@ In functions.h the particle class is declared.
 #include <vector>
 #include <fstream>
 #include <random>
-
+#include <omp.h>
 using namespace std;
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -23,14 +23,16 @@ std::mt19937 gen(rd());
 	constexpr double particleRadius   		  = 2    *pow(10,-6);
 	constexpr double particleRadiusSquared    = particleRadius*particleRadius;
 	constexpr double depositRadius	 	      = 30   *pow(10,-9);	
-	constexpr double volumePerDeposit	      = 4*pi *pow((depositRadius),3)/3; 
-	constexpr double depositArea	 	      = 2*pi *pow(depositRadius,2); 
+	constexpr double depositVolume	          = 4*pi *pow((depositRadius),3)/3;  //Spherical deposit volume
+	constexpr double depositArea	 	      = 2*pi *pow(depositRadius,2);		 //Spherical deposit surface area
 	constexpr double intensity		  		  = 100  *pow(10,-3);  //Watts
-	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
-	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
-	constexpr double waterConductivity	 	  = 0.606;
+	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters^2  How much area the laser is distributed on.
+	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); //Total laser intensity Watt/meter^2
+	constexpr double waterConductivity	 	  = 0.606;   //water conductivity in Watts/(meter*Kelvin)
 	constexpr double thermoDiffusion 		  = 2.8107e-6; 
-	constexpr long double dt = 0.1; 
+
+	//Simulation time step
+	constexpr double dt = 0.1; 
 	
 	
 
@@ -46,15 +48,16 @@ void Particle::generateDeposits(int nDeposits) {
     uniform_real_distribution<double> u(0.8,1);
 
 	//Initiate deposits
+	
 	for(int i = 0; i<nDeposits; i++){
 
-		double theta = acos(costheta(gen));
-		double r 	 = (this->radius)*u(gen);
+		double const theta = acos(costheta(gen));
+		double const r 	 = (this->radius)*u(gen);
 
 		//Convert to cartesian:
-    	double x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
-    	double y = r*sin(theta) * sin(phi(gen)) + this->center.y;
-    	double z = r*cos(theta)					+ this->center.z;
+    	double const x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
+    	double const y = r*sin(theta) * sin(phi(gen)) + this->center.y;
+    	double const z = r*cos(theta)				  + this->center.z;
    		
 		//Add to deposits list
     	(this->deposits).emplace_back(Point{x,y,z});
@@ -70,14 +73,11 @@ void Particle::generateDeposits(int nDeposits) {
 	//costheta(0.5,0.7)
 	//u(0.9,1)
 }
-double Particle::getRadialDistance(Point r){
-		double norm = pow(this->center.x-r.x,2) + pow(this->center.y-r.y,2) + pow(this->center.z-r.z,2);
-	   return norm;
-}
 
 void Particle::updatePosition(){
-
+	
 	//Update positions of deposits and center of particle based on self propulsion
+
 	for(int i = 0; i< this->deposits.size(); i++){
 
 		this->deposits[i].x += (this->velocity)[0]*dt;
@@ -87,97 +87,108 @@ void Particle::updatePosition(){
 	this->center.x += (this->velocity)[0]*dt;
 	this->center.y += (this->velocity)[1]*dt;
 	this->center.z += (this->velocity)[2]*dt;
-
 }
 
-//      This function extensively uses the following formulae for rotation: 
-//          Numerical Simulations of Active Brownian Particles by A. Callegari & G. Volpe
-//          Section 7.4.1
+
 
 void Particle::rotation_transform() {
-    double* w = this->selfRotation;
-    double theta = dt* sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
-
-    if (theta != 0) {
-
-        //Generate theta_x matrix
-        std::vector<std::vector<double>> theta_x = {
-            { 0, -w[2], w[1] },
-            { w[2], 0, -w[0] },
-            { -w[1], w[0], 0 }
-        };
-
-        std::vector<std::vector<double>> theta_x_squared = mat_mat_mul(theta_x, theta_x);
-        std::vector<std::vector<double>> R = theta_x;
-
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                R[i][j] = (sin(theta) / theta) * theta_x[i][j] + ((1.0 - cos(theta)) / (theta * theta)) * theta_x_squared[i][j];
-
-                if (i == j){
-                    R[i][j] +=1;
-                }
-            }
-			
-        }
-
-        // Rotate the deposits, using the particle center as reference
-
-        std::vector<double> temp(3);
-        std::vector<double> x(3);
-   
-        for (auto &p : this->deposits) {
-
-            x = { p.x-this->center.x, p.y-this->center.y, p.z-this->center.z };
-            temp = mat_vec_mul(R,x);
-
-            p.x = temp[0];
-            p.y = temp[1];
-            p.z = temp[2];
-        }
-    
-        
-        // Rotate the particle itself (center)
-        x = { this->center.x, this->center.y, this->center.z };
-        std::vector<double> v(this->velocity, this->velocity +3);
-        temp = mat_vec_mul(R,v);
-        for(int i  = 0; i<3; i++){
-            this->velocity[i] = temp[i];
-        }
-
-    }
-}
-
-
-double integral(double _x,double _y,double _z,std::vector<Point> deposits,double lambda,double dv){
-	//absorbtionTerm will compute the absorbed ammount of power from the laser
-	//ContributionSum will sum up contributions from all deposits
-	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
-	double laserPower	           = I0 + I0*cos(twoPi*(_x)/lambda);	
-	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
-	double contributionSum 		   = 0.0;
+	//This function extensively uses the following formula for rotation: 
+	//Section 7.4.1 in:
+	//Numerical Simulations of Active Brownian Particles by A. Callegari & G. Volpe
 	
-	//Since the values scale with the inverse square distance.
-    	for (size_t i = 0; i < deposits.size(); i++){
 
-    		double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
-														  pow(_y-deposits[i].y,2)+
-														  pow(_z-deposits[i].z,2));
-			contributionSum +=  inverse_squareroot_distance;
+    double*    w    = this->selfRotation;
+    double  theta = dt*sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+
+	//check if theta is 0, (no rotation needed if true)a
+    if (theta != 0.0) { 
+
+
+
+		//Generate skew-symmetric theta_x matrix:
+		std::vector<std::vector<double>> theta_x = {
+			{    0, -w[2],  w[1] },
+			{ w[2],     0, -w[0] },
+			{-w[1],  w[0],     0 }
+		};
+
+		std::vector<std::vector<double>> theta_x_squared = matrix_matrix_multiplication(theta_x, theta_x);
+		std::vector<std::vector<double>> R = theta_x;
+		for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+				R[i][j] = (sin(theta) / theta) * theta_x[i][j] + ((1.0 - cos(theta)) / (theta * theta)) * theta_x_squared[i][j];
+				if (i == j){
+					R[i][j] +=1;
+				}
+			}		
 		}
-    return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
+
+		// Rotate the deposits, using the particle center as reference
+		
+		std::vector<double> temp(3);
+		std::vector<double> x(3);
+
+		
+		for (auto &p : this->deposits) {
+
+			x = { p.x-this->center.x, p.y-this->center.y, p.z-this->center.z };
+			temp = matrix_vector_multiplication(R,x);
+
+			p.x = temp[0];
+			p.y = temp[1];
+			p.z = temp[2];
+		}
+		
+			
+		// Rotate the particle itself (center)
+		x = { this->center.x, this->center.y, this->center.z };
+		std::vector<double> v(this->velocity, this->velocity +3);
+		temp = matrix_vector_multiplication(R,v);
+		for(int i  = 0; i<3; i++){
+			this->velocity[i] = temp[i];
+		}
+	}
+
+}
+double Particle::getRadialDistance(Point r){
+		double const norm = pow(this->center.x-r.x,2) + pow(this->center.y-r.y,2) + pow(this->center.z-r.z,2);
+	   return norm;
 }
 
-double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, vector<Point> deposits,double dl,double lambda, double dv){
-	double back   		= integral(x1,y1,z1,deposits,lambda,dv);
-	double forward		= integral(x2,y2,z2,deposits,lambda,dv);
-	return (forward - back)/(2*dl);
-}
+/////////////////////////////////////////////////
+////////integral and central difference function
+/////////////////////////////////////////////////
+	double integral(double _x,double _y,double _z,std::vector<Point> deposits,double absorbtionTerm,double dv){
+		//absorbtionTerm will compute the absorbed ammount of power from the laser
+		//ContributionSum will sum up contributions from all deposits
+		//Finally, the contributionSum is scaled with volume element dv and divided with constants												
+
+		double contributionSum 		       = 0.0;
+		
+		//Since the values scale with the inverse square distance.
+			for (size_t i = 0; i < deposits.size(); i++){
+
+				double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
+															pow(_y-deposits[i].y,2)+
+															pow(_z-deposits[i].z,2));
+				contributionSum +=  inverse_squareroot_distance;
+			}
+		return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
+	}
+
+	double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, 
+						          vector<Point> deposits   ,double dl, double absorbtionTerm, double dv){
+
+		double const back   		= integral(x1,y1,z1,deposits,absorbtionTerm,dv);
+		double const forward		= integral(x2,y2,z2,deposits,absorbtionTerm,dv);
+		return (forward - back)/(2*dl);
+	}
+/////////////////////////////////////////////////
 
 
 
 
-void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::vector<double> z,
+void Particle::getKinematics(std::vector<double> linspace,
 				double thickness,double dl,std::vector<Point> globalDeposits, double lambda, double dv){
 
 	//This will compute the tangential component in a thin layer around the particle
@@ -190,15 +201,18 @@ void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::v
 	double gradientX;
 	double gradientY;
 	double gradientZ;
-	double Qx = center.x;
-	double Qy = center.y;
-	double Qz = center.z;
+	double const Qx = center.x;
+	double const Qy = center.y;
+	double const Qz = center.z;
 
-	#pragma omp parallel for
+		#pragma omp parallel for schedule(dynamic)
+		for (auto i:linspace){
 
-		for (auto i:x){
-			for(auto j:y){
-				for(auto k:z){		
+			double const currentLaserPower = I0 + I0*cos(twoPi*(i)/lambda);
+			double const absorbtionTerm    = currentLaserPower*depositArea/(depositVolume);
+
+			for(auto j:linspace){
+				for(auto k:linspace){		
 					
 					Point point 	= { i-center.x,
 										j-center.y,
@@ -207,7 +221,7 @@ void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::v
 					//double norm = get_norm({point.x, point.y, point.z});
 					//if (norm > 6*particleRadius){continue;}
 
-					double d = getRadialDistance(point);
+					double const d = getRadialDistance(point);
 
 
 					//Compute only the points near the surface
@@ -220,18 +234,19 @@ void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::v
 							vector<double> r		   = {u,v,w};	
 
 
-							vector<double> gradient = {central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,globalDeposits,dl,lambda,dv),
-													   central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,globalDeposits,dl,lambda,dv),
-													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits,dl,lambda,dv)};
+							vector<double> gradient = {central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,globalDeposits,dl,absorbtionTerm,dv),
+													   central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,globalDeposits,dl,absorbtionTerm,dv),
+													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits,dl,absorbtionTerm,dv)};
 
 	
 							vector<double> radial     = {0,0,0};
 							vector<double> tangential = {0,0,0};
 							vector<double> vel 		  = {0,0,0};
-							double duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
-							double theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
-							double phi   = atan((Qz-k)/(Qx-i));
-							double sincos = sin(theta)*cos(phi);
+
+							double const duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
+							double const theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
+							double const phi   = atan((Qz-k)/(Qx-i));
+							double const sincos = sin(theta)*cos(phi);
 
 							//Populate the cartesian vectors with their respective components:
 							for(int l = 0; l<3; l++){
@@ -246,7 +261,7 @@ void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::v
 							for(int l = 0; l<3; l++){
 								omega[l] -= rxV[l];
 							}
-
+							
 							counter++;
 
 					}

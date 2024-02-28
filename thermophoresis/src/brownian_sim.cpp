@@ -9,15 +9,14 @@ compute_temperature.cpp contains the computation for the temperature increase.
 #include <fstream>
 #include <cmath>
 #include <vector>
-#include <omp.h>
 #include "particle.h"
-#include <random>
+
 
 using namespace std;
 	int     number_of_steps,nDeposits, nPoints;
  	double  bounds, lambda, stepSize, dv, dl; 
 	bool    onlyTangential = false;
-	vector<double> z,x,y;
+	
 	vector<Point> globalDeposits;
 
 
@@ -43,9 +42,8 @@ int main(int argc, char** argv) {
 	p2   << "x,y,z"<<"\n";
 
 	vector<Particle> particles = initializeParticles();
-	int nParticles = particles.size();
 
-	for(int i = 0; i<nParticles; i++ ){
+	for(int i = 0; i < particles.size(); i++ ){
 		particles[i].generateDeposits(nDeposits);
 		for(int j = 0; j<nDeposits;j++){
 			globalDeposits.push_back(particles[i].deposits[j]);
@@ -54,16 +52,14 @@ int main(int argc, char** argv) {
 
 
 	//Generate linspace vectors:
-	vector<double> linspace = arange(-bounds,bounds,stepSize);
-	z = linspace;
-	x = linspace;
-	y = linspace;
+	vector<double> linspace         = arange(-bounds,bounds,stepSize);
 
-	nPoints = x.size();
+
+	nPoints = linspace.size();
    
  	cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
       
-    const int totalIterations = nPoints*nPoints*y.size();
+    const int totalIterations = nPoints*nPoints*linspace.size();
 
 	dl = stepSize*stepSize;
 	double thickness = pow(10*stepSize,2);
@@ -73,21 +69,26 @@ int main(int argc, char** argv) {
 	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 	
-	for(int time = 0; time < number_of_steps; time ++){ //Loop over timestep
+
+	for(int time = 0; time < number_of_steps; time ++){ 
 
 		for(auto &particle:particles){
-			particle.getKinematics(x,y,z,thickness,dl,globalDeposits,lambda,dv);
+			particle.getKinematics(linspace,thickness,dl,globalDeposits,lambda,dv);
 			particle.rotation_transform();
 			particle.updatePosition();
+			
+			p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
+			p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+			
+			//TODO: Hard sphere correction
+			//TODO: write particle position to csv file
 			
 		}
 			
 		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
 
-	//Write final position
-	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
-	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+
 
 	particles[0].writeDepositToCSV();
 	particles[1].writeDepositToCSV();

@@ -2,7 +2,6 @@
 #include <cmath>
 #include <vector>
 #include <fstream>
-#include <random>
 
 using namespace std;
 	constexpr double particleRadius	= 2*pow(10,-6);
@@ -12,8 +11,8 @@ using namespace std;
 std::vector<Particle> initializeParticles(){
 
 	//Create the coordinates
-	Point centerOfParticle1 = {0.0*particleRadius,0.0,0.0}; 
-	Point centerOfParticle2 = {1.5*particleRadius,0.0,0.0}; 
+	Point centerOfParticle1 = {-1.75*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {1.75*particleRadius,0.0,0.0}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
@@ -72,12 +71,12 @@ double get_norm(std::vector<double> a){
 
  std::vector<double> arange(double start, double stop, double stepSize){
  	std::vector<double> array;
-
-	 for (double coordinate = start; coordinate <= stop; coordinate += stepSize) {
+	for (double coordinate = start; coordinate <= stop; coordinate += stepSize) {
           	 array.push_back(coordinate);
-      	 }
+    }
 	return array;
  }
+ 
  std::vector<double> cross_product(std::vector<double> a,std::vector<double> b){
 	std::vector<double> output = {a[1]*b[2]-a[2]*b[1],
 								  a[2]*b[0]-a[0]*b[2],
@@ -85,11 +84,10 @@ double get_norm(std::vector<double> a){
 	
 	return output;
  }
- std::vector<std::vector<double>> mat_mat_mul (std::vector<std::vector<double>> a,
+ std::vector<std::vector<double>> matrix_matrix_multiplication (std::vector<std::vector<double>> a,
  										  std::vector<std::vector<double>> b){
 
 	std::vector<std::vector<double>> output = a;
-
 	for(int i = 0; i<3;i++){
 		for(int j = 0; j<3; j++) {
 			double sum = 0.0;
@@ -102,7 +100,7 @@ double get_norm(std::vector<double> a){
 	return output;					
 }
  
- std::vector<double> mat_vec_mul(std::vector<std::vector<double>> R, std::vector<double> x){
+ std::vector<double> matrix_vector_multiplication(std::vector<std::vector<double>> R, std::vector<double> x){
 
 	std::vector<double> temp(3);
     for (int i = 0; i < 3; i++) {
