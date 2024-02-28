@@ -147,6 +147,8 @@ void Particle::rotation_transform() {
 
     }
 }
+
+
 double integral(double _x,double _y,double _z,std::vector<Point> deposits,double lambda,double dv){
 	//absorbtionTerm will compute the absorbed ammount of power from the laser
 	//ContributionSum will sum up contributions from all deposits
@@ -171,6 +173,9 @@ double central_difference(double x1,double x2,double y1,double y2, double z1, do
 	double forward		= integral(x2,y2,z2,deposits,lambda,dv);
 	return (forward - back)/(2*dl);
 }
+
+
+
 
 void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::vector<double> z,
 				double thickness,double dl,std::vector<Point> globalDeposits, double lambda, double dv){

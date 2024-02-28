@@ -12,29 +12,12 @@ compute_temperature.cpp contains the computation for the temperature increase.
 #include <omp.h>
 #include "particle.h"
 #include <random>
-	constexpr double pi	      		 	  	  = 3.14159265358979323846;
-	constexpr double twoPi					  = 2*3.14159265358979323846;
-	constexpr double particleRadius   		  = 2    *pow(10,-6);
-	constexpr double particleRadiusSquared    = particleRadius*particleRadius;
-	constexpr double depositRadius	 	      = 30   *pow(10,-9);	
-	constexpr double volumePerDeposit	      = 4*pi *pow((depositRadius),3)/3; 
-	constexpr double depositArea	 	      = 2*pi *pow(depositRadius,2); 
-	constexpr double intensity		  		  = 100  *pow(10,-3);  //Watts
-	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters  How much area the laser is distributed on.
-	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); 
-	constexpr double waterConductivity	 	  = 0.606;
-	constexpr double thermoDiffusion 		  = 2.8107e-6; 
+
 
 
 using namespace std;
- 	double  bounds;
-	double  lambda;
-	double  stepSize;
-	double  dv;
-	int 	nDeposits;	
-	int	    nPoints;
-	double  dl;
-	double  thickness; 
+ 	double  bounds,  lambda, stepSize, dv, dl;
+	int 	nDeposits, nPoints;
 	bool    onlyTangential = false;
 
 	vector<double> z;
@@ -76,7 +59,7 @@ int main(int argc, char** argv) {
 
 
 	dl = stepSize*stepSize;
-	thickness = pow(10*stepSize,2);
+
 
 
 	for(int n = 0; n < nParticles;n++){
@@ -121,7 +104,7 @@ int main(int argc, char** argv) {
 								zGrad[i][j][k]   		   += tangentialZ*25/1000;
 							}
 						}
-						currentIteration++
+
 
 					}
 				}

@@ -16,13 +16,7 @@ struct Point{
 	double y;
 	double z;
 };
-double integral(double _x, double _y,double _z,std::vector<Point> deposits,double lambda, double dv);
 
-double central_difference(double x_back,double x_forward,
-						  		double y_back,double y_forward, 
-						  		double z_back, double z_forward,
-						  		std::vector<Point> deposits,
-								double dl,double lambda, double dv);
 
 
 class Particle{
@@ -54,6 +48,8 @@ class Particle{
 		
 };
 
+
+
 /*
 Example: to create a particle with velocity 0.0 at origin with radius 1 micron, you do:
 
@@ -62,7 +58,13 @@ Example: to create a particle with velocity 0.0 at origin with radius 1 micron, 
 	Particle myParticle(center, 1e-6 , 0.0);
 */
 
+double integral(double _x, double _y,double _z,std::vector<Point> deposits,double lambda, double dv);
 
+double central_difference(double x_back,double x_forward,
+						  		double y_back,double y_forward, 
+						  		double z_back, double z_forward,
+						  		std::vector<Point> deposits,
+								double dl,double lambda, double dv);
 
 std::vector<Particle> initializeParticles();std::vector<double> get_new_coordinates(std::vector<double> omega, std::vector<double> x);
 
