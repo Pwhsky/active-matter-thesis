@@ -16,13 +16,14 @@ struct Point{
 	double y;
 	double z;
 };
-
-double integral(double _x, double _y,double _z,std::vector<Point> deposits);
+double integral(double _x, double _y,double _z,std::vector<Point> deposits,double lambda, double dv);
 
 double central_difference(double x_back,double x_forward,
 						  		double y_back,double y_forward, 
 						  		double z_back, double z_forward,
-						  		std::vector<Point> deposits);
+						  		std::vector<Point> deposits,
+								double dl,double lambda, double dv);
+
 
 class Particle{
 	public:
@@ -49,7 +50,7 @@ class Particle{
 		void   generateDeposits(int nDeposits);
 		void   writeDepositToCSV();
 		void   getKinematics(std::vector<double> x,std::vector<double> y, std::vector<double> z,
-				double thickness,double dl,std::vector<Point> globalDeposits);
+				double thickness,double dl,std::vector<Point> globalDeposits, double lambda, double dv);
 		
 };
 

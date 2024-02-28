@@ -27,22 +27,6 @@ using namespace std;
 	int    nDeposits;	
 
 
-double integral(double x, double y, double z,std::vector<Point> deposits){
-	//absorbtionTerm will compute the absorbed ammount of power from the laser
-	//ContributionSum will sum up contributions
-	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
-	double laserPower	           = I0 + I0*cos(twoPi*(x)/lambda);	
-	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
-	double contributionSum 		   = 0.0;
-		//Since the values scale with the inverse square distance, this is the only heavy computation.
-    for (size_t i = 0; i < deposits.size(); i++){
-    	double inverse_squareroot_distance = 1.0/sqrt(pow(x-deposits[i].x,2)+
-											 pow(y-deposits[i].y,2)+
-											 pow(z-deposits[i].z,2));
-		contributionSum +=  inverse_squareroot_distance;
-	}
-    return contributionSum*dv*absorbtionTerm/(4*pi*waterConductivity); 
-}
 
 int main(int argc, char** argv) {
 	auto startTimer = std::chrono::high_resolution_clock::now();
@@ -93,7 +77,7 @@ int main(int argc, char** argv) {
 					double d = particles[n].getRadialDistance(point);
     				//Check if outside particle:
 					if (d > pow(particles[n].radius,2)){
-						temperature[i][j][k] += integral(x[i],y[j],z[k],particles[n].deposits);	
+						temperature[i][j][k] += integral(x[i],y[j],z[k],particles[n].deposits,lambda,dv);	
        				}
 
 					// Display progress bar so that the user has something to look at

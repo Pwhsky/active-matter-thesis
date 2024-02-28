@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 	for(int time = 0; time < number_of_steps; time ++){ //Loop over timestep
 
 		for(auto &particle:particles){
-			particle.getKinematics(x,y,z,thickness,dl,globalDeposits);
+			particle.getKinematics(x,y,z,thickness,dl,globalDeposits,lambda,dv);
 			particle.updatePosition();
 			particle.rotation_transform();
 		}
@@ -118,6 +118,7 @@ int main(int argc, char** argv) {
 	return 0;
 }	
 
+/*
 double central_difference(double x_back,double x_forward,double y_back,double y_forward, double z_back, double z_forward, vector<Point> deposits){
 	double back   		= integral(x_back,y_back,z_back,deposits);
 	double forward		= integral(x_forward,y_forward,z_forward,deposits);
@@ -143,7 +144,7 @@ inline double integral(double _x,double _y,double _z,std::vector<Point> deposits
     return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 }
 
-
+*/
 
 
 

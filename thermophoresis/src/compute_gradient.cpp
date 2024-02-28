@@ -42,14 +42,6 @@ using namespace std;
 	vector<double> y;
 
 
-
-double integral(double _x, double _y,double _z,std::vector<Point> deposits);
-
-double central_difference(double x1,double y1,
-						  double z1,double x2, 
-						  double y2, double z2,
-						vector<Point> deposits);
-
 int main(int argc, char** argv) {
 	   
 	auto startTimer = std::chrono::high_resolution_clock::now();
@@ -104,8 +96,8 @@ int main(int argc, char** argv) {
 						double d = particles[n].getRadialDistance(point);
 						if (d > pow(particles[n].radius,2)){
 
-							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits);
-							double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits);
+							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits,dl,lambda,dv);
+							double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits,dl,lambda,dv);
 			
 
 							//Project on normal vector:
@@ -129,21 +121,7 @@ int main(int argc, char** argv) {
 								zGrad[i][j][k]   		   += tangentialZ*25/1000;
 							}
 						}
-						currentIteration++;
-						/*
-						
-						
-						// Calculate progress percentage so that the user has something to look at
-						if(currentIteration % 500 == 0) {
-							float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
-							// Print progress bar
-							#pragma omp critical
-							{
-									cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
-									cout.flush();
-							}
-						}
-						*/
+						currentIteration++
 
 					}
 				}
@@ -171,29 +149,5 @@ int main(int argc, char** argv) {
 	return 0;
 }	
 
-inline double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, vector<Point> deposits){
-	double back   		= integral(x1,y1,z1,deposits);
-	double forward		= integral(x2,y2,z2,deposits);
-	return (forward - back)/(2*dl);
-}
-
-inline double integral(double _x,double _y,double _z,std::vector<Point> deposits){
-	//absorbtionTerm will compute the absorbed ammount of power from the laser
-	//ContributionSum will sum up contributions from all deposits
-	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
-	double laserPower	           = I0 + I0*cos(twoPi*(_x)/lambda);	
-	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
-	double contributionSum 		   = 0.0;
-	
-	//Since the values scale with the inverse square distance.
-    	for (size_t i = 0; i < deposits.size(); i++){
-
-    		double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
-														  pow(_y-deposits[i].y,2)+
-														  pow(_z-deposits[i].z,2));
-			contributionSum +=  inverse_squareroot_distance;
-		}
-    return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
-}
 
 

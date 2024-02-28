@@ -52,9 +52,9 @@ void Particle::generateDeposits(int nDeposits) {
 		double r 	 = (this->radius)*u(gen);
 
 		//Convert to cartesian:
-    	double x = r*sin(theta) * cos(phi(gen));//; + this->center.x; 
-    	double y = r*sin(theta) * sin(phi(gen));//; + this->center.y;
-    	double z = r*cos(theta)					;//;+ this->center.z;
+    	double x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
+    	double y = r*sin(theta) * sin(phi(gen)) + this->center.y;
+    	double z = r*cos(theta)					+ this->center.z;
    		
 		//Add to deposits list
     	(this->deposits).emplace_back(Point{x,y,z});
@@ -147,8 +147,33 @@ void Particle::rotation_transform() {
 
     }
 }
+double integral(double _x,double _y,double _z,std::vector<Point> deposits,double lambda,double dv){
+	//absorbtionTerm will compute the absorbed ammount of power from the laser
+	//ContributionSum will sum up contributions from all deposits
+	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
+	double laserPower	           = I0 + I0*cos(twoPi*(_x)/lambda);	
+	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
+	double contributionSum 		   = 0.0;
+	
+	//Since the values scale with the inverse square distance.
+    	for (size_t i = 0; i < deposits.size(); i++){
+
+    		double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
+														  pow(_y-deposits[i].y,2)+
+														  pow(_z-deposits[i].z,2));
+			contributionSum +=  inverse_squareroot_distance;
+		}
+    return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
+}
+
+double central_difference(double x1,double x2,double y1,double y2, double z1, double z2, vector<Point> deposits,double dl,double lambda, double dv){
+	double back   		= integral(x1,y1,z1,deposits,lambda,dv);
+	double forward		= integral(x2,y2,z2,deposits,lambda,dv);
+	return (forward - back)/(2*dl);
+}
+
 void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::vector<double> z,
-				double thickness,double dl,std::vector<Point> globalDeposits){
+				double thickness,double dl,std::vector<Point> globalDeposits, double lambda, double dv){
 
 	//This will compute the tangential component in a thin layer around the particle
 	//And then do a surface integral to get self propulsion in X and Z direction.
@@ -190,9 +215,9 @@ void Particle::getKinematics(std::vector<double> x,std::vector<double> y, std::v
 							vector<double> r		   = {u,v,w};	
 
 
-							vector<double> gradient = {central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,globalDeposits),
-													   central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,globalDeposits),
-													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits)};
+							vector<double> gradient = {central_difference(i-dl,i+dl,j   ,j   ,k   ,k   ,globalDeposits,dl,lambda,dv),
+													   central_difference(i   ,i   ,j-dl,j+dl,k   ,k   ,globalDeposits,dl,lambda,dv),
+													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits,dl,lambda,dv)};
 
 	
 							vector<double> radial     = {0,0,0};
@@ -258,6 +283,10 @@ void Particle::writeDepositToCSV() {
     outputFile.close();
 }
 
+
+
+
+
 //Old rotation function
 /*
 void Particle::rotate(double angle) {
@@ -285,4 +314,6 @@ void Particle::rotate(double angle) {
 	
 }
 */
+
+
 
