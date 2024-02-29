@@ -38,9 +38,7 @@ int main(int argc, char** argv) {
  	////////////////////////  INTEGRAL ///////////////////////////////////////////////////////////
 	int nSteps = x.size();
 	//Initialize empty 3D space of points which will contain the integral values.
-	 vector<vector<vector<double>>> temperature(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));  
-	const int totalIterations = nSteps*nSteps*y.size();
-   	size_t currentIteration = 0;
+	vector<vector<vector<double>>> temperature(nSteps, vector<vector<double>>(nSteps, vector<double>(nSteps)));  
 
 	//The 3 nested for-loops will call integral() for all points in 3D space.
 	for(int n = 0;n<nParticles;n++){
@@ -49,23 +47,11 @@ int main(int argc, char** argv) {
     		for(size_t j = 0; j<y.size(); j++){
     			for(size_t k = 0; k<nSteps; k++){
 					Point point = {x[i],y[j],z[k]};
-					double d = particles[n].getRadialDistance(point);
+					double d = particles[n].getSquaredDistance(point);
     				//Check if outside particle:
 					if (d > pow(particles[n].radius,2)){
 						temperature[i][j][k] += integral(x[i],y[j],z[k],particles[n].deposits,lambda,dv);	
        				}
-
-					// Display progress bar so that the user has something to look at
-					currentIteration++;
-              		if(currentIteration % 500 == 0) {
-             			float progress = round(static_cast<float>(currentIteration) / totalIterations * 100.0);
-               			#pragma omp critical
-               			{
-								//Print progress bar
-                				cout << "Progress: "<< progress << "% ("<< currentIteration<< "/" << totalIterations << ")\r";
-                	  	 		cout.flush();
-                		}
-              		}
 				}
     		}
     	}

@@ -49,7 +49,7 @@ def generateFigure(imageBounds):
 	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
 	ax.set_title("Final orientation of particle")
 
-
+	
 	xlim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
 	ylim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
 
@@ -71,12 +71,6 @@ def generateFigure(imageBounds):
 
 	ax.plot(particle_1['x'][:],particle_1["z"][:],linestyle="--",label="Particle 1")
 	ax.plot(particle_2['x'][:],particle_2["z"][:],linestyle="--",label="Particle 2")
-
-
-
-		
-		
-
 	
 	#ax.hlines(lastPos[1],lastPos[0],lastPos[0]+2e-6)
 	ax.axis("equal")
@@ -84,7 +78,6 @@ def generateFigure(imageBounds):
 	ax.set_ylim(ylim)
 	ax.set_xlabel('X (m)',fontsize=15)
 	ax.set_ylabel('Z (m)',fontsize=15)
-	ax.grid(True)
 	ax.legend()
 	os.chdir("..")
 	os.chdir("figures")

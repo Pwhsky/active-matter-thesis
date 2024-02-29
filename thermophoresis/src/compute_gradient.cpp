@@ -53,10 +53,6 @@ int main(int argc, char** argv) {
  	cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
 	vector<vector<vector<double>>> xGrad(nPoints, vector<vector<double>>(nPoints, vector<double>(nPoints)));
     vector<vector<vector<double>>> zGrad(nPoints, vector<vector<double>>(nPoints, vector<double>(nPoints)));
-      
-    const int totalIterations = nPoints*nPoints*y.size();
-	size_t currentIteration = 0;
-
 
 	dl = stepSize*stepSize;
 
@@ -76,7 +72,7 @@ int main(int argc, char** argv) {
 
 						//Check if outside particle:
 						Point point = {x[i],y[j],z[k]};
-						double d = particles[n].getRadialDistance(point);
+						double d = particles[n].getSquaredDistance(point);
 						if (d > pow(particles[n].radius,2)){
 
 							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits,dl,lambda,dv);

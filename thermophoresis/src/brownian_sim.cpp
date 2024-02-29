@@ -13,15 +13,10 @@ compute_temperature.cpp contains the computation for the temperature increase.
 
 
 using namespace std;
-	int     number_of_steps,nDeposits, nPoints;
+	int     number_of_steps,nDeposits;
  	double  bounds, lambda, stepSize, dv, dl; 
 	bool    onlyTangential = false;
-	
 	vector<Point> globalDeposits;
-
-
-//inline Particle getKinematics(Particle particle);
-
 
 
 int main(int argc, char** argv) {
@@ -38,6 +33,7 @@ int main(int argc, char** argv) {
 	std::ofstream p1("particle_1.csv");
 	std::ofstream p2("particle_2.csv");
 
+
 	p1   << "x,y,z"<<"\n";
 	p2   << "x,y,z"<<"\n";
 
@@ -53,21 +49,18 @@ int main(int argc, char** argv) {
 
 	//Generate linspace vectors:
 	vector<double> linspace         = arange(-bounds,bounds,stepSize);
-
-
-	nPoints = linspace.size();
-   
  	cout<<"Finished initialization of "<< nDeposits <<" deposits."<<endl;
-      
-    const int totalIterations = nPoints*nPoints*linspace.size();
-
 	dl = stepSize*stepSize;
 	double thickness = pow(10*stepSize,2);
 
 	
 	//Write initial positions:
+	for(int i = 0; i<particles.size(); i++){
+
+	}
 	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+
 	
 
 	for(int time = 0; time < number_of_steps; time ++){ 
@@ -77,11 +70,12 @@ int main(int argc, char** argv) {
 			particle.rotation_transform();
 			particle.updatePosition();
 			
+			hard_sphere_correction(particles);
+
+
 			p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 			p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
-			
-			//TODO: Hard sphere correction
-			//TODO: write particle position to csv file
+			//TODO: make exporting particle positions a trivial task.
 			
 		}
 			

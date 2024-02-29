@@ -89,8 +89,6 @@ void Particle::updatePosition(){
 	this->center.z += (this->velocity)[2]*dt;
 }
 
-
-
 void Particle::rotation_transform() {
 	//This function extensively uses the following formula for rotation: 
 	//Section 7.4.1 in:
@@ -102,8 +100,6 @@ void Particle::rotation_transform() {
 
 	//check if theta is 0, (no rotation needed if true)a
     if (theta != 0.0) { 
-
-
 
 		//Generate skew-symmetric theta_x matrix:
 		std::vector<std::vector<double>> theta_x = {
@@ -150,9 +146,67 @@ void Particle::rotation_transform() {
 	}
 
 }
-double Particle::getRadialDistance(Point r){
-		double const norm = pow(this->center.x-r.x,2) + pow(this->center.y-r.y,2) + pow(this->center.z-r.z,2);
-	   return norm;
+
+void hard_sphere_correction(std::vector<Particle> &particles){
+	
+	//Exclude itself
+	std::vector<Particle> tempParticles = particles;
+	int const nParticles = particles.size();
+
+	for (int i = 0; i<nParticles; i++){
+		for(int j = 0; j<nParticles; j++) {
+			
+			double centerToCenterDistance = sqrt(particles[i].getSquaredDistance(particles[j].center)); 
+			double overlap =   2*particleRadius - centerToCenterDistance; //Experiment with this
+			
+			if (overlap > 0.0 && overlap != 0.0 && i !=j ){
+				std::cout<<"Performing H-S correction"<<"\n";
+				double distanceToMove = overlap/2;
+
+				vector<double> direction = getDirection(particles[i],particles[j]);				
+		
+
+				//Move particles AND their deposits:
+				tempParticles[i].center.x +=  distanceToMove*direction[0];
+				tempParticles[i].center.y +=  distanceToMove*direction[1];	
+				tempParticles[i].center.z +=  distanceToMove*direction[2];	
+
+				for(int k = 0; k< tempParticles[i].deposits.size(); k++){
+					tempParticles[i].deposits[k].x += distanceToMove*direction[0];
+					tempParticles[i].deposits[k].y += distanceToMove*direction[1];
+					tempParticles[i].deposits[k].z += distanceToMove*direction[2];
+
+					tempParticles[j].deposits[k].x -= distanceToMove*direction[0];
+					tempParticles[j].deposits[k].y -= distanceToMove*direction[1];
+					tempParticles[j].deposits[k].z -= distanceToMove*direction[2];
+
+				}
+
+		
+				tempParticles[j].center.x -=  distanceToMove*direction[0];
+				tempParticles[j].center.y -=  distanceToMove*direction[1];	
+				tempParticles[j].center.z -=  distanceToMove*direction[2];	
+			}							
+		}
+	}
+	particles = tempParticles;
+}
+
+
+double Particle::getSquaredDistance(Point r){
+	return (this->center.x-r.x)*(this->center.x-r.x) + 
+		   (this->center.y-r.y)*(this->center.y-r.y) +
+		   (this->center.z-r.z)*(this->center.z-r.z);
+}
+
+std::vector<double> getDirection(Particle p1,Particle p2){
+	std::vector<double> direction = {0,0,0};
+	double norm = sqrt(p1.getSquaredDistance(p2.center));
+	
+	direction[0] = (p1.center.x-p2.center.x)/norm;
+	direction[1] = (p1.center.y-p2.center.y)/norm;
+	direction[2] = (p1.center.z-p2.center.z)/norm;
+	return direction;
 }
 
 /////////////////////////////////////////////////
@@ -171,7 +225,7 @@ double Particle::getRadialDistance(Point r){
 				double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
 															pow(_y-deposits[i].y,2)+
 															pow(_z-deposits[i].z,2));
-				contributionSum +=  inverse_squareroot_distance;
+				contributionSum -=  inverse_squareroot_distance;
 			}
 		return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
 	}
@@ -221,7 +275,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 					//double norm = get_norm({point.x, point.y, point.z});
 					//if (norm > 6*particleRadius){continue;}
 
-					double const d = getRadialDistance(point);
+					double const d = getSquaredDistance(point);
 
 
 					//Compute only the points near the surface
@@ -316,7 +370,7 @@ void Particle::rotate(double angle) {
 		double theta =   angle*0.01;
 
     	for (int i = 0; i < this->deposits.size(); i++) {
-       		double distance = getRadialDistance(deposits[i]);
+       		double distance = getSquaredDistance(deposits[i]);
         	this->deposits[i].x = (this->deposits[i].x - this->center.x) * cos(theta) - (this->deposits[i].z - this->center.z) * sin(theta) + this->center.x;
         	this->deposits[i].z = (this->deposits[i].x - this->center.x) * sin(theta) + (this->deposits[i].z - this->center.z) * cos(theta) + this->center.z;
     	}

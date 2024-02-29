@@ -38,7 +38,7 @@ class Particle{
 		}  
 
 		void   generateDeposits(int nDeposits);
-		double getRadialDistance(Point r);
+		double getSquaredDistance(Point r);
 
 		//Kinematics
 		void   getKinematics(std::vector<double> linspace,
@@ -46,12 +46,12 @@ class Particle{
 								  									  double lambda, double dv);
 		void   updatePosition();
 		void   rotation_transform();
-		
 		//Exporting positions of deposits
 		void   writeDepositToCSV();
 };
 
 
+void   hard_sphere_correction(std::vector<Particle> &particles);
 
 /*
 Example: to create a particle with velocity 0.0 at origin with radius 1 micron, you do:
@@ -59,8 +59,8 @@ Example: to create a particle with velocity 0.0 at origin with radius 1 micron, 
 	Point center = {0.0,0.0,0.0};
 	Particle myParticle(center, 1e-6 , 0.0);
 */
-
 double integral(double _x, double _y,double _z,std::vector<Point> deposits,double absorbtionTerm, double dv);
+
 
 double central_difference(double x_back,double x_forward,
 						  		double y_back,double y_forward, 
@@ -77,6 +77,7 @@ std::vector<Particle> initializeParticles();std::vector<double> get_new_coordina
 	std::vector<double>              matrix_vector_multiplication (std::vector<std::vector<double>> R, std::vector<double> x);
 	std::vector<double>              arange(double start, double stop, double stepSize);
 	std::vector<double>              cross_product(std::vector<double> a,std::vector<double> b);
+	std::vector<double>              getDirection(Particle p1,Particle p2);
 	double                           get_norm(std::vector<double> a);
 
 

@@ -11,13 +11,18 @@ using namespace std;
 std::vector<Particle> initializeParticles(){
 
 	//Create the coordinates
-	Point centerOfParticle1 = {-1.75*particleRadius,0.0,0.0}; 
-	Point centerOfParticle2 = {1.75*particleRadius,0.0,0.0}; 
+	Point centerOfParticle1 = {-1.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {1.1*particleRadius,0.0,0.0}; 
+
+	Point centerOfParticle3 = {0.0,0.0, 1.1*particleRadius}; 
+	Point centerOfParticle4 = {0.0,0.0, -1.1*particleRadius}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
-	vector<Particle> particles = {particle1,particle2};//,particle2};
+	Particle particle3(centerOfParticle3,particleRadius,0.0);
+	Particle particle4(centerOfParticle4,particleRadius,0.0);
+	vector<Particle> particles = {particle1,particle2};//particle3,particle4};//,particle2};
 
 	return particles;
 	
