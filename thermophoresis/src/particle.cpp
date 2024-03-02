@@ -32,7 +32,7 @@ std::mt19937 gen(rd());
 	constexpr double thermoDiffusion 		  = 2.8107e-6; 
 
 	//Simulation time step
-	constexpr double dt = 0.1; 
+	constexpr double dt = 0.08; 
 	
 	
 
@@ -161,7 +161,7 @@ void hard_sphere_correction(std::vector<Particle> &particles){
 			
 			if (overlap > 0.0 && overlap != 0.0 && i !=j ){
 				std::cout<<"Performing H-S correction"<<"\n";
-				double distanceToMove = overlap/2;
+				double distanceToMove = overlap/1.97; //Overlap should be slightly more than needed
 
 				vector<double> direction = getDirection(particles[i],particles[j]);				
 		
@@ -328,7 +328,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 		velocity[i]    *= thermoDiffusion/(double)counter;
 		selfRotation[i] = omega[i]/((double)counter);
 		//cout<<output.selfRotation[i]<<"\n";
-		//cout<<output.velocity[i]<<"\n";
+		cout<<velocity[i]<<"\n";
 	}
 
 }

@@ -67,17 +67,18 @@ int main(int argc, char** argv) {
 
 		for(auto &particle:particles){
 			particle.getKinematics(linspace,thickness,dl,globalDeposits,lambda,dv);
+		}
+		for(auto &particle:particles){
 			particle.rotation_transform();
 			particle.updatePosition();
-			
 			hard_sphere_correction(particles);
 
-
+		}
 			p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 			p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 			//TODO: make exporting particle positions a trivial task.
 			
-		}
+		
 			
 		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
