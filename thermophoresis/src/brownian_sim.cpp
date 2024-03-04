@@ -70,7 +70,8 @@ int main(int argc, char** argv) {
 		}
 		for(auto &particle:particles){
 			particle.rotation_transform();
-			particle.updatePosition();
+			particle.update_position();
+			particle.brownian_noise();
 			hard_sphere_correction(particles);
 
 		}

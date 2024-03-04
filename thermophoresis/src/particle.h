@@ -44,8 +44,9 @@ class Particle{
 		void   getKinematics(std::vector<double> linspace,
 							       double thickness,double dl,std::vector<Point> globalDeposits, 
 								  									  double lambda, double dv);
-		void   updatePosition();
+		void   update_position();
 		void   rotation_transform();
+		void   brownian_noise();
 		//Exporting positions of deposits
 		void   writeDepositToCSV();
 };

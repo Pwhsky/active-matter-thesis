@@ -30,9 +30,11 @@ std::mt19937 gen(rd());
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); //Total laser intensity Watt/meter^2
 	constexpr double waterConductivity	 	  = 0.606;   //water conductivity in Watts/(meter*Kelvin)
 	constexpr double thermoDiffusion 		  = 2.8107e-6; 
+	constexpr double D_T					  = 2e-13;
 
-	//Simulation time step
-	constexpr double dt = 0.08; 
+	//Simulation time step, at timesteps above 0.01 numerical instabilities occur.
+	constexpr double dt = 0.01; 
+	constexpr double brownian_term			  = sqrt(2.0*D_T*dt);
 	
 	
 
@@ -74,20 +76,46 @@ void Particle::generateDeposits(int nDeposits) {
 	//u(0.9,1)
 }
 
-void Particle::updatePosition(){
+void Particle::update_position(){
 	
 	//Update positions of deposits and center of particle based on self propulsion
+	double dx = (this->velocity)[0]*dt;
+	double dy = (this->velocity)[1]*dt;
+	double dz = (this->velocity)[2]*dt;
 
 	for(int i = 0; i< this->deposits.size(); i++){
 
-		this->deposits[i].x += (this->velocity)[0]*dt;
-		this->deposits[i].y += (this->velocity)[1]*dt;
-		this->deposits[i].z += (this->velocity)[2]*dt;
+		this->deposits[i].x += dx;
+		this->deposits[i].y += dy;
+		this->deposits[i].z += dz;
 	}
-	this->center.x += (this->velocity)[0]*dt;
-	this->center.y += (this->velocity)[1]*dt;
-	this->center.z += (this->velocity)[2]*dt;
+	this->center.x += dx;
+	this->center.y += dy;
+	this->center.z += dz;
 }
+void Particle::brownian_noise(){
+	
+	std::normal_distribution<double> wiener_process(0.0, 1.0);
+	std::vector<double> W = {0,0,0};
+	for(int i = 0; i<3; i++){
+		W[i] = wiener_process(gen);
+	} 
+	double dx = W[0]*brownian_term;
+	double dy = W[1]*brownian_term;
+	double dz = W[2]*brownian_term;
+
+	for(int i = 0; i< this->deposits.size(); i++){
+		this->deposits[i].x += dx;
+		this->deposits[i].y += dy;
+		this->deposits[i].z += dz;
+	}
+	this->center.x += dx;
+	this->center.y += dy;
+	this->center.z += dz;
+	
+
+}
+
 
 void Particle::rotation_transform() {
 	//This function extensively uses the following formula for rotation: 
@@ -161,7 +189,7 @@ void hard_sphere_correction(std::vector<Particle> &particles){
 			
 			if (overlap > 0.0 && overlap != 0.0 && i !=j ){
 				std::cout<<"Performing H-S correction"<<"\n";
-				double distanceToMove = overlap/1.97; //Overlap should be slightly more than needed
+				double distanceToMove = overlap/1.85; //Overlap should be slightly more than needed
 
 				vector<double> direction = getDirection(particles[i],particles[j]);				
 		
