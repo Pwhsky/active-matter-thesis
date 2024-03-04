@@ -5,9 +5,10 @@ import os
 import time 
 import subprocess
 import sys
+from matplotlib.patches import Circle,Wedge
 
 os.chdir("src")
-from matplotlib.patches import Circle,Wedge
+
 
 
 ##IMPORTANT:
@@ -47,17 +48,17 @@ def generateFigure(imageBounds):
 	particle_2     = pd.read_csv("particle_2.csv",engine="pyarrow")
 
 	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
-	ax.set_title("Final orientation of particle")
+	ax.set_title(f"Time evolution after {sys.argv[2]} timesteps.")
 	
 	xlim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
 	ylim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
 
 	circle1 = Circle((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['z']), 2e-6)
-	wedge1  = Wedge((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
+	wedge1  =  Wedge((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
 	circle1.set(fill=False, alpha=0.5)
 
 	circle2 = Circle((particle_2.iloc[-1]['x'], particle_2.iloc[-1]['z']), 2e-6)
-	wedge2  = Wedge((particle_2.iloc[-1]['x'], particle_2.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
+	wedge2  =  Wedge((particle_2.iloc[-1]['x'], particle_2.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
 	circle2.set(fill=False, alpha=0.5)
 
 	ax.add_patch(circle1)
@@ -68,8 +69,8 @@ def generateFigure(imageBounds):
 	#ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
 
 
-	ax.plot(particle_1['x'][:],particle_1["z"][:],linestyle="--",label="Trajectory 1",color='black')
-	ax.plot(particle_2['x'][:],particle_2["z"][:],linestyle="--",label="Trajectory 2",color='blue')
+	ax.plot(particle_1['x'][:],particle_1["z"][:],label="Trajectory 1",color='black')
+	ax.plot(particle_2['x'][:],particle_2["z"][:],label="Trajectory 2",color='blue')
 	
 	#ax.hlines(lastPos[1],lastPos[0],lastPos[0]+2e-6)
 	ax.axis("equal")
@@ -87,7 +88,7 @@ def plotDeposits():
 
 	os.chdir("..")
 	os.chdir("src")
-	df = pd.read_csv('deposits.csv')
+	df          = pd.read_csv('deposits.csv')
 	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
 	ax = fig.add_subplot(projection='3d')
 	ax.view_init(azim=50, elev=10)
@@ -99,6 +100,7 @@ def plotDeposits():
 
 
 resolution,nDeposits = parseArgs()
+
 generateNewData()
 
 tic = time.time()

@@ -7,22 +7,18 @@ using namespace std;
 	constexpr double particleRadius	= 2*pow(10,-6);
 
 
-//Places particles next to each other	
+
 std::vector<Particle> initializeParticles(){
 
 	//Create the coordinates
 	Point centerOfParticle1 = {-1.1*particleRadius,0.0,0.0}; 
 	Point centerOfParticle2 = {1.1*particleRadius,0.0,0.0}; 
 
-	Point centerOfParticle3 = {0.0,0.0, 1.1*particleRadius}; 
-	Point centerOfParticle4 = {0.0,0.0, -1.1*particleRadius}; 
-
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
-	Particle particle3(centerOfParticle3,particleRadius,0.0);
-	Particle particle4(centerOfParticle4,particleRadius,0.0);
-	vector<Particle> particles = {particle1,particle2};//particle3,particle4};//,particle2};
+
+	vector<Particle> particles = {particle1,particle2};
 
 	return particles;
 	
@@ -116,4 +112,57 @@ double get_norm(std::vector<double> a){
         temp[i] = sum;
     }
 	return temp;
+}
+
+void update_globalDeposits(std::vector<Particle> particles,std::vector<Point> &oldDeposits){
+	
+	std::vector<Point> newDeposits;
+	int nDeposits = particles[0].deposits.size();
+
+	for(int i = 0; i < particles.size(); i++ ){
+		for(int j = 0; j<nDeposits;j++){
+			newDeposits.push_back(particles[i].deposits[j]);
+		}
+	} 
+
+	oldDeposits = newDeposits;
+}
+
+
+std::vector<Particle> initialize_4_particles(){
+
+	//Create the coordinates
+	Point centerOfParticle1 = {-1.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {1.1*particleRadius,0.0,0.0}; 
+
+	Point centerOfParticle3 = {0.0,0.0, 1.1*particleRadius}; 
+	Point centerOfParticle4 = {0.0,0.0, -1.1*particleRadius}; 
+
+	//Create the particles
+	Particle particle1(centerOfParticle1,particleRadius,0.0);
+	Particle particle2(centerOfParticle2,particleRadius,0.0);
+	Particle particle3(centerOfParticle3,particleRadius,0.0);
+	Particle particle4(centerOfParticle4,particleRadius,0.0);
+	vector<Particle> particles = {particle1,particle2,particle3,particle4};
+
+	return particles;
+	
+}
+
+std::vector<Particle> initialize_3_particles(){
+
+	//Create the coordinates
+	Point centerOfParticle1 = {-1.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {1.1*particleRadius,0.0,0.0}; 
+
+	Point centerOfParticle3 = {0.0,0.0, 1.1*particleRadius}; 
+	Point centerOfParticle4 = {0.0,0.0, -1.1*particleRadius}; 
+
+	//Create the particles
+	Particle particle1(centerOfParticle1,particleRadius,0.0);
+	Particle particle2(centerOfParticle2,particleRadius,0.0);
+	Particle particle3(centerOfParticle3,particleRadius,0.0);
+	vector<Particle> particles = {particle1,particle2,particle3};
+	return particles;
+	
 }

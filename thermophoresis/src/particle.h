@@ -53,7 +53,7 @@ class Particle{
 
 
 void   hard_sphere_correction(std::vector<Particle> &particles);
-
+void   update_globalDeposits(std::vector<Particle> particles,std::vector<Point> &oldDeposits);
 /*
 Example: to create a particle with velocity 0.0 at origin with radius 1 micron, you do:
 
@@ -69,7 +69,11 @@ double central_difference(double x_back,double x_forward,
 						  		std::vector<Point> deposits,
 								double dl,double absorbtionTerm, double dv);
 
-std::vector<Particle> initializeParticles();std::vector<double> get_new_coordinates(std::vector<double> omega, std::vector<double> x);
+std::vector<Particle> initializeParticles();
+std::vector<Particle> initialize_4_particles();
+std::vector<Particle> initialize_3_particles();
+
+std::vector<double> get_new_coordinates(std::vector<double> omega, std::vector<double> x);
 
 
 

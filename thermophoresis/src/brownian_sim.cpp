@@ -65,22 +65,25 @@ int main(int argc, char** argv) {
 
 	for(int time = 0; time < number_of_steps; time ++){ 
 
+		
+
 		for(auto &particle:particles){
 			particle.getKinematics(linspace,thickness,dl,globalDeposits,lambda,dv);
 		}
+
 		for(auto &particle:particles){
-			particle.rotation_transform();
 			particle.update_position();
 			particle.brownian_noise();
-			hard_sphere_correction(particles);
+			particle.rotation_transform();
 
+			hard_sphere_correction(particles);
 		}
 			p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 			p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 			//TODO: make exporting particle positions a trivial task.
 			
-		
-			
+		update_globalDeposits(particles, globalDeposits);	
+
 		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
 
@@ -102,30 +105,3 @@ int main(int argc, char** argv) {
 
 	return 0;
 }	
-
-/*
-double central_difference(double x_back,double x_forward,double y_back,double y_forward, double z_back, double z_forward, vector<Point> deposits){
-	double back   		= integral(x_back,y_back,z_back,deposits);
-	double forward		= integral(x_forward,y_forward,z_forward,deposits);
-	return (forward - back)/(2*dl);
-}
-
-inline double integral(double _x,double _y,double _z,std::vector<Point> deposits){
-	//absorbtionTerm will compute the absorbed ammount of power from the laser
-	//ContributionSum will sum up contributions from all deposits
-	//Finally, the contributionSum is scaled with volume element dv and divided with constants												
-	double laserPower	           = I0 + I0*cos(twoPi*(_x)/lambda);	
-	double absorbtionTerm          = laserPower*depositArea/(volumePerDeposit);
-	double contributionSum 		   = 0.0;
-	
-	//Since the values scale with the inverse square distance.
-    	for (size_t i = 0; i < deposits.size(); i++){
-
-    		double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
-														  pow(_y-deposits[i].y,2)+
-														  pow(_z-deposits[i].z,2));
-			contributionSum +=  inverse_squareroot_distance;
-		}
-    return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
-}
-*/

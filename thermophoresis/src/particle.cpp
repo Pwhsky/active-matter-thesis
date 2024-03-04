@@ -29,7 +29,7 @@ std::mt19937 gen(rd());
 	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters^2  How much area the laser is distributed on.
 	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); //Total laser intensity Watt/meter^2
 	constexpr double waterConductivity	 	  = 0.606;   //water conductivity in Watts/(meter*Kelvin)
-	constexpr double thermoDiffusion 		  = 2.8107e-6; 
+	constexpr double thermoDiffusion 		  = 2.8107e-9; 
 	constexpr double D_T					  = 2e-13;
 
 	//Simulation time step, at timesteps above 0.01 numerical instabilities occur.
@@ -82,7 +82,7 @@ void Particle::update_position(){
 	double dx = (this->velocity)[0]*dt;
 	double dy = (this->velocity)[1]*dt;
 	double dz = (this->velocity)[2]*dt;
-
+	#pragma omp paralell for schedule(dynamic)
 	for(int i = 0; i< this->deposits.size(); i++){
 
 		this->deposits[i].x += dx;
@@ -103,7 +103,7 @@ void Particle::brownian_noise(){
 	double dx = W[0]*brownian_term;
 	double dy = W[1]*brownian_term;
 	double dz = W[2]*brownian_term;
-
+	#pragma omp paralell for schedule(dynamic)
 	for(int i = 0; i< this->deposits.size(); i++){
 		this->deposits[i].x += dx;
 		this->deposits[i].y += dy;
@@ -138,38 +138,42 @@ void Particle::rotation_transform() {
 
 		std::vector<std::vector<double>> theta_x_squared = matrix_matrix_multiplication(theta_x, theta_x);
 		std::vector<std::vector<double>> R = theta_x;
+		#pragma omp paralell for schedule(dynamic)
 		for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
+			for (int j = 0; j < 3; j++) {
 				R[i][j] = (sin(theta) / theta) * theta_x[i][j] + ((1.0 - cos(theta)) / (theta * theta)) * theta_x_squared[i][j];
 				if (i == j){
 					R[i][j] +=1;
 				}
 			}		
 		}
-
 		// Rotate the deposits, using the particle center as reference
-		
-		std::vector<double> temp(3);
+		std::vector<double> new_values(3);
 		std::vector<double> x(3);
 
 		
 		for (auto &p : this->deposits) {
 
-			x = { p.x-this->center.x, p.y-this->center.y, p.z-this->center.z };
-			temp = matrix_vector_multiplication(R,x);
+			x = { p.x-this->center.x, 
+				  p.y-this->center.y, 
+				  p.z-this->center.z };
 
-			p.x = temp[0];
-			p.y = temp[1];
-			p.z = temp[2];
+			new_values = matrix_vector_multiplication(R,x);
+			p.x = new_values[0];
+			p.y = new_values[1];
+			p.z = new_values[2];
 		}
 		
 			
 		// Rotate the particle itself (center)
-		x = { this->center.x, this->center.y, this->center.z };
+		x = { this->center.x,
+			  this->center.y, 
+			  this->center.z };
+
 		std::vector<double> v(this->velocity, this->velocity +3);
-		temp = matrix_vector_multiplication(R,v);
+		new_values = matrix_vector_multiplication(R,v);
 		for(int i  = 0; i<3; i++){
-			this->velocity[i] = temp[i];
+			this->velocity[i] = new_values[i];
 		}
 	}
 
@@ -180,8 +184,9 @@ void hard_sphere_correction(std::vector<Particle> &particles){
 	//Exclude itself
 	std::vector<Particle> tempParticles = particles;
 	int const nParticles = particles.size();
-
+	#pragma omp paralell for schedule(dynamic)
 	for (int i = 0; i<nParticles; i++){
+		
 		for(int j = 0; j<nParticles; j++) {
 			
 			double centerToCenterDistance = sqrt(particles[i].getSquaredDistance(particles[j].center)); 
@@ -277,15 +282,18 @@ void Particle::getKinematics(std::vector<double> linspace,
 	//And then do a surface integral to get self propulsion in X and Z direction.
 
 
-	int counter = 1;
+	size_t counter = 1;
 	vector<double> omega = {0,0,0};
 
 	double gradientX;
 	double gradientY;
 	double gradientZ;
-	double const Qx = center.x;
-	double const Qy = center.y;
-	double const Qz = center.z;
+	double const Qx = this->center.x;
+	double const Qy = this->center.y;
+	double const Qz = this->center.z;
+	vector<double> radial     = {0,0,0};
+	vector<double> tangential = {0,0,0};
+	vector<double> vel 		  = {0,0,0};
 
 		#pragma omp parallel for schedule(dynamic)
 		for (auto i:linspace){
@@ -296,9 +304,9 @@ void Particle::getKinematics(std::vector<double> linspace,
 			for(auto j:linspace){
 				for(auto k:linspace){		
 					
-					Point point 	= { i-center.x,
-										j-center.y,
-										k-center.z};
+					Point point 	= { i-this->center.x,
+										j-this->center.y,
+										k-this->center.z};
 
 					//double norm = get_norm({point.x, point.y, point.z});
 					//if (norm > 6*particleRadius){continue;}
@@ -313,6 +321,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 							double v 				   = point.y;
 							double w 				   = point.z;
 
+
 							vector<double> r		   = {u,v,w};	
 
 
@@ -321,9 +330,6 @@ void Particle::getKinematics(std::vector<double> linspace,
 													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits,dl,absorbtionTerm,dv)};
 
 	
-							vector<double> radial     = {0,0,0};
-							vector<double> tangential = {0,0,0};
-							vector<double> vel 		  = {0,0,0};
 
 							double const duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
 							double const theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
@@ -332,10 +338,10 @@ void Particle::getKinematics(std::vector<double> linspace,
 
 							//Populate the cartesian vectors with their respective components:
 							for(int l = 0; l<3; l++){
-								radial[l]    	   = duvwr * r[l] / d;
-								tangential[l]	   = gradient[l] - radial[l];
-								vel[l]     		   = tangential[l] * sincos;
-								velocity[l] 	   = vel[l];
+								radial[l]    	   += duvwr * r[l] / d;
+								tangential[l]	   += gradient[l] - radial[l];
+								vel[l]     		   += tangential[l] * sincos;
+
 							}
 
 							vector<double> rxV = cross_product(r,vel);
@@ -343,18 +349,20 @@ void Particle::getKinematics(std::vector<double> linspace,
 							for(int l = 0; l<3; l++){
 								omega[l] -= rxV[l];
 							}
-							
 							counter++;
-
+					
 					}
 					
 				}
 			}
 		}
-		//scale with number of points
+	
+		
+
+
 	for(int i = 0; i<3;i++){
-		velocity[i]    *= thermoDiffusion/(double)counter;
-		selfRotation[i] = omega[i]/((double)counter);
+		velocity[i]    = D_T*D_T*vel[i]/(double)counter;
+		selfRotation[i] = omega[i];
 		//cout<<output.selfRotation[i]<<"\n";
 		cout<<velocity[i]<<"\n";
 	}
