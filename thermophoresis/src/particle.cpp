@@ -374,10 +374,10 @@ void Particle::getKinematics(std::vector<double> linspace,
 
 
 	for(int i = 0; i<3;i++){
-		velocity[i]     += D_T*vel[i]*1e-4;
-		selfRotation[i] += thermoDiffusion*omega[i];
+		velocity[i]     += D_T*vel[i]*1e-6;
+		selfRotation[i] += D_T*omega[i];
 		//cout<<selfRotation[i]<<"\n";
-		cout<<velocity[i]<<"\n";
+		//cout<<velocity[i]<<"\n";
 	}
 
 }

@@ -49,12 +49,12 @@ def generateFigure(imageBounds):
 	particle_2     = pd.read_csv("particle_2.csv",engine="pyarrow")
 	df          = pd.read_csv('deposits.csv')
 
-	fig, ax     = plt.subplots(1, 1, figsize=(10, 4))
+	fig, ax     = plt.subplots(1, 1, figsize=(10, 7))
 	ax.set_title(f"Time evolution after {sys.argv[2]} timesteps.")
 	
 	#xlim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
 	#ylim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
-	lims = 13e-6
+	lims = 15e-6
 	xlim = [- lims,  lims]
 	ylim = [- lims,  lims]
 
@@ -66,15 +66,15 @@ def generateFigure(imageBounds):
 	#wedge2  =  Wedge((particle_2.iloc[-1]['x'], particle_2.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
 	circle2.set(fill=False, alpha=0.5)
 
-	ax.scatter(df['x'],df['z'],color='red',s=7)
-	
-	x   = np.linspace(-100e-6,100e-6, 200)
-	y   = np.linspace(-100e-6,100e-6, 200)
-	X,Y = np.meshgrid(x,y)	
-	Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))/2
 
-	ax.contourf(X,Y,Z,50,alpha=0.5)
 	
+	x   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
+	y   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
+	X,Y = np.meshgrid(x,y)	
+	Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
+
+	ax.contourf(X,Y,Z,400,alpha=0.4)
+	ax.scatter(df['x'],df['z'],color='red',s=10,alpha=0.6)
 	ax.add_patch(circle1)
 	#ax.add_patch(wedge1)
 	ax.add_patch(circle2)
