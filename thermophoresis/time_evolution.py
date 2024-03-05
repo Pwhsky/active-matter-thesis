@@ -36,9 +36,10 @@ def generateNewData():
 	#Compiles and runs the .CPP file
 	print(f"Producing {sys.argv[2]} steps \n" )
 	#Forbidden compiler flags below, if it doesn't break anything then leave them in (10% speed boost)
-	subprocess.run(["g++","functions.cpp","particle.cpp","brownian_sim.cpp","-o","sim","-Ofast", "-fopenmp", "-fno-strict-overflow","-fno-unsafe-loop-optimizations", "-fno-strict-aliasing","-funroll-all-loops"])
+	subprocess.run(["g++","functions.cpp","particle.cpp","brownian_sim.cpp","-o","sim","-Ofast", "-fopenmp","-funroll-all-loops"])
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4],sys.argv[2]])
 
+	
 
 	
 def generateFigure(imageBounds):
@@ -46,25 +47,38 @@ def generateFigure(imageBounds):
 	#depositDF = pd.read_csv('deposits.csv')
 	particle_1     = pd.read_csv("particle_1.csv",engine="pyarrow")
 	particle_2     = pd.read_csv("particle_2.csv",engine="pyarrow")
+	df          = pd.read_csv('deposits.csv')
 
-	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
+	fig, ax     = plt.subplots(1, 1, figsize=(10, 4))
 	ax.set_title(f"Time evolution after {sys.argv[2]} timesteps.")
 	
-	xlim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
-	ylim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
+	#xlim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
+	#ylim = [particle_1.iloc[-1]['x'] - 3e-5, particle_1.iloc[-1]['x'] + 3e-5]
+	lims = 13e-6
+	xlim = [- lims,  lims]
+	ylim = [- lims,  lims]
 
 	circle1 = Circle((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['z']), 2e-6)
-	wedge1  =  Wedge((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
+	#wedge1  =  Wedge((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
 	circle1.set(fill=False, alpha=0.5)
 
 	circle2 = Circle((particle_2.iloc[-1]['x'], particle_2.iloc[-1]['z']), 2e-6)
-	wedge2  =  Wedge((particle_2.iloc[-1]['x'], particle_2.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
+	#wedge2  =  Wedge((particle_2.iloc[-1]['x'], particle_2.iloc[-1]['z']), 2e-6, 0, 180, color='red', alpha=0.6)
 	circle2.set(fill=False, alpha=0.5)
 
+	ax.scatter(df['x'],df['z'],color='red',s=7)
+	
+	x   = np.linspace(-100e-6,100e-6, 200)
+	y   = np.linspace(-100e-6,100e-6, 200)
+	X,Y = np.meshgrid(x,y)	
+	Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))/2
+
+	ax.contourf(X,Y,Z,50,alpha=0.5)
+	
 	ax.add_patch(circle1)
-	ax.add_patch(wedge1)
+	#ax.add_patch(wedge1)
 	ax.add_patch(circle2)
-	ax.add_patch(wedge2)
+	#ax.add_patch(wedge2)
 	#ax.scatter(depositDF['x'][:],depositDF['z'][:],s=10)
 	#ax.scatter(lastPos[0],lastPos[1],label="Particle Center")
 
@@ -90,10 +104,8 @@ def plotDeposits():
 	os.chdir("src")
 	df          = pd.read_csv('deposits.csv')
 	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
-	ax = fig.add_subplot(projection='3d')
-	ax.view_init(azim=50, elev=10)
-	ax.set_box_aspect([1, 1, 1])
-	#ax.scatter3D(df['x'],df['y'],df['z'])
+	ax.axis("equal")
+	ax.scatter(df['x'],df['z'])
 	os.chdir("..")
 	os.chdir("figures")
 	plt.savefig("deposits.png")
@@ -101,7 +113,7 @@ def plotDeposits():
 
 resolution,nDeposits = parseArgs()
 
-generateNewData()
+#generateNewData()
 
 tic = time.time()
 print("Starting plotting...")
@@ -109,6 +121,7 @@ print("Starting plotting...")
 #Saves the figure in the figures directory, then goes back to generate a new figure and 
 #then saves in the figures directory once more.
 generateFigure(imageBounds)
+
 #plotDeposits()
 toc = time.time()
 #print("Plotting finished after " + str(round(toc-tic)) + " s")

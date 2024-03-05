@@ -53,7 +53,7 @@ class Particle{
 
 
 void   hard_sphere_correction(std::vector<Particle> &particles);
-void   update_globalDeposits(std::vector<Particle> particles,std::vector<Point> &oldDeposits);
+std::vector<Point>   update_globalDeposits(std::vector<Particle> particles);
 /*
 Example: to create a particle with velocity 0.0 at origin with radius 1 micron, you do:
 

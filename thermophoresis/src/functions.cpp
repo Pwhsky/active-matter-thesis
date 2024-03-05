@@ -11,8 +11,8 @@ using namespace std;
 std::vector<Particle> initializeParticles(){
 
 	//Create the coordinates
-	Point centerOfParticle1 = {-1.1*particleRadius,0.0,0.0}; 
-	Point centerOfParticle2 = {1.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle1 = {-1.0*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {1.0*particleRadius,0.0,0.0}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
@@ -114,7 +114,7 @@ double get_norm(std::vector<double> a){
 	return temp;
 }
 
-void update_globalDeposits(std::vector<Particle> particles,std::vector<Point> &oldDeposits){
+std::vector<Point> update_globalDeposits(std::vector<Particle> particles){
 	
 	std::vector<Point> newDeposits;
 	int nDeposits = particles[0].deposits.size();
@@ -125,7 +125,7 @@ void update_globalDeposits(std::vector<Particle> particles,std::vector<Point> &o
 		}
 	} 
 
-	oldDeposits = newDeposits;
+	return newDeposits;
 }
 
 

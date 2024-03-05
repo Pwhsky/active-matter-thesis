@@ -1,7 +1,8 @@
 /*
 Alex Lech 2023	
 
-This file contains the functions source code.
+This file contains the functions related to particle dynamics and
+computation of temperature increase and temperature gradient.
 
 In functions.h the particle class is declared.
 
@@ -34,7 +35,7 @@ std::mt19937 gen(rd());
 
 	//Simulation time step, at timesteps above 0.01 numerical instabilities occur.
 	constexpr double dt = 0.01; 
-	constexpr double brownian_term			  = sqrt(2.0*D_T*dt);
+	constexpr double brownian_term			  = 2*sqrt(2.0*D_T*dt);
 	
 	
 
@@ -82,7 +83,7 @@ void Particle::update_position(){
 	double dx = (this->velocity)[0]*dt;
 	double dy = (this->velocity)[1]*dt;
 	double dz = (this->velocity)[2]*dt;
-	#pragma omp paralell for schedule(dynamic)
+	
 	for(int i = 0; i< this->deposits.size(); i++){
 
 		this->deposits[i].x += dx;
@@ -154,9 +155,9 @@ void Particle::rotation_transform() {
 		
 		for (auto &p : this->deposits) {
 
-			x = { p.x-this->center.x, 
-				  p.y-this->center.y, 
-				  p.z-this->center.z };
+			x = { p.x, 
+				  p.y, 
+				  p.z};
 
 			new_values = matrix_vector_multiplication(R,x);
 			p.x = new_values[0];
@@ -165,7 +166,7 @@ void Particle::rotation_transform() {
 		}
 		
 			
-		// Rotate the particle itself (center)
+		// Rotate the particles velocity direction
 		x = { this->center.x,
 			  this->center.y, 
 			  this->center.z };
@@ -175,6 +176,16 @@ void Particle::rotation_transform() {
 		for(int i  = 0; i<3; i++){
 			this->velocity[i] = new_values[i];
 		}
+
+		std::vector<double> p =  {this->center.x,
+			  					  this->center.y, 
+			                      this->center.z};
+
+		//Rotate the particles center
+		new_values = matrix_vector_multiplication(R,p);
+		this->center.x = new_values[0];
+		this->center.y = new_values[1];
+		this->center.z = new_values[2];
 	}
 
 }
@@ -184,7 +195,7 @@ void hard_sphere_correction(std::vector<Particle> &particles){
 	//Exclude itself
 	std::vector<Particle> tempParticles = particles;
 	int const nParticles = particles.size();
-	#pragma omp paralell for schedule(dynamic)
+	
 	for (int i = 0; i<nParticles; i++){
 		
 		for(int j = 0; j<nParticles; j++) {
@@ -194,7 +205,7 @@ void hard_sphere_correction(std::vector<Particle> &particles){
 			
 			if (overlap > 0.0 && overlap != 0.0 && i !=j ){
 				std::cout<<"Performing H-S correction"<<"\n";
-				double distanceToMove = overlap/1.85; //Overlap should be slightly more than needed
+				double distanceToMove = overlap/1.9; //Overlap should be slightly more than needed
 
 				vector<double> direction = getDirection(particles[i],particles[j]);				
 		
@@ -291,8 +302,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 	double const Qx = this->center.x;
 	double const Qy = this->center.y;
 	double const Qz = this->center.z;
-	vector<double> radial     = {0,0,0};
-	vector<double> tangential = {0,0,0};
+
 	vector<double> vel 		  = {0,0,0};
 
 		#pragma omp parallel for schedule(dynamic)
@@ -310,8 +320,8 @@ void Particle::getKinematics(std::vector<double> linspace,
 
 					//double norm = get_norm({point.x, point.y, point.z});
 					//if (norm > 6*particleRadius){continue;}
-
-					double const d = getSquaredDistance(point);
+					Point p = {i,j,k};
+					double const d = getSquaredDistance(p);
 
 
 					//Compute only the points near the surface
@@ -330,16 +340,18 @@ void Particle::getKinematics(std::vector<double> linspace,
 													   central_difference(i   ,i   ,j   ,j   ,k-dl,k+dl,globalDeposits,dl,absorbtionTerm,dv)};
 
 	
+							vector<double> radial     = {0,0,0};
+							vector<double> tangential = {0,0,0};
 
-							double const duvwr = gradient[0] * u + gradient[1] * v + gradient[2] * w;
-							double const theta = atan2(sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j) ));
-							double const phi   = atan((Qz-k)/(Qx-i));
+							double const duvwr  = gradient[0] * u + gradient[1] * v + gradient[2] * w;
+							double const theta  = atan2( sqrt((Qx-i)*(Qx-i) + (Qz-k)*(Qz-k)), sqrt((Qy-j) *(Qy-j))); //Changed order of j-Qy  k-Qz etc
+							double const phi    = atan((Qz-k)/(Qx-i));
 							double const sincos = sin(theta)*cos(phi);
 
 							//Populate the cartesian vectors with their respective components:
 							for(int l = 0; l<3; l++){
-								radial[l]    	   += duvwr * r[l] / d;
-								tangential[l]	   += gradient[l] - radial[l];
+								radial[l]    	    = duvwr * r[l] / d;
+								tangential[l]	    = gradient[l] - radial[l];
 								vel[l]     		   += tangential[l] * sincos;
 
 							}
@@ -349,21 +361,22 @@ void Particle::getKinematics(std::vector<double> linspace,
 							for(int l = 0; l<3; l++){
 								omega[l] -= rxV[l];
 							}
-							counter++;
-					
+							
+						counter++;
 					}
+					
 					
 				}
 			}
 		}
-	
+	vel[2] *=20;
 		
 
 
 	for(int i = 0; i<3;i++){
-		velocity[i]    = D_T*D_T*vel[i]/(double)counter;
-		selfRotation[i] = omega[i];
-		//cout<<output.selfRotation[i]<<"\n";
+		velocity[i]     += D_T*vel[i]*1e-4;
+		selfRotation[i] += thermoDiffusion*omega[i];
+		//cout<<selfRotation[i]<<"\n";
 		cout<<velocity[i]<<"\n";
 	}
 

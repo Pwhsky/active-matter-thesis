@@ -53,8 +53,8 @@ def loadData():
 	return x,y,z,grad,depositDF
 	
 def generateLaserProfile(spatialPeriodicity): #Generates gaussian laser profile
-	x   = np.linspace(-imageBounds,imageBounds, 200)
-	y   = np.linspace(-imageBounds,imageBounds, 200)
+	x   = np.linspace(-imageBounds*spatialPeriodicity,imageBounds*spatialPeriodicity, 200)
+	y   = np.linspace(-imageBounds*spatialPeriodicity,imageBounds*spatialPeriodicity, 200)
 	X,Y = np.meshgrid(x,y)	
 	Z = (1+ (np.cos(2*pi*X/spatialPeriodicity)))/2
 	return X,Y,Z

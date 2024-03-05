@@ -1,8 +1,7 @@
 /*
 Alex Lech 2023	
 
-This source code contains the computation for the temperature gradient.
-compute_temperature.cpp contains the computation for the temperature increase.
+This source code contains the time evolution for simulating thermophoresis.
 */
 
 #include <chrono>
@@ -65,24 +64,24 @@ int main(int argc, char** argv) {
 
 	for(int time = 0; time < number_of_steps; time ++){ 
 
-		
-
 		for(auto &particle:particles){
 			particle.getKinematics(linspace,thickness,dl,globalDeposits,lambda,dv);
+			particle.rotation_transform();
 		}
 
 		for(auto &particle:particles){
 			particle.update_position();
 			particle.brownian_noise();
-			particle.rotation_transform();
-
-			hard_sphere_correction(particles);
 		}
+		hard_sphere_correction(particles);
+		globalDeposits = update_globalDeposits(particles);
+
+
 			p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 			p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 			//TODO: make exporting particle positions a trivial task.
 			
-		update_globalDeposits(particles, globalDeposits);	
+			
 
 		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
