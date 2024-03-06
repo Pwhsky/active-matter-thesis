@@ -117,7 +117,6 @@ void Particle::brownian_noise(){
 
 }
 
-
 void Particle::rotation_transform() {
 	//This function extensively uses the following formula for rotation: 
 	//Section 7.4.1 in:
@@ -152,7 +151,6 @@ void Particle::rotation_transform() {
 		std::vector<double> new_values(3);
 		std::vector<double> x(3);
 
-		
 		for (auto &p : this->deposits) {
 
 			x = { p.x, 
@@ -165,7 +163,6 @@ void Particle::rotation_transform() {
 			p.z = new_values[2];
 		}
 		
-			
 		// Rotate the particles velocity direction
 		x = { this->center.x,
 			  this->center.y, 
@@ -187,6 +184,7 @@ void Particle::rotation_transform() {
 		this->center.y = new_values[1];
 		this->center.z = new_values[2];
 	}
+
 
 }
 
@@ -374,7 +372,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 
 
 	for(int i = 0; i<3;i++){
-		velocity[i]     += D_T*vel[i]*1e-6;
+		velocity[i]     += D_T*vel[i]*1e-5;
 		selfRotation[i] += D_T*omega[i];
 		//cout<<selfRotation[i]<<"\n";
 		//cout<<velocity[i]<<"\n";

@@ -30,11 +30,11 @@ int main(int argc, char** argv) {
 
 	
 	std::ofstream p1("particle_1.csv");
-	std::ofstream p2("particle_2.csv");
+	//std::ofstream p2("particle_2.csv");
 
 
 	p1   << "x,y,z"<<"\n";
-	p2   << "x,y,z"<<"\n";
+	//p2   << "x,y,z"<<"\n";
 
 	vector<Particle> particles = initializeParticles();
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
 	}
 	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
-	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+//	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 
 	
 
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
 
 			p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
-			p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+			//p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 			//TODO: make exporting particle positions a trivial task.
 			
 			
@@ -87,9 +87,8 @@ int main(int argc, char** argv) {
 	}
 
 
-
 	particles[0].writeDepositToCSV();
-	particles[1].writeDepositToCSV();
+	//particles[1].writeDepositToCSV();
 
 	cout<<"Simulation finished, writing to csv..."<<"\n";
     //////////////////////////////////////////////////////////////////
