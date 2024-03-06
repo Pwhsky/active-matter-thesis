@@ -21,7 +21,7 @@ std::mt19937 gen(rd());
 
 	constexpr double pi	      		 	  	  = 3.14159265358979323846;
 	constexpr double twoPi					  = 2*3.14159265358979323846;
-	constexpr double particleRadius   		  = 2    *pow(10,-6);
+	constexpr double particleRadius   		  = 2e-6;
 	constexpr double particleRadiusSquared    = particleRadius*particleRadius;
 	constexpr double depositRadius	 	      = 30   *pow(10,-9);	
 	constexpr double depositVolume	          = 4*pi *pow((depositRadius),3)/3;  //Spherical deposit volume
@@ -47,23 +47,29 @@ void Particle::generateDeposits(int nDeposits) {
 	//u is commonly set (0.9,1) so the deposits are near the surface.
 
     uniform_real_distribution<double> phi(0.0,twoPi); 
-    uniform_real_distribution<double> costheta(-0.1,1);
+    uniform_real_distribution<double> costheta(0.0,1);
     uniform_real_distribution<double> u(0.8,1);
 
 	//Initiate deposits
-	
-	for(int i = 0; i<nDeposits; i++){
-
+	int i = 0;
+	while (i < nDeposits ){
+		
 		double const theta = acos(costheta(gen));
-		double const r 	 = (this->radius)*u(gen);
+		double const r 	 = particleRadius*u(gen);
 
 		//Convert to cartesian:
-    	double const x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
-    	double const y = r*sin(theta) * sin(phi(gen)) + this->center.y;
-    	double const z = r*cos(theta)				  + this->center.z;
+    	double  x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
+    	double  y = r*sin(theta) * sin(phi(gen)) + this->center.y;
+    	double  z = r*cos(theta)				  + this->center.z;
    		
+		
+		if( (x*x + y*y +z*z)<particleRadiusSquared ){
+			(this->deposits).emplace_back(Point{x,y,z});
+			i++;
+
+		}
 		//Add to deposits list
-    	(this->deposits).emplace_back(Point{x,y,z});
+    	
     	
     }
 
@@ -367,16 +373,13 @@ void Particle::getKinematics(std::vector<double> linspace,
 				}
 			}
 		}
-	vel[2] *=20;
-		
-
-
 	for(int i = 0; i<3;i++){
-		velocity[i]     += D_T*vel[i]*1e-5;
-		selfRotation[i] += D_T*omega[i];
+		velocity[i]     = D_T*vel[i]*1e-5;
+		selfRotation[i] = D_T*omega[i]*1e-3;
 		//cout<<selfRotation[i]<<"\n";
 		//cout<<velocity[i]<<"\n";
 	}
+	
 
 }
 

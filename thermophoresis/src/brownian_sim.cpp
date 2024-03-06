@@ -21,7 +21,7 @@ using namespace std;
 int main(int argc, char** argv) {
 	   
 	auto startTimer = std::chrono::high_resolution_clock::now();
-	bounds    		= stold(argv[2])  * pow(10,-6); 
+	bounds    		= 100  * pow(10,-6); 
 	stepSize  		= bounds/(double)(300);		  //Step size, based off of bounds parameter Set to 100 for now
 	nDeposits 		= stof(argv[1]);				  //number of deposits to initialize
 	lambda	 	    = stold(argv[3])  * pow(10,-9); //Spatial periodicity
@@ -30,10 +30,13 @@ int main(int argc, char** argv) {
 
 	
 	std::ofstream p1("particle_1.csv");
+
+	std::ofstream v1("velocity_1.csv");
 	//std::ofstream p2("particle_2.csv");
 
 
 	p1   << "x,y,z"<<"\n";
+	v1   << "t,x,y,z,v"<<"\n";
 	//p2   << "x,y,z"<<"\n";
 
 	vector<Particle> particles = initializeParticles();
@@ -53,10 +56,6 @@ int main(int argc, char** argv) {
 	double thickness = pow(10*stepSize,2);
 
 	
-	//Write initial positions:
-	for(int i = 0; i<particles.size(); i++){
-
-	}
 	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 //	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 
@@ -68,7 +67,6 @@ int main(int argc, char** argv) {
 			particle.getKinematics(linspace,thickness,dl,globalDeposits,lambda,dv);
 			particle.rotation_transform();
 		}
-
 		for(auto &particle:particles){
 			particle.update_position();
 			particle.brownian_noise();
@@ -76,13 +74,19 @@ int main(int argc, char** argv) {
 		hard_sphere_correction(particles);
 		globalDeposits = update_globalDeposits(particles);
 
+		double total_vel = 0;
+		for(int i = 0; i<3; i++){
+			total_vel += particles[0].velocity[i]*particles[0].velocity[i];
+		}
+		total_vel = sqrt(total_vel);
+		v1 << time*0.01 <<","<< particles[0].center.x << ","<< particles[0].center.y << ","<< particles[0].center.z 
+																					<< "," <<total_vel<< "\n";
 
-			p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
-			//p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
-			//TODO: make exporting particle positions a trivial task.
-			
-			
 
+		p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
+		//p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+		//TODO: make exporting particle positions a trivial task.
+			
 		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
 
