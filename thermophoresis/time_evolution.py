@@ -6,16 +6,12 @@ import time
 import subprocess
 import sys
 from matplotlib.patches import Circle
+import matplotlib.animation as animation
 
 os.chdir("src")
 
 
-
-##IMPORTANT:
-#The units on the colorbar are kelvin divided by the step-size of the finite differences.
-#When resolution = 300 (for most simulations) that equals roughly 13 nanometers!
-#Convert accordingly.
-
+limit = 15e-6
 font = 19
 pi = 3.14159
 particleRadius = 2e-6
@@ -42,9 +38,7 @@ def generateFigure():
 
 	fig, ax     = plt.subplots(1, 2, figsize=(10, 7))
 	#ax.set_title(f"Time evolution after {sys.argv[2]} timesteps.")
-	
-	
-	limit = 15e-6
+
 	xlim = [- limit,  limit]
 	ylim = [- limit*2,  limit]
 
@@ -57,10 +51,7 @@ def generateFigure():
 	##############################
 
 	#Generate contour plot of laser profile:
-	x   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
-	y   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
-	X,Y = np.meshgrid(x,y)	
-	Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
+
 	ax[0].contourf(X,Y,Z,400,alpha=1,zorder=-1)
 	ax[1].contourf(X,Y,Z,400,alpha=1,zorder=-1)
 	######################################
@@ -68,13 +59,13 @@ def generateFigure():
 	#Plot, place, and draw the deposits, circles, trajectory:
 	ax[0].plot(particle_1['x'][:],particle_1["z"][:],label="Trajectory 1",color='black',zorder=0)
 	#ax.plot(particle_2['x'][:],particle_2["z"][:],label="Trajectory 2",color='blue',zorder=0)
-	ax[0].scatter(deposits['x'],deposits['z'],color='red',s=8,alpha=1,zorder=0)
+	ax[0].scatter(deposits['x'][-int(nDeposits):],deposits['z'][-int(nDeposits):],color='red',s=8,alpha=1,zorder=0)
 
 	ax[0].add_patch(circle1)
 	ax[1].add_patch(circle2)
 
 	ax[1].plot(particle_1['x'][:],particle_1["y"][:],label="Trajectory 1",color='black',zorder=0)
-	ax[1].scatter(deposits['x'],deposits['y'],color='red',s=8,alpha=1,zorder=0)
+	ax[1].scatter(deposits['x'][-int(nDeposits):],deposits['y'][-int(nDeposits):],color='red',s=8,alpha=1,zorder=0)
 	#ax.add_patch(circle2)
 
 	###########################################################
@@ -98,36 +89,79 @@ def generateFigure():
 	os.chdir("src")
 
 	
-	fig, ax     = plt.subplots(1, 4, figsize=(17, 7))
+	fig, ax     = plt.subplots(3, 1, figsize=(17, 7))
 
-	ax[0].plot(kinematics['t'],kinematics['x'])
-	ax[1].plot(kinematics['t'],kinematics['y'])
-	ax[2].plot(kinematics['t'],kinematics['z'])
-	ax[3].plot(kinematics['t'],kinematics['v'])
-	ylabels = ["X","Y","Z","V"]
-	for i in range(4):
-		ax[i].set_xlabel("Time (a.u)")
+	ax[0].plot(kinematics['t'],kinematics['x'],label="Displacement")
+	ax[1].plot(kinematics['t'],kinematics['y'],label="Displacement")
+	ax[2].plot(kinematics['t'],kinematics['z'],label="Displacement")
+	#ax[1].plot(kinematics['t'],kinematics['v'],label="Velocity")
+	#ax[1].plot(kinematics['t'],kinematics['y'])
+	#ax[2].plot(kinematics['t'],kinematics['z'])
+	
+	ylabels = ["X","Y","Z"]
+	for i in range(3):
+		ax[i].set_xlabel("Time (s)")
 		ax[i].set_ylabel(ylabels[i])
+		ax[i].legend()
+		ax[i].grid()
+
 
 	os.chdir("..")
 	os.chdir("figures")
 	plt.savefig("kinematics.png")
 
 	#################################
-def plotDeposits():
+def update(frame):
+	ax.clear()
 
-	os.chdir("..")
-	os.chdir("src")
-	deposits    = pd.read_csv('deposits.csv')
-	fig, ax     = plt.subplots(1, 1, figsize=(13, 7))
-	ax.axis("equal")
-	ax.scatter(deposits['x'],deposits['z'])
-	os.chdir("..")
-	os.chdir("figures")
-	plt.savefig("deposits.png")
+	ax.set_xlabel('X')
+	ax.set_ylabel('Z')
+	ax.set_title('Particle positions at t = {:.2f}'.format(frame))
+	ax.axis('equal')
+	
+	circle = Circle((x_positions[frame],y_positions[frame]),radius=2e-6,edgecolor='b',facecolor='none' )
+	ax.add_patch(circle)
+	start_index = (frame) * int(nDeposits)
+	end_index = (frame + 1) * int(nDeposits)
+	scatter = ax.scatter(x_deposits[start_index:end_index], y_deposits[start_index:end_index], color='red', marker='o',zorder=0)
+	ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
+	
+	ax.set_xlim(-limit, limit)
+	ax.set_ylim(-limit*2,limit)
+
+	return circle,scatter
+
+x   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
+y   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
+X,Y = np.meshgrid(x,y)	
+Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
+
 
 generateNewData()
-print("Starting plotting...")
+
+data = np.genfromtxt("particle_1.csv",delimiter=',',skip_header=1)
+deposits = np.genfromtxt("deposits.csv",delimiter=',',skip_header=1)
+
+x_positions = data[:, 0]
+y_positions = data[:, 2]
+
+x_deposits = deposits[:, 0]
+y_deposits = deposits[:, 2]
+
+
+fig,ax= plt.subplots()
+sc = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='none')
+
+
+print("Creating movie...")
+tic = time.time()
+
+ani = animation.FuncAnimation(fig, update, frames=len(data), interval=50,blit=True)
+ani.save('particle_animation.mp4', writer='ffmpeg')
+
+
+toc= time.time()
+print("Movie created after " + str(round(toc-tic)) + " s")
 generateFigure()
 
 #plotDeposits()

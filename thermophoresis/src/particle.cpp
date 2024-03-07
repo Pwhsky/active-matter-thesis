@@ -35,7 +35,7 @@ std::mt19937 gen(rd());
 
 	//Simulation time step, at timesteps above 0.01 numerical instabilities occur.
 	constexpr double dt = 0.01; 
-	constexpr double brownian_term			  = 2*sqrt(2.0*D_T*dt);
+	constexpr double brownian_term			  = sqrt(2.0*D_T*dt);
 	
 	
 
@@ -363,7 +363,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 							vector<double> rxV = cross_product(r,vel);
 
 							for(int l = 0; l<3; l++){
-								omega[l] -= rxV[l];
+								omega[l] += rxV[l];
 							}
 							
 						counter++;
@@ -375,7 +375,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 		}
 	for(int i = 0; i<3;i++){
 		velocity[i]     = D_T*vel[i]*1e-5;
-		selfRotation[i] = D_T*omega[i]*1e-3;
+		selfRotation[i] = D_T*omega[i]*1e-5;
 		//cout<<selfRotation[i]<<"\n";
 		//cout<<velocity[i]<<"\n";
 	}

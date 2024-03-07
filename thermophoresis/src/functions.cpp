@@ -114,7 +114,7 @@ double get_norm(std::vector<double> a){
 	return temp;
 }
 
-std::vector<Point> update_globalDeposits(std::vector<Particle> particles){
+std::vector<Point> update_globalDeposits(std::vector<Particle> &particles){
 	
 	std::vector<Point> newDeposits;
 	int nDeposits = particles[0].deposits.size();

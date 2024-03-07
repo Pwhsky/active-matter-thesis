@@ -9,7 +9,7 @@ This source code contains the time evolution for simulating thermophoresis.
 #include <cmath>
 #include <vector>
 #include "particle.h"
-
+double compute_total_velocity(Particle &particle);
 
 using namespace std;
 	int     number_of_steps,nDeposits;
@@ -30,11 +30,11 @@ int main(int argc, char** argv) {
 
 	
 	std::ofstream p1("particle_1.csv");
-
+	std::ofstream d1("deposits.csv");
 	std::ofstream v1("velocity_1.csv");
 	//std::ofstream p2("particle_2.csv");
 
-
+	d1   << "x,y,z"<<"\n";
 	p1   << "x,y,z"<<"\n";
 	v1   << "t,x,y,z,v"<<"\n";
 	//p2   << "x,y,z"<<"\n";
@@ -72,27 +72,26 @@ int main(int argc, char** argv) {
 			particle.brownian_noise();
 		}
 		hard_sphere_correction(particles);
-		globalDeposits = update_globalDeposits(particles);
 
-		double total_vel = 0;
-		for(int i = 0; i<3; i++){
-			total_vel += particles[0].velocity[i]*particles[0].velocity[i];
+
+		//Write deposits to csv:
+		for(int i = 0; i<globalDeposits.size(); i++){
+			d1 << globalDeposits[i].x << "," << globalDeposits[i].y <<"," << globalDeposits[i].z <<"\n";
 		}
-		total_vel = sqrt(total_vel);
-		v1 << time*0.01 <<","<< particles[0].center.x << ","<< particles[0].center.y << ","<< particles[0].center.z 
-																					<< "," <<total_vel<< "\n";
-
-
+		globalDeposits = update_globalDeposits(particles);
+		
+		//Write velocity and displacements
+		double total_vel = compute_total_velocity(particles[0]);
+		v1 << time*0.01             << "," << particles[0].center.x << "," << particles[0].center.y << ","<< particles[0].center.z  << "," <<total_vel<< "\n";
 		p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
 		//p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
-		//TODO: make exporting particle positions a trivial task.
 			
 		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
 
-
-	particles[0].writeDepositToCSV();
-	//particles[1].writeDepositToCSV();
+	v1.close();
+	p1.close();
+	d1.close();
 
 	cout<<"Simulation finished, writing to csv..."<<"\n";
     //////////////////////////////////////////////////////////////////
@@ -101,9 +100,18 @@ int main(int argc, char** argv) {
    	auto endTimer = std::chrono::high_resolution_clock::now();
    	std::chrono::duration<double> duration = endTimer - startTimer;
 	double elapsed_seconds = duration.count();
-  	std::cout << "Program completed after: " << elapsed_seconds << " seconds" << "\n";
+  	std::cout << "Simulation finished after: " << elapsed_seconds << " seconds" << "\n";
 	//////////////////////////////////////////////////////////////////	
 	//////////////////END PROGRAM/////////////////////////////////////
 
 	return 0;
 }	
+
+double compute_total_velocity(Particle &particle){
+	double total_vel = 0;
+		for(int i = 0; i<3; i++){
+			total_vel += particle.velocity[i]*particle.velocity[i];
+		}
+		total_vel = sqrt(total_vel);
+	return total_vel;
+}
