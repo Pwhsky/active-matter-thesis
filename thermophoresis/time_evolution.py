@@ -118,10 +118,20 @@ def generateFigure():
 		ax[i].legend()
 		ax[i].grid()
 
-
 	os.chdir("..")
 	os.chdir("figures")
 	plt.savefig("kinematics.png")
+	plt.clf()
+	MSDZ = compute_MSD(data[:,2])
+	MSDY = compute_MSD(data[:,1])
+	MSDX = compute_MSD(data[:,0])
+
+	plt.loglog(velocities[:,0],MSDZ[0:3000],label = "Z")
+	plt.loglog(velocities[:,0],MSDX[0:3000],label = "X")
+	plt.loglog(velocities[:,0],MSDY[0:3000],label = "Y")
+	plt.legend()
+	plt.savefig("mean_square_displacement.png")
+
 
 	#################################
 def update(frame):
@@ -166,16 +176,7 @@ y_deposits = deposits[:, 2]
 fig,ax= plt.subplots()
 sc = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='none')
 
-MSDZ = compute_MSD(data[:,2])
-MSDY = compute_MSD(data[:,1])
-MSDX = compute_MSD(data[:,0])
 
-plt.loglog(velocities[:,0],MSDZ[0:3000],label = "Z")
-plt.loglog(velocities[:,0],MSDX[0:3000],label = "X")
-plt.loglog(velocities[:,0],MSDY[0:3000],label = "Y")
-plt.legend()
-
-plt.show()
 print("Creating movie...")
 tic = time.time()
 
