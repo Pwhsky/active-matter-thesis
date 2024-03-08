@@ -56,31 +56,43 @@ int main(int argc, char** argv) {
 	double thickness = pow(10*stepSize,2);
 
 	
-	p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
-//	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 
+	//Write initial positions to file:
+	p1 << particles[0].center.x << ","
+	   << particles[0].center.y << "," 
+	   << particles[0].center.z << "\n";
+	for(int i = 0; i<globalDeposits.size(); i++){
+		d1 << globalDeposits[i].x << "," 
+		   << globalDeposits[i].y << "," 
+		   << globalDeposits[i].z <<"\n";
+	}
 	
+//	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 
 	for(int time = 0; time < number_of_steps; time ++){ 
 
+
 		for(auto &particle:particles){
 			particle.getKinematics(linspace,thickness,dl,globalDeposits,lambda,dv);
-			particle.rotation_transform();
 		}
+
 		for(auto &particle:particles){
+			particle.rotation_transform();
 			particle.update_position();
 			particle.brownian_noise();
 		}
 		hard_sphere_correction(particles);
 
 
-		//Write deposits to csv:
+		//Write deposits to csv file:
 		for(int i = 0; i<globalDeposits.size(); i++){
-			d1 << globalDeposits[i].x << "," << globalDeposits[i].y <<"," << globalDeposits[i].z <<"\n";
+			d1 << globalDeposits[i].x << "," 
+			   << globalDeposits[i].y << "," 
+			   << globalDeposits[i].z <<"\n";
 		}
 		globalDeposits = update_globalDeposits(particles);
 		
-		//Write velocity and displacements
+		//Write velocity and displacements to csv file
 		double total_vel = compute_total_velocity(particles[0]);
 		v1 << time*0.01             << "," << particles[0].center.x << "," << particles[0].center.y << ","<< particles[0].center.z  << "," <<total_vel<< "\n";
 		p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";

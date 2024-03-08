@@ -27,6 +27,19 @@ def generateNewData():
 					"-o","sim","-Ofast", "-fopenmp","-funroll-all-loops"])
 
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4],sys.argv[2]])
+def compute_MSD(pos_data):
+	n = len(pos_data)
+	
+	MSD = np.zeros((n,1))
+	for t in range(n):
+		square_sum = 0
+		for tau in range(n-t):
+			square_sum += (pos_data[tau+t]-pos_data[tau])**2
+		MSD[t] = square_sum/(n)
+	
+
+	return MSD
+
 
 def generateFigure():
 
@@ -137,9 +150,10 @@ X,Y = np.meshgrid(x,y)
 Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
 
 
-generateNewData()
+#generateNewData()
 
 data = np.genfromtxt("particle_1.csv",delimiter=',',skip_header=1)
+velocities = np.genfromtxt("velocity_1.csv",delimiter=',',skip_header=1)
 deposits = np.genfromtxt("deposits.csv",delimiter=',',skip_header=1)
 
 x_positions = data[:, 0]
@@ -152,12 +166,21 @@ y_deposits = deposits[:, 2]
 fig,ax= plt.subplots()
 sc = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='none')
 
+MSDZ = compute_MSD(data[:,2])
+MSDY = compute_MSD(data[:,1])
+MSDX = compute_MSD(data[:,0])
 
+plt.loglog(velocities[:,0],MSDZ[0:3000],label = "Z")
+plt.loglog(velocities[:,0],MSDX[0:3000],label = "X")
+plt.loglog(velocities[:,0],MSDY[0:3000],label = "Y")
+plt.legend()
+
+plt.show()
 print("Creating movie...")
 tic = time.time()
 
-ani = animation.FuncAnimation(fig, update, frames=len(data), interval=50,blit=True)
-ani.save('particle_animation.mp4', writer='ffmpeg')
+#ani = animation.FuncAnimation(fig, update, frames=len(data), interval=50,blit=True)
+#ani.save('particle_animation.mp4', writer='ffmpeg')
 
 
 toc= time.time()
