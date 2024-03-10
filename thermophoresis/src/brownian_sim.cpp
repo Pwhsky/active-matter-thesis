@@ -22,13 +22,13 @@ int main(int argc, char** argv) {
 	   
 	auto startTimer = std::chrono::high_resolution_clock::now();
 	bounds    		= 100  * pow(10,-6); 
-	stepSize  		= bounds/(double)(300);		  //Step size, based off of bounds parameter Set to 100 for now
+	stepSize  		= bounds/(double)(300);		      //Step size, based off of bounds parameter Set to 100 for now
 	nDeposits 		= stof(argv[1]);				  //number of deposits to initialize
-	lambda	 	    = stold(argv[3])  * pow(10,-9); //Spatial periodicity
+	lambda	 	    = stold(argv[3])  * pow(10,-9);   //Spatial periodicity
 	number_of_steps = (int)stof(argv[4]);
-    dv	      		= stepSize*stepSize*stepSize;  //volume element for integral
+    dv	      		= stepSize*stepSize*stepSize;     //volume element for integral
 
-	
+
 	std::ofstream write_deposit_data("deposits.csv");
 	std::ofstream write_trajectory_data("trajectory.csv");
 	//std::ofstream p2("particle_2.csv");
@@ -53,8 +53,6 @@ int main(int argc, char** argv) {
 	dl = stepSize*stepSize;
 	double thickness = pow(10*stepSize,2);
 
-	
-	
 	
 	//Write initial positions to file:
 	write_trajectory_data << 0.0 <<"," 
