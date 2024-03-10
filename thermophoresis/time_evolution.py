@@ -9,7 +9,7 @@ from matplotlib.patches import Circle
 import matplotlib.animation as animation
 
 os.chdir("src")
-
+faceColor = (1,0.964706,0.901961)
 
 limit = 15e-6
 font = 19
@@ -27,14 +27,14 @@ def generateNewData():
 					"-o","sim","-Ofast", "-fopenmp","-funroll-all-loops"])
 
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4],sys.argv[2]])
-def compute_MSD(pos_data):
-	n = len(pos_data)
+def compute_MSD(x):
+	n = len(x)
 	
 	MSD = np.zeros((n,1))
 	for t in range(n):
 		square_sum = 0
 		for tau in range(n-t):
-			square_sum += (pos_data[tau+t]-pos_data[tau])**2
+			square_sum += (x[tau+t]-x[tau])**2
 		MSD[t] = square_sum/(n)
 	
 
@@ -43,22 +43,17 @@ def compute_MSD(pos_data):
 
 def generateFigure():
 
-	particle_1     = pd.read_csv("particle_1.csv",engine="pyarrow")
-	kinematics     = pd.read_csv("velocity_1.csv",engine="pyarrow")
-
-	#particle_2     = pd.read_csv("particle_2.csv",engine="pyarrow")
-	deposits       = pd.read_csv('deposits.csv')
 
 	fig, ax     = plt.subplots(1, 2, figsize=(10, 7))
-	#ax.set_title(f"Time evolution after {sys.argv[2]} timesteps.")
+
 
 	xlim = [- limit,  limit]
 	ylim = [- limit*2,  limit]
 
 	#Create circles for particles:
-	circle1 = Circle((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['z']), 2e-6)
+	circle1 = Circle((trajectory[-1,1], trajectory[-1,3]), 2e-6)
 	
-	circle2 = Circle((particle_1.iloc[-1]['x'], particle_1.iloc[-1]['y']), 2e-6)
+	circle2 = Circle((trajectory[-1,1], trajectory[-1,2]), 2e-6)
 	circle1.set(fill=False, alpha=0.5)
 	circle2.set(fill=False, alpha=0.5)
 	##############################
@@ -70,15 +65,16 @@ def generateFigure():
 	######################################
 
 	#Plot, place, and draw the deposits, circles, trajectory:
-	ax[0].plot(particle_1['x'][:],particle_1["z"][:],label="Trajectory 1",color='black',zorder=0)
-	#ax.plot(particle_2['x'][:],particle_2["z"][:],label="Trajectory 2",color='blue',zorder=0)
-	ax[0].scatter(deposits['x'][-int(nDeposits):],deposits['z'][-int(nDeposits):],color='red',s=8,alpha=1,zorder=0)
+
+	ax[0].plot(trajectory[:,1],trajectory[:,3],label="Trajectory",color='black',zorder=0)
+	#ax.plot(particle_2[:,1],particle_2[:,3],label="Trajectory 2",color='blue',zorder=0)
+	ax[0].scatter(deposits[-int(nDeposits):,0],deposits[-int(nDeposits):,2],color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
 
 	ax[0].add_patch(circle1)
 	ax[1].add_patch(circle2)
 
-	ax[1].plot(particle_1['x'][:],particle_1["y"][:],label="Trajectory 1",color='black',zorder=0)
-	ax[1].scatter(deposits['x'][-int(nDeposits):],deposits['y'][-int(nDeposits):],color='red',s=8,alpha=1,zorder=0)
+	ax[1].plot(trajectory[:,1],trajectory[:,2],label="Trajectory",color='black',zorder=0)
+	ax[1].scatter(deposits[-int(nDeposits):,0],deposits[-int(nDeposits):,1],color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
 	#ax.add_patch(circle2)
 
 	###########################################################
@@ -96,7 +92,7 @@ def generateFigure():
 	#Save figure in figures directory:
 	os.chdir("..")
 	os.chdir("figures")
-	plt.savefig("time_evolution.png")
+	plt.savefig("time_evolution.png",facecolor=faceColor)
 
 	os.chdir("..")
 	os.chdir("src")
@@ -104,13 +100,10 @@ def generateFigure():
 	
 	fig, ax     = plt.subplots(3, 1, figsize=(17, 7))
 
-	ax[0].plot(kinematics['t'],kinematics['x'],label="Displacement")
-	ax[1].plot(kinematics['t'],kinematics['y'],label="Displacement")
-	ax[2].plot(kinematics['t'],kinematics['z'],label="Displacement")
-	#ax[1].plot(kinematics['t'],kinematics['v'],label="Velocity")
-	#ax[1].plot(kinematics['t'],kinematics['y'])
-	#ax[2].plot(kinematics['t'],kinematics['z'])
-	
+	ax[0].plot(trajectory[:,0],trajectory[:,1],label="X displacement")
+	ax[1].plot(trajectory[:,0],trajectory[:,2],label="Y displacement")
+	ax[2].plot(trajectory[:,0],trajectory[:,3],label="Z displacement")
+
 	ylabels = ["X","Y","Z"]
 	for i in range(3):
 		ax[i].set_xlabel("Time (s)")
@@ -120,17 +113,24 @@ def generateFigure():
 
 	os.chdir("..")
 	os.chdir("figures")
-	plt.savefig("kinematics.png")
+	plt.savefig("displacement.png",facecolor=faceColor)
 	plt.clf()
-	MSDZ = compute_MSD(data[:,2])
-	MSDY = compute_MSD(data[:,1])
-	MSDX = compute_MSD(data[:,0])
+	MSDZ = compute_MSD(trajectory[:,3])
+	MSDY = compute_MSD(trajectory[:,2])
+	MSDX = compute_MSD(trajectory[:,1])
 
-	plt.loglog(velocities[:,0],MSDZ[0:3000],label = "Z")
-	plt.loglog(velocities[:,0],MSDX[0:3000],label = "X")
-	plt.loglog(velocities[:,0],MSDY[0:3000],label = "Y")
-	plt.legend()
-	plt.savefig("mean_square_displacement.png")
+	n =1
+	plt.loglog(trajectory[:-n,0],MSDZ[0:-n]*1e6,label = "Z",linewidth=3)
+	plt.loglog(trajectory[:-n,0],MSDX[0:-n]*1e6,label = "X",linewidth=3)
+	plt.loglog(trajectory[:-n,0],MSDY[0:-n]*1e6,label = "Y",linewidth=3)
+	plt.xlabel("t [s]",fontsize=17)
+	plt.ylabel(r"MSD $\langle r^2 ( t) \rangle$",fontsize=17)
+	plt.tick_params(axis='both', which='major', labelsize=14)
+	plt.tick_params(axis='both', which='minor', labelsize=14)
+	plt.grid(True)
+	plt.legend(fontsize=15)
+	plt.title(f"Mean square displacement for {N-1} timesteps. ",fontsize=20)
+	plt.savefig("mean_square_displacement.png",facecolor=faceColor)
 
 
 	#################################
@@ -162,30 +162,27 @@ Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
 
 #generateNewData()
 
-data = np.genfromtxt("particle_1.csv",delimiter=',',skip_header=1)
-velocities = np.genfromtxt("velocity_1.csv",delimiter=',',skip_header=1)
+#Trajectory.csv contains time,x,y,z,velocity
+trajectory = np.genfromtxt("trajectory.csv",delimiter=',',skip_header=1)
+N = len(trajectory)
 deposits = np.genfromtxt("deposits.csv",delimiter=',',skip_header=1)
-
-x_positions = data[:, 0]
-y_positions = data[:, 2]
-
+x_positions = trajectory[:,1]
+y_positions = trajectory[:,3]
 x_deposits = deposits[:, 0]
 y_deposits = deposits[:, 2]
 
+print("Computing MSD...")
+generateFigure()
+print("Done, Creating movie...")
 
 fig,ax= plt.subplots()
 sc = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='none')
-
-
-print("Creating movie...")
 tic = time.time()
-
-#ani = animation.FuncAnimation(fig, update, frames=len(data), interval=50,blit=True)
+#ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
 #ani.save('particle_animation.mp4', writer='ffmpeg')
 
-
 toc= time.time()
-print("Movie created after " + str(round(toc-tic)) + " s")
-generateFigure()
+print("Done after " + str(round(toc-tic)) + " s")
+
 
 #plotDeposits()

@@ -29,14 +29,12 @@ int main(int argc, char** argv) {
     dv	      		= stepSize*stepSize*stepSize;  //volume element for integral
 
 	
-	std::ofstream p1("particle_1.csv");
-	std::ofstream d1("deposits.csv");
-	std::ofstream v1("velocity_1.csv");
+	std::ofstream write_deposit_data("deposits.csv");
+	std::ofstream write_trajectory_data("trajectory.csv");
 	//std::ofstream p2("particle_2.csv");
 
-	d1   << "x,y,z"<<"\n";
-	p1   << "x,y,z"<<"\n";
-	v1   << "t,x,y,z,v"<<"\n";
+	write_deposit_data      << "x,y,z"<<"\n";
+	write_trajectory_data   << "t,x,y,z,v"<<"\n";
 	//p2   << "x,y,z"<<"\n";
 
 	vector<Particle> particles = initializeParticles();
@@ -56,15 +54,18 @@ int main(int argc, char** argv) {
 	double thickness = pow(10*stepSize,2);
 
 	
-
+	
+	
 	//Write initial positions to file:
-	p1 << particles[0].center.x << ","
-	   << particles[0].center.y << "," 
-	   << particles[0].center.z << "\n";
+	write_trajectory_data << 0.0 <<"," 
+						  << particles[0].center.x << ","
+	   					  << particles[0].center.y << "," 
+	   					  << particles[0].center.z << ","
+						  <<                   0.0 << "\n";
 	for(int i = 0; i<globalDeposits.size(); i++){
-		d1 << globalDeposits[i].x << "," 
-		   << globalDeposits[i].y << "," 
-		   << globalDeposits[i].z <<"\n";
+		write_deposit_data << globalDeposits[i].x << "," 
+		   				   << globalDeposits[i].y << "," 
+		   			 	   << globalDeposits[i].z <<"\n";
 	}
 	
 //	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
@@ -86,24 +87,26 @@ int main(int argc, char** argv) {
 
 		//Write deposits to csv file:
 		for(int i = 0; i<globalDeposits.size(); i++){
-			d1 << globalDeposits[i].x << "," 
-			   << globalDeposits[i].y << "," 
-			   << globalDeposits[i].z <<"\n";
+			write_deposit_data << globalDeposits[i].x << "," 
+			   				   << globalDeposits[i].y << "," 
+			   				   << globalDeposits[i].z <<"\n";
 		}
 		globalDeposits = update_globalDeposits(particles);
 		
 		//Write velocity and displacements to csv file
 		double total_vel = compute_total_velocity(particles[0]);
-		v1 << time*0.01             << "," << particles[0].center.x << "," << particles[0].center.y << ","<< particles[0].center.z  << "," <<total_vel<< "\n";
-		p1 << particles[0].center.x << "," << particles[0].center.y << "," << particles[0].center.z << "\n";
+		write_trajectory_data << time*0.01 << ","
+		                      << particles[0].center.x << ","
+							  << particles[0].center.y << ","
+							  << particles[0].center.z << "," 
+							  << total_vel             << "\n";
 		//p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 			
 		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
 
-	v1.close();
-	p1.close();
-	d1.close();
+	write_trajectory_data.close();
+	write_deposit_data.close();
 
 	cout<<"Simulation finished, writing to csv..."<<"\n";
     //////////////////////////////////////////////////////////////////
