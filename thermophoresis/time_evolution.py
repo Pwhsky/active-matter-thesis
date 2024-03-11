@@ -35,7 +35,7 @@ def compute_MSD(x):
 		square_sum = 0
 		for tau in range(n-t):
 			square_sum += (x[tau+t]-x[tau])**2
-		MSD[t] = square_sum/(n)
+		MSD[t] = square_sum/(n-t)
 	return MSD
 
 
@@ -45,9 +45,12 @@ def generateFigure():
 	ylim = [- limit*2,  limit]
 
 	#Create circles for particles:
-	circle1 = Circle((trajectory[-1,1], trajectory[-1,3]), 2e-6)
+	circle1 = Circle((trajectory[-1,1], 
+	                  trajectory[-1,3]), 2e-6)
 	
-	circle2 = Circle((trajectory[-1,1], trajectory[-1,2]), 2e-6)
+	circle2 = Circle((trajectory[-1,1], 
+	                  trajectory[-1,2]), 2e-6)
+
 	circle1.set(fill=False, alpha=0.5)
 	circle2.set(fill=False, alpha=0.5)
 	##############################
@@ -59,15 +62,21 @@ def generateFigure():
 	######################################
 
 	#Plot, place, and draw the deposits, circles, trajectory:
-
-	ax[0].plot(trajectory[:,1],trajectory[:,3],label="Trajectory",color='black',zorder=0)
-	ax[0].scatter(deposits[-int(nDeposits):,0],deposits[-int(nDeposits):,2],color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
 	ax[0].add_patch(circle1)
-
 	ax[1].add_patch(circle2)
-	ax[1].plot(trajectory[:,1],trajectory[:,2],label="Trajectory",color='black',zorder=0)
-	ax[1].scatter(deposits[-int(nDeposits):,0],deposits[-int(nDeposits):,1],color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
 
+	ax[0].plot(trajectory[:,1],
+	           trajectory[:,3],
+			   label="Trajectory",color='black',zorder=0)
+	ax[0].scatter(deposits[-int(nDeposits):,0],
+	              deposits[-int(nDeposits):,2],
+				  color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
+	ax[1].plot(trajectory[:,1],
+	           trajectory[:,2],
+			   label="Trajectory",color='black',zorder=0)
+	ax[1].scatter(deposits[-int(nDeposits):,0],
+	              deposits[-int(nDeposits):,1],
+				  color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
 	###########################################################
 	
 	ax[0].set_ylabel('Z (m)',fontsize=16)
@@ -131,8 +140,6 @@ def generateFigure():
 ##############################################################################################
 def update(frame):
 	ax.clear()
-
-
 	ax.set_title('Particle positions at t = {:.2f}'.format(frame))
 	ax.set_xlabel('X')
 	ax.set_ylabel('Z')
@@ -142,11 +149,11 @@ def update(frame):
 	ax.add_patch(circle)
 
 	start_index = (frame) * int(nDeposits)
-	end_index = (frame + 1) * int(nDeposits)
+	end_index   = (frame + 1) * int(nDeposits)
 
-	scatter = ax.scatter(x_deposits[start_index:end_index], 
-					     y_deposits[start_index:end_index], 
-						 color='red', marker='o',zorder=0)
+	scatter      = ax.scatter(x_deposits[start_index:end_index], 
+					    y_deposits[start_index:end_index], 
+						color='red', marker='o',zorder=0)
 
 	ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
 	ax.set_xlim(-limit, limit)
@@ -160,7 +167,7 @@ Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
 
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-#generateNewData()
+generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
