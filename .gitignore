@@ -9,5 +9,9 @@ coldParticles.csv
 hotParticles.csv
 /movie_frames
 /movie
+
 gradient.csv
 cap.csv
+deposits.csv
+trajectory.csv
+
