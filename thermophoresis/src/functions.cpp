@@ -71,10 +71,13 @@ double get_norm(std::vector<double> a){
 
 
  std::vector<double> arange(double start, double stop, double stepSize){
- 	std::vector<double> array;
-	for (double coordinate = start; coordinate <= stop; coordinate += stepSize) {
-          	 array.push_back(coordinate);
-    }
+	int nElements = static_cast<int>((stop-start)/stepSize)+1;
+	std::vector<double> array(nElements);
+	double coordinate = start;
+	for (int i = 0; i< nElements; i++){
+		array[i] = coordinate;
+		coordinate +=stepSize;
+	}
 	return array;
  }
  
@@ -116,12 +119,15 @@ double get_norm(std::vector<double> a){
 
 std::vector<Point> update_globalDeposits(std::vector<Particle> &particles){
 	
-	std::vector<Point> newDeposits;
+	
 	int nDeposits = particles[0].deposits.size();
+	int nParticles = particles.size();
+	std::vector<Point> newDeposits(nDeposits*nParticles);
 
 	for(int i = 0; i < particles.size(); i++ ){
 		for(int j = 0; j<nDeposits;j++){
-			newDeposits.push_back(particles[i].deposits[j]);
+			int index = i*nDeposits +j;
+			newDeposits[index] = particles[i].deposits[j];
 		}
 	} 
 

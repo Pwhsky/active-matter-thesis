@@ -50,8 +50,11 @@ void Particle::generateDeposits(int nDeposits) {
     uniform_real_distribution<double> costheta(0.0,1);
     uniform_real_distribution<double> u(0.8,1);
 
+
 	//Initiate deposits
+	this->deposits.reserve(nDeposits);
 	int i = 0;
+	
 	while (i < nDeposits ){
 		
 		double const theta = acos(costheta(gen));
@@ -271,8 +274,8 @@ std::vector<double> getDirection(Particle p1,Particle p2){
 			for (size_t i = 0; i < deposits.size(); i++){
 
 				double inverse_squareroot_distance = 1.0/sqrt(pow(_x-deposits[i].x,2)+
-															pow(_y-deposits[i].y,2)+
-															pow(_z-deposits[i].z,2));
+															  pow(_y-deposits[i].y,2)+
+															  pow(_z-deposits[i].z,2));
 				contributionSum -=  inverse_squareroot_distance;
 			}
 		return contributionSum*absorbtionTerm*dv/(4*pi*waterConductivity); 
@@ -318,22 +321,18 @@ void Particle::getKinematics(std::vector<double> linspace,
 			for(auto j:linspace){
 				for(auto k:linspace){		
 					
-					Point point 	= { i-this->center.x,
-										j-this->center.y,
-										k-this->center.z};
-
+	
 					//double norm = get_norm({point.x, point.y, point.z});
 					//if (norm > 6*particleRadius){continue;}
-					Point p = {i,j,k};
-					double const d = getSquaredDistance(p);
+					double const d = getSquaredDistance({i,j,k});
 
 
 					//Compute only the points near the surface
 					if (d > pow(radius,2) && d < pow(radius,2)+thickness){
 							
-							double u				   = point.x;
-							double v 				   = point.y;
-							double w 				   = point.z;
+							double u				   = i-this->center.x;
+							double v 				   = j-this->center.y;
+							double w 				   = k-this->center.z;
 
 
 							vector<double> r		   = {u,v,w};	
