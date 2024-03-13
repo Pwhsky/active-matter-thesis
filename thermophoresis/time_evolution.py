@@ -24,7 +24,7 @@ def generateNewData():
 	print(f"Producing {sys.argv[2]} steps \n" )
 	#Compiles and runs the .CPP files
 	subprocess.run(["g++","functions.cpp","particle.cpp","brownian_sim.cpp",
-					"-o","sim","-Ofast", "-fopenmp","-funroll-all-loops"])
+					"-o","sim","-Ofast", "-fopenmp","-funroll-all-loops","-march=native"])
 	subprocess.run(["./sim",nDeposits,sys.argv[3], sys.argv[4],sys.argv[2]])
 
 	
@@ -126,10 +126,30 @@ def generateFigure():
 	MSDY = compute_MSD(trajectory[:,2])
 	MSDX = compute_MSD(trajectory[:,1])
 
-	n = 1
-	plt.loglog(trajectory[:-n,0],MSDZ[0:-n],label = "Z",linewidth=3)
-	plt.loglog(trajectory[:-n,0],MSDX[0:-n],label = "X",linewidth=3)
-	plt.loglog(trajectory[:-n,0],MSDY[0:-n],label = "Y",linewidth=3)
+	plt.loglog(trajectory[2:,0],MSDZ[2:],label = "Z",linewidth=3)
+	plt.loglog(trajectory[2:,0],MSDX[2:],label = "X",linewidth=3)
+	plt.loglog(trajectory[2:,0],MSDY[2:],label = "Y",linewidth=3)
+
+	slopes_1 = [np.max(MSDX[:10]),
+			    np.max(MSDY[:10]),
+				np.max(MSDZ[:10])]
+
+	slopes_2 = [np.max(MSDX[10:100]),
+			    np.max(MSDY[10:100]),
+				np.max(MSDZ[10:100])]
+
+	slopes_3 = [np.max(MSDX[100:1000]),
+			    np.max(MSDY[100:1000]),
+				np.max(MSDZ[100:1000])]
+	slopes_4 = [np.max(MSDX[1000:]),
+			    np.max(MSDY[1000:]),
+				np.max(MSDZ[1000:])]
+	print("X                     Y                      Z")
+	print(slopes_1)
+	print(slopes_2)
+	print(slopes_3)
+	print(slopes_4)
+
 
 	plt.tick_params(axis='both', which='major', labelsize=20)
 	plt.tick_params(axis='both', which='minor', labelsize=20)
@@ -167,7 +187,7 @@ Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
 
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-generateNewData()
+#generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
@@ -191,8 +211,8 @@ sc     = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='non
 tic    = time.time()
 
 ################ MOVIE, TAKES A LONG TIME
-ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
-ani.save('particle_animation.mp4', writer='ffmpeg')
+#ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
+#ani.save('particle_animation.mp4', writer='ffmpeg')
 ################
 
 toc = time.time()

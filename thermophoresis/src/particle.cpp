@@ -20,7 +20,7 @@ std::random_device rd;
 std::mt19937 gen(rd());
 
 	constexpr double pi	      		 	  	  = 3.14159265358979323846;
-	constexpr double twoPi					  = 2*3.14159265358979323846;
+	constexpr double twoPi					  = 2*pi;
 	constexpr double particleRadius   		  = 2e-6;
 	constexpr double particleRadiusSquared    = particleRadius*particleRadius;
 	constexpr double depositRadius	 	      = 30   *pow(10,-9);	
@@ -69,7 +69,6 @@ void Particle::generateDeposits(int nDeposits) {
 		if( (x*x + y*y +z*z)<particleRadiusSquared ){
 			(this->deposits).emplace_back(Point{x,y,z});
 			i++;
-
 		}
 		//Add to deposits list
     	
