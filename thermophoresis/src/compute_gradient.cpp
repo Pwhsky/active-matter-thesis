@@ -12,13 +12,23 @@ compute_temperature.cpp contains the computation for the temperature increase.
 #include <omp.h>
 #include "particle.h"
 #include <random>
-
+	constexpr double pi	      		 	  	  = 3.14159265358979323846;
+	constexpr double twoPi					  = 2*pi;
+	constexpr double particleRadius   		  = 2e-6;
+	constexpr double particleRadiusSquared    = particleRadius*particleRadius;
+	constexpr double depositRadius	 	      = 30   *pow(10,-9);	
+	constexpr double depositVolume	          = 4*pi *pow((depositRadius),3)/3;  //Spherical deposit volume
+	constexpr double depositArea	 	      = 2*pi *pow(depositRadius,2);		 //Spherical deposit surface area
+	constexpr double intensity		  		  = 100  *pow(10,-3);  //Watts
+	constexpr double areaOfIllumination 	  = 40   *pow(10,-6);  //Meters^2  How much area the laser is distributed on.
+	constexpr double I0		 				  = 2*intensity/(pow(areaOfIllumination*2,2)); //Total laser intensity Watt/meter^2
+	constexpr double waterConductivity	 	  = 0.606;   //water conductivity in Watts/(meter*Kelvin)
 
 
 using namespace std;
  	double  bounds,  lambda, stepSize, dv, dl;
 	int 	nDeposits, nPoints;
-	bool    onlyTangential = false;
+	bool    onlyTangential = true;
 
 	vector<double> z;
 	vector<double> x;
@@ -67,6 +77,9 @@ int main(int argc, char** argv) {
 			int counter = 0;
 			#pragma omp parallel for schedule(dynamic)
 			for (size_t i = 0; i < nPoints; i++){
+				double const currentLaserPower = I0 + I0*cos(twoPi*(x[i])/lambda);
+				double const absorbtionTerm    = currentLaserPower*depositArea/(depositVolume);
+
 				for(size_t j = 0; j<y.size(); j++){
 					for(size_t k = 0; k<nPoints; k++){
 
@@ -75,8 +88,8 @@ int main(int argc, char** argv) {
 						double d = particles[n].getSquaredDistance(point);
 						if (d > pow(particles[n].radius,2)){
 
-							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits,dl,lambda,dv);
-							double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits,dl,lambda,dv);
+							double gradientX = central_difference(x[i]-dl,x[i]+dl,y[j],y[j],z[k],   z[k],   particles[n].deposits,dl,absorbtionTerm,dv);
+							double gradientZ = central_difference(x[i],   x[i],   y[j],y[j],z[k]-dl,z[k]+dl,particles[n].deposits,dl,absorbtionTerm,dv);
 			
 
 							//Project on normal vector:

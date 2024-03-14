@@ -54,19 +54,21 @@ void Particle::generateDeposits(int nDeposits) {
 	//Initiate deposits
 	this->deposits.reserve(nDeposits);
 	int i = 0;
-	
+	double _x = this->center.x; 
+	double _y = this->center.y; 
+	double _z = this->center.z; 
 	while (i < nDeposits ){
 		
 		double const theta = acos(costheta(gen));
 		double const r 	 = particleRadius*u(gen);
 
 		//Convert to cartesian:
-    	double  x = r*sin(theta) * cos(phi(gen)) + this->center.x; 
-    	double  y = r*sin(theta) * sin(phi(gen)) + this->center.y;
-    	double  z = r*cos(theta)				  + this->center.z;
+    	double  x = r*sin(theta) * cos(phi(gen)) + _x; 
+    	double  y = r*sin(theta) * sin(phi(gen)) + _y;
+    	double  z = r*cos(theta)				 + _z;
    		
 		
-		if( (x*x + y*y +z*z)<particleRadiusSquared ){
+		if( (x-_x)*(x-_x) + (y-_y)*(y-_y) + (z-_z)*(z-_z) < particleRadiusSquared ){
 			(this->deposits).emplace_back(Point{x,y,z});
 			i++;
 		}

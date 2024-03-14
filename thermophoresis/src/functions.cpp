@@ -11,14 +11,14 @@ using namespace std;
 std::vector<Particle> initializeParticles(){
 
 	//Create the coordinates
-	Point centerOfParticle1 = {-0.0*particleRadius,0.0,0.0}; 
+	Point centerOfParticle1 = {0.0*particleRadius,0.0,0.0}; 
 	Point centerOfParticle2 = {1.0*particleRadius,0.0,0.0}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);
 	Particle particle2(centerOfParticle2,particleRadius,0.0);
 
-	vector<Particle> particles = {particle1};
+	vector<Particle> particles = {particle1};//,particle2};
 
 	return particles;
 	
@@ -138,11 +138,11 @@ std::vector<Point> update_globalDeposits(std::vector<Particle> &particles){
 std::vector<Particle> initialize_4_particles(){
 
 	//Create the coordinates
-	Point centerOfParticle1 = {-1.1*particleRadius,0.0,0.0}; 
-	Point centerOfParticle2 = {1.1*particleRadius,0.0,0.0}; 
+	Point centerOfParticle1 = {-1.5*particleRadius,0.0,0.0}; 
+	Point centerOfParticle2 = {1.5*particleRadius,0.0,0.0}; 
 
-	Point centerOfParticle3 = {0.0,0.0, 1.1*particleRadius}; 
-	Point centerOfParticle4 = {0.0,0.0, -1.1*particleRadius}; 
+	Point centerOfParticle3 = {0.0,0.0, 1.5*particleRadius}; 
+	Point centerOfParticle4 = {0.0,0.0, -1.5*particleRadius}; 
 
 	//Create the particles
 	Particle particle1(centerOfParticle1,particleRadius,0.0);

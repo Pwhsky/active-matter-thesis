@@ -162,8 +162,10 @@ def generateFigureQuiver(imageBounds):
 
 			cbar = plt.colorbar(quiver,ax=ax[0])
 			cbar.set_label(f"K/μm",fontsize=font-5)
-			axis.add_patch(circles[0])
+			#axis.add_patch(circles[0])
 			#axis.add_patch(circles[1])
+			#axis.add_patch(circles[2])
+			#axis.add_patch(circles[3])
 			ax[0].set_facecolor('white')
 			
 		#if index == 1:
@@ -175,9 +177,9 @@ def generateFigureQuiver(imageBounds):
 			#ax[1] = fig.add_subplot(projection='3d')
 			#ax[1].view_init(azim=90, elev=10)
 			#ax[1].set_box_aspect([1, 1, 1])
-		#	ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10,color='C0')
-		#	ax[1].set_xlim(-imageBounds,imageBounds)
-		#	ax[1].set_ylim(-imageBounds,imageBounds)
+			ax[1].scatter(depositDF['x'], depositDF['z'], label='_nolegend_',s=10,color='C0')
+			ax[1].set_xlim(-imageBounds,imageBounds)
+			ax[1].set_ylim(-imageBounds,imageBounds)
 			#ax[1].set_zlim(-imageBounds,imageBounds)
 		#	ax[1].set_xlabel(axisLabelsX[index])
 		#	ax[1].set_ylabel(axisLabelsY[index])
@@ -192,11 +194,11 @@ def generateFigureQuiver(imageBounds):
 			#ax[1].set_zticklabels([round(min(z)*1e6),round(min(z)/2*1e6),0,round(max(z)/2*1e6), round(max(z)*1e6)],fontsize=15)
 
 
-		if index == 1:
-			X,Y,Z = generateLaserProfile(spatialPeriodicity*10)
-			laserImage = ax[1].contourf(X,Y,Z,50)
-			cbar2 = plt.colorbar(laserImage,ax=ax[1])
-			cbar2.set_label(" I(x) / $\mathrm{I}_0$",fontsize=font-5)
+		#if index == 1:
+			#X,Y,Z = generateLaserProfile(spatialPeriodicity*10)
+			#laserImage = ax[1].contourf(X,Y,Z,50)
+			#cbar2 = plt.colorbar(laserImage,ax=ax[1])
+			#cbar2.set_label(" I(x) / $\mathrm{I}_0$",fontsize=font-5)
 			
 		
 		index+=1

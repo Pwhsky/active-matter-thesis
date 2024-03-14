@@ -81,19 +81,19 @@ def generateFigure():
 	
 	ax[0].set_ylabel('Z (m)',fontsize=16)
 	ax[1].set_ylabel('Y (m)',fontsize=16)
-	fig.suptitle(f"Particle trajectory",fontsize=20)
+	fig.suptitle(f"Particle trajectory for Λ = {round(spatialPeriodicity*1000000)} µm",fontsize=20)
 	for i in range(2):
 		ax[i].set_xlabel('X (m)',fontsize=16)
 		ax[i].axis("equal")
 		ax[i].set_xlim(xlim)
 		ax[i].set_ylim(ylim)
-		ax[i].legend()
+		ax[i].legend(fontsize=15)
 		ax[i].tick_params(axis='both',which='major',labelsize=15)
 
 	#Save figure in figures directory:
 	os.chdir("..")
 	os.chdir("figures")
-	plt.savefig("time_evolution.png",facecolor=faceColor)
+	plt.savefig("time_evolution.png")#,facecolor=faceColor)
 	os.chdir("..")
 	os.chdir("src")
 ##################################################################################################
@@ -117,46 +117,46 @@ def generateFigure():
 	plt.savefig("displacement.png",facecolor=faceColor)
 	plt.clf()
 ######################################################################################################
-	fig.suptitle(f"Mean square displacement for {N-1} timesteps. ",fontsize=20)
+	fig.suptitle(f"Mean square displacement for Λ = {round(spatialPeriodicity*1000000,1)}µm ",fontsize=24)
 
 	plt.xlabel("t [s]",fontsize=20)
-	plt.ylabel(r"MSD $\langle r^2 ( t) \rangle$",fontsize=20)
+	plt.ylabel(r"MSD(t) [µm²] ",fontsize=20)
 
-	MSDZ = compute_MSD(trajectory[:,3])
-	MSDY = compute_MSD(trajectory[:,2])
-	MSDX = compute_MSD(trajectory[:,1])
+	MSDZ = compute_MSD(trajectory[:,3])*1e12
+	MSDY = compute_MSD(trajectory[:,2])*1e12
+	MSDX = compute_MSD(trajectory[:,1])*1e12
 
 	plt.loglog(trajectory[2:,0],MSDZ[2:],label = "Z",linewidth=3)
-	plt.loglog(trajectory[2:,0],MSDX[2:],label = "X",linewidth=3)
-	plt.loglog(trajectory[2:,0],MSDY[2:],label = "Y",linewidth=3)
+	plt.loglog(trajectory[2:-100,0],MSDX[2:-100],label = "X",linewidth=3)
+	plt.loglog(trajectory[2:-100,0],MSDY[2:-100],label = "Y",linewidth=3)
 
-	slopes_1 = [np.max(MSDX[:10]),
-			    np.max(MSDY[:10]),
-				np.max(MSDZ[:10])]
 
-	slopes_2 = [np.max(MSDX[10:100]),
-			    np.max(MSDY[10:100]),
-				np.max(MSDZ[10:100])]
+	
+	slope_z = np.asarray( [  np.log(MSDZ[20]/MSDZ[1])/np.log(20), 
+							 np.log(MSDZ[400]/MSDZ[20])/np.log(380/20),
+							 np.log(MSDZ[-1]/MSDZ[400])/np.log(len(MSDZ[400:])/380 )  ])
 
-	slopes_3 = [np.max(MSDX[100:1000]),
-			    np.max(MSDY[100:1000]),
-				np.max(MSDZ[100:1000])]
-	slopes_4 = [np.max(MSDX[1000:]),
-			    np.max(MSDY[1000:]),
-				np.max(MSDZ[1000:])]
-	print("X                     Y                      Z")
-	print(slopes_1)
-	print(slopes_2)
-	print(slopes_3)
-	print(slopes_4)
+	slope_y = np.asarray( [  np.log(MSDY[20]/MSDY[1])/np.log(20), 
+							 np.log(MSDY[400]/MSDY[20])/np.log(380/20),
+							 np.log(MSDY[-500]/MSDY[400])/np.log((len(MSDY[400:])-500)/380 )  ])
 
+	slope_x = np.asarray( [  np.log(MSDX[20]/MSDX[1])/np.log(20), 
+							 np.log(MSDX[400]/MSDX[20])/np.log(380/20),
+							 np.log(MSDX[-500]/MSDX[400])/np.log((len(MSDX[400:])-500)/380 )  ])
+	print("Slopes of Z:")
+	print(slope_z)
+	print("Slopes of Y:")
+	print(slope_y)
+	print("Slopes of X:")
+	print(slope_x)
+	
 
 	plt.tick_params(axis='both', which='major', labelsize=20)
 	plt.tick_params(axis='both', which='minor', labelsize=20)
 	plt.grid(True)
 	plt.legend(fontsize=15)
 	
-	plt.savefig("mean_square_displacement.png",facecolor=faceColor)
+	plt.savefig("mean_square_displacement.png")
 ##############################################################################################
 def update(frame):
 	ax.clear()
