@@ -62,9 +62,9 @@ int main(int argc, char** argv) {
 					Point point = {x[i],y[j],z[k]};
 					double d = particles[n].getSquaredDistance(point);
     				//Check if outside particle:
-					//if (d > pow(particles[n].radius,2)){
-						temperature[i][j][k] += integral(x[i],y[j],z[k],particles[n].deposits,absorbtionTerm,dv);	
-       			//	}
+					if (d > pow(particles[n].radius,2)){
+						temperature[i][j][k] -= integral(x[i],y[j],z[k],particles[n].deposits,absorbtionTerm,dv);	
+       				}
 				}
     		}
     	}

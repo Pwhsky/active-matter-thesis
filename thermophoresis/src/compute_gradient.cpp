@@ -28,7 +28,7 @@ compute_temperature.cpp contains the computation for the temperature increase.
 using namespace std;
  	double  bounds,  lambda, stepSize, dv, dl;
 	int 	nDeposits, nPoints;
-	bool    onlyTangential = true;
+	bool    onlyTangential = false;
 
 	vector<double> z;
 	vector<double> x;
@@ -104,13 +104,13 @@ int main(int argc, char** argv) {
 							double tangentialZ         = (gradientZ - perpendicularZ);
 
 							if (onlyTangential == true){
-								xGrad[i][j][k] 			   += tangentialX*25/1000;		
-								zGrad[i][j][k]   		   += tangentialZ*25/1000;			
+								xGrad[i][j][k] 			   -= tangentialX*25/1000;		
+								zGrad[i][j][k]   		   -= tangentialZ*25/1000;			
 							}else{
-								xGrad[i][j][k] 	     	   += perpendicularX*25/1000;	
-								zGrad[i][j][k] 			   += perpendicularZ*25/1000;	
-								xGrad[i][j][k] 			   += tangentialX*25/1000;		
-								zGrad[i][j][k]   		   += tangentialZ*25/1000;
+								xGrad[i][j][k] 	     	   -= perpendicularX*25/1000;	
+								zGrad[i][j][k] 			   -= perpendicularZ*25/1000;	
+								xGrad[i][j][k] 			   -= tangentialX*25/1000;		
+								zGrad[i][j][k]   		   -= tangentialZ*25/1000;
 							}
 						}
 
