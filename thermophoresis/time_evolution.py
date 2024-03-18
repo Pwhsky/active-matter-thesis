@@ -40,62 +40,64 @@ def compute_MSD(x):
 
 
 def generateFigure():
-	fig, ax     = plt.subplots(1, 2, figsize=(10, 7))
-	xlim = [- limit,  limit]
-	ylim = [- limit*2,  limit]
+	makeFigure = False
+	if makeFigure:
+		fig, ax     = plt.subplots(1, 2, figsize=(10, 7))
+		xlim = [- limit,  limit]
+		ylim = [- limit*2,  limit]
 
-	#Create circles for particles:
-	circle1 = Circle((trajectory[-1,1], 
-	                  trajectory[-1,3]), 2e-6)
-	
-	circle2 = Circle((trajectory[-1,1], 
-	                  trajectory[-1,2]), 2e-6)
+		#Create circles for particles:
+		circle1 = Circle((trajectory[-1,1], 
+						trajectory[-1,3]), 2e-6)
+		
+		circle2 = Circle((trajectory[-1,1], 
+						trajectory[-1,2]), 2e-6)
 
-	circle1.set(fill=False, alpha=0.5)
-	circle2.set(fill=False, alpha=0.5)
-	##############################
+		circle1.set(fill=False, alpha=0.5)
+		circle2.set(fill=False, alpha=0.5)
+		##############################
 
-	#Generate contour plot of laser profile:
+		#Generate contour plot of laser profile:
 
-	ax[0].contourf(X,Y,Z,400,alpha=1,zorder=-1)
-	ax[1].contourf(X,Y,Z,400,alpha=1,zorder=-1)
-	######################################
+		ax[0].contourf(X,Y,Z,400,alpha=1,zorder=-1)
+		ax[1].contourf(X,Y,Z,400,alpha=1,zorder=-1)
+		######################################
 
-	#Plot, place, and draw the deposits, circles, trajectory:
-	ax[0].add_patch(circle1)
-	ax[1].add_patch(circle2)
+		#Plot, place, and draw the deposits, circles, trajectory:
+		ax[0].add_patch(circle1)
+		ax[1].add_patch(circle2)
 
-	ax[0].plot(trajectory[:,1],
-	           trajectory[:,3],
-			   label="Trajectory",color='black',zorder=0)
-	ax[0].scatter(deposits[-int(nDeposits):,0],
-	              deposits[-int(nDeposits):,2],
-				  color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
-	ax[1].plot(trajectory[:,1],
-	           trajectory[:,2],
-			   label="Trajectory",color='black',zorder=0)
-	ax[1].scatter(deposits[-int(nDeposits):,0],
-	              deposits[-int(nDeposits):,1],
-				  color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
-	###########################################################
-	
-	ax[0].set_ylabel('Z (m)',fontsize=16)
-	ax[1].set_ylabel('Y (m)',fontsize=16)
-	fig.suptitle(f"Particle trajectory for Λ = {round(spatialPeriodicity*1000000)} µm",fontsize=20)
-	for i in range(2):
-		ax[i].set_xlabel('X (m)',fontsize=16)
-		ax[i].axis("equal")
-		ax[i].set_xlim(xlim)
-		ax[i].set_ylim(ylim)
-		ax[i].legend(fontsize=15)
-		ax[i].tick_params(axis='both',which='major',labelsize=15)
+		ax[0].plot(trajectory[:,1],
+				trajectory[:,3],
+				label="Trajectory",color='black',zorder=0)
+		ax[0].scatter(deposits[-int(nDeposits):,0],
+					deposits[-int(nDeposits):,2],
+					color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
+		ax[1].plot(trajectory[:,1],
+				trajectory[:,2],
+				label="Trajectory",color='black',zorder=0)
+		ax[1].scatter(deposits[-int(nDeposits):,0],
+					deposits[-int(nDeposits):,1],
+					color='red',s=8,alpha=1,zorder=0,label = "Iron oxide")
+		###########################################################
+		
+		ax[0].set_ylabel('Z (m)',fontsize=16)
+		ax[1].set_ylabel('Y (m)',fontsize=16)
+		fig.suptitle(f"Particle trajectory for Λ = {round(spatialPeriodicity*1000000)} µm",fontsize=20)
+		for i in range(2):
+			ax[i].set_xlabel('X (m)',fontsize=16)
+			ax[i].axis("equal")
+			ax[i].set_xlim(xlim)
+			ax[i].set_ylim(ylim)
+			ax[i].legend(fontsize=15)
+			ax[i].tick_params(axis='both',which='major',labelsize=15)
 
-	#Save figure in figures directory:
-	os.chdir("..")
-	os.chdir("figures")
-	plt.savefig("time_evolution.png")#,facecolor=faceColor)
-	os.chdir("..")
-	os.chdir("src")
+		#Save figure in figures directory:
+		os.chdir("..")
+		os.chdir("figures")
+		plt.savefig("time_evolution.png")#,facecolor=faceColor)
+		os.chdir("..")
+		os.chdir("src")
 ##################################################################################################
 	fig, ax     = plt.subplots(3, 1, figsize=(17, 7))
 	fig.suptitle("Particle displacement",fontsize=20)
@@ -122,35 +124,48 @@ def generateFigure():
 	plt.xlabel("t [s]",fontsize=20)
 	plt.ylabel(r"MSD(t) [µm²] ",fontsize=20)
 
+	#Rescale to be in units of micrometer
 	MSDZ = compute_MSD(trajectory[:,3])*1e12
 	MSDY = compute_MSD(trajectory[:,2])*1e12
 	MSDX = compute_MSD(trajectory[:,1])*1e12
 
-	plt.loglog(trajectory[2:,0],MSDZ[2:],label = "Z",linewidth=3)
+	plt.loglog(trajectory[2:,0],MSDZ[2:],        label = "Z",linewidth=3)
 	plt.loglog(trajectory[2:-100,0],MSDX[2:-100],label = "X",linewidth=3)
 	plt.loglog(trajectory[2:-100,0],MSDY[2:-100],label = "Y",linewidth=3)
 
 
 	
-	slope_z = np.asarray( [  np.log(MSDZ[20]/MSDZ[1])/np.log(20), 
+	slope_z = np.asarray( [  np.log(MSDZ[20]/MSDZ[1])  /np.log(20), 
 							 np.log(MSDZ[400]/MSDZ[20])/np.log(380/20),
 							 np.log(MSDZ[-1]/MSDZ[400])/np.log(len(MSDZ[400:])/380 )  ])
 
-	slope_y = np.asarray( [  np.log(MSDY[20]/MSDY[1])/np.log(20), 
-							 np.log(MSDY[400]/MSDY[20])/np.log(380/20),
+	slope_y = np.asarray( [  np.log(MSDY[20]/MSDY[1])    /np.log(20), 
+							 np.log(MSDY[400]/MSDY[20])  /np.log(380/20),
 							 np.log(MSDY[-500]/MSDY[400])/np.log((len(MSDY[400:])-500)/380 )  ])
 
-	slope_x = np.asarray( [  np.log(MSDX[20]/MSDX[1])/np.log(20), 
-							 np.log(MSDX[400]/MSDX[20])/np.log(380/20),
+	slope_x = np.asarray( [  np.log(MSDX[20]/MSDX[1])    /np.log(20), 
+							 np.log(MSDX[400]/MSDX[20])  /np.log(380/20),
 							 np.log(MSDX[-500]/MSDX[400])/np.log((len(MSDX[400:])-500)/380 )  ])
-	print("Slopes of Z:")
-	print(slope_z)
-	print("Slopes of Y:")
-	print(slope_y)
-	print("Slopes of X:")
-	print(slope_x)
-	
 
+	printSlopes = False
+	if printSlopes:
+		print("Slopes of Z:")
+		print(slope_z)
+		print("Slopes of Y:")
+		print(slope_y)
+		print("Slopes of X:")
+		print(slope_x)
+	
+	num = 1000
+	velocities =  [np.divide(MSDX[num:-100],(trajectory[num:-100,0]**2)),
+				   np.divide(MSDY[num:-100],(trajectory[num:-100,0]**2)),
+				   np.divide(MSDZ[num:-100],(trajectory[num:-100,0]**2))]
+
+	#Unit of v_z is meter per millisecond (dt = 0.01)
+	#Rescale to micrometers per second: 
+	print(f"V_x = {np.mean(velocities[0])} \n errors = {np.std(velocities[0])/np.sqrt((len(MSDX[num:-100])))} ")
+	print(f"V_y = {np.mean(velocities[1])} \n errors = {np.std(velocities[1])/np.sqrt((len(MSDX[num:-100])))} ")
+	print(f"V_z = {np.mean(velocities[2])} \n errors = {np.std(velocities[2])/np.sqrt((len(MSDX[num:-100])))} ")
 	plt.tick_params(axis='both', which='major', labelsize=20)
 	plt.tick_params(axis='both', which='minor', labelsize=20)
 	plt.grid(True)
