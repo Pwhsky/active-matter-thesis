@@ -316,11 +316,14 @@ void Particle::getKinematics(std::vector<double> linspace,
 		#pragma omp parallel for schedule(dynamic)
 		for (auto i:linspace){
 
-			double const currentLaserPower = I0 + I0*cos(twoPi*(i)/lambda);
-			double const absorbtionTerm    = currentLaserPower*depositArea/(depositVolume);
+
 
 			for(auto j:linspace){
+
 				for(auto k:linspace){		
+					double const currentLaserPower = I0 + I0*cos(twoPi*(sqrt(i*i + k*k))/lambda);
+					double const absorbtionTerm    = currentLaserPower*depositArea/(depositVolume);
+			
 					
 	
 					//double norm = get_norm({point.x, point.y, point.z});

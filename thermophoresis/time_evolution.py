@@ -40,7 +40,7 @@ def compute_MSD(x):
 
 
 def generateFigure():
-	makeFigure = False
+	makeFigure = True
 	if makeFigure:
 		fig, ax     = plt.subplots(1, 2, figsize=(10, 7))
 		xlim = [- limit,  limit]
@@ -59,8 +59,8 @@ def generateFigure():
 
 		#Generate contour plot of laser profile:
 
-		ax[0].contourf(X,Y,Z,400,alpha=1,zorder=-1)
-		ax[1].contourf(X,Y,Z,400,alpha=1,zorder=-1)
+		ax[0].contourf(X,Y,Z2,400,alpha=1,zorder=-1)
+		ax[1].contourf(X,Y,Z1,400,alpha=1,zorder=-1)
 		######################################
 
 		#Plot, place, and draw the deposits, circles, trajectory:
@@ -163,9 +163,13 @@ def generateFigure():
 
 	#Unit of v_z is meter per millisecond (dt = 0.01)
 	#Rescale to micrometers per second: 
-	print(f"V_x = {np.mean(velocities[0])} \n errors = {np.std(velocities[0])/np.sqrt((len(MSDX[num:-100])))} ")
-	print(f"V_y = {np.mean(velocities[1])} \n errors = {np.std(velocities[1])/np.sqrt((len(MSDX[num:-100])))} ")
-	print(f"V_z = {np.mean(velocities[2])} \n errors = {np.std(velocities[2])/np.sqrt((len(MSDX[num:-100])))} ")
+	print("V_x,V_y,V_z")
+	for vel in velocities:
+		print(np.mean(vel))
+	print("err_x, err_y, err_z")	
+	for vel in velocities:
+		print(np.std(vel)/np.sqrt((len(MSDX[num:-100]))))
+
 	plt.tick_params(axis='both', which='major', labelsize=20)
 	plt.tick_params(axis='both', which='minor', labelsize=20)
 	plt.grid(True)
@@ -190,7 +194,7 @@ def update(frame):
 					    y_deposits[start_index:end_index], 
 						color='red', marker='o',zorder=0)
 
-	ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
+	ax.contourf(X,Y,Z1,25,alpha=1,zorder=-1)
 	ax.set_xlim(-limit, limit)
 	ax.set_ylim(-limit*2,limit)
 	return circle,scatter
@@ -198,11 +202,11 @@ def update(frame):
 x   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
 y   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
 X,Y = np.meshgrid(x,y)	
-Z = (1+ (np.cos(2*pi*X/(spatialPeriodicity))))
-
+Z1 = (1+ (np.cos(2*pi*((X))/(spatialPeriodicity))))
+Z2 = (1+ (np.cos(2*pi*(np.sqrt(X**2 + Y**2))/(spatialPeriodicity))))
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-#generateNewData()
+generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
@@ -211,23 +215,24 @@ deposits   = np.genfromtxt("deposits.csv",delimiter=',',skip_header=1)
 N = len(trajectory)
 
 x_positions = trajectory[:,1]
-y_positions = trajectory[:,3]
+y_positions = trajectory[:,2]
+
 x_deposits  = deposits[:, 0]
-y_deposits  = deposits[:, 2]
+y_deposits  = deposits[:, 1]
 
 print("Computing MSD...")
 ################ GRAPHS AND FIGURES
 generateFigure()
 ################
-print("Done, Creating movie...")
+print("Creating movie...")
 
 fig,ax = plt.subplots()
 sc     = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='none')
 tic    = time.time()
 
 ################ MOVIE, TAKES A LONG TIME
-#ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
-#ani.save('particle_animation.mp4', writer='ffmpeg')
+ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
+ani.save('particle_animation.mp4', writer='ffmpeg')
 ################
 
 toc = time.time()
