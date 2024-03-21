@@ -206,7 +206,7 @@ Z = (1+ (np.cos(2*pi*((X))/(spatialPeriodicity))))
 
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-#generateNewData()
+generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
