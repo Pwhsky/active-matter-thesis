@@ -99,8 +99,10 @@ int main(int argc, char** argv) {
 							  << particles[0].center.z << "," 
 							  << total_vel             << "\n";
 		//p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+		if(time%1000 == 0){
+			cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
+		}
 			
-		cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
 	}
 
 	write_trajectory_data.close();
