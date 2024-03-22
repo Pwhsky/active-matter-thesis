@@ -92,7 +92,10 @@ for i in range(loop_limit):
 	velocities[i,0]  = velocity
 	velocities[i,1]  = error
 	periodicities[i] = periodicity
+os.chdir("..")
+os.chdir("figures")
 
 plt.plot(velocities,periodicities)
+plt.savefig("test.png")
 ##################
 
