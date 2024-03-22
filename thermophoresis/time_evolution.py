@@ -122,7 +122,7 @@ def generateFigure():
 	plt.clf()
 ######################################################################################################
 
-	fig.suptitle(f"Mean square displacement for Λ = {round(spatialPeriodicity*1000000,1)}µm ",fontsize=24)
+	fig.suptitle(f"Mean square displacement for Λ = {round(spatialPeriodicity*1000000,1)} µm ",fontsize=24)
 	legend_labels = ["X","Y","Z"]
 	plt.xlabel("t [s]",fontsize=20)
 	plt.ylabel(r"MSD(t) [µm²] ",fontsize=20)
@@ -144,9 +144,9 @@ def generateFigure():
 	slope_y = np.asarray( [  np.log(MSD[1][20]/MSD[1][1])    /np.log(20), 
 							 np.log(MSD[1][400]/MSD[1][20])  /np.log(380/20),
 							 np.log(MSD[1][-500]/MSD[1][400])/np.log((len(MSD[1][400:])-500)/380 )  ])
-	slope_z = np.asarray( [  np.log(MSD[2][20]/MSD[2][1])  /np.log(20), 
-							 np.log(MSD[2][400]/MSD[2][20])/np.log(380/20),
-							 np.log(MSD[2][-1]/MSD[2][400])/np.log(len(MSD[2][400:])/380 )  ])
+	slope_z = np.asarray( [  np.log(MSD[2][20]/MSD[2][1])    /np.log(20), 
+							 np.log(MSD[2][400]/MSD[2][20])  /np.log(380/20),
+							 np.log(MSD[2][-1]/MSD[2][400])  /np.log(len(MSD[2][400:])/380 )  ])
 
 	#Method 2, perform logarithm polyfit (with error estimate):
 	x = trajectory[100:-1,0]
