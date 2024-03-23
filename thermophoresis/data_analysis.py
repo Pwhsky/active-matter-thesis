@@ -1,12 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import os
 import time 
 import subprocess
 import sys
-from matplotlib.patches import Circle
-import matplotlib.animation as animation
 
 os.chdir("src")
 faceColor = (1,0.964706,0.901961)
@@ -70,33 +67,42 @@ def data_analysis(trajectory):
 	velocity       = np.exp((coefficients[0])/2)
 	velocity_error = np.exp((coefficients[0]+errors[0])/2)-np.exp((coefficients[0]-errors[0])/2)
 
-	print(f"velocity = {round(velocity,5)} ± {round(velocity_error,5)}" )
+	#print(f"velocity = {round(velocity,5)} ± {round(velocity_error,5)}" )
 	return velocity,velocity_error
 	
 ##############################################################################################
 
 
-bounds    = 5
-timesteps = 5000
-nDeposits = 400
-
+bounds        = 5
+timesteps     = 5000
+deposits 	  = [200,220,240,260,280,300,320,340,460,380,400,420,440,460,480,500,520,540,560,580,600]
 velocities    = []
-periodicities = []
-errors 		  = [0.2,0.4,0.8,1.6, 3.2, 6.4,12.8, 25,6.4, 51.2,102.4]
+errors  	  = []
+#errors 		  = [0.2,0.4,0.8,1.6, 3.2, 6.4,12.8, 25,6.4, 51.2,102.4]
 #Perform parameter sweep over laser periodicities
-
-for i in range(len(periodicities)):
-	periodicity = periodicities[i]
-	generateNewData(nDeposits, timesteps, periodicity*1e-9,bounds)
+tic = time.time()
+for i in range(len(deposits)):
+	nDeposits = deposits[i]
+	generateNewData(nDeposits, timesteps, 80000*1e-9,bounds)
 	trajectory       = np.genfromtxt("trajectory.csv",delimiter=',',skip_header=3)
 	velocity,error   = data_analysis(trajectory)
 	
 	velocities.append(velocity)
-	velocities.append(error)
+	errors.append(error)
+print(velocities)
+print(errors)
+
+toc = time.tim()
 os.chdir("..")
 os.chdir("figures")
-
-plt.plot(periodicities,velocities)
+fig, ax = plt.subplots()
+ax.errorbar(deposits,velocities,errors,capsize=4)
+ax.set_ylabel("Velocity")
+ax.set_xlabel("nDeposits")
+ax.set_title("Velocity vs deposit number")
 plt.savefig("test.png")
+
+
+print("Finished after " + str(round(toc-tic)) + " s")
 ##################
 
