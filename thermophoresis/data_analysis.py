@@ -75,27 +75,28 @@ def data_analysis(trajectory):
 	
 ##############################################################################################
 
-loop_limit = 4
-bounds    = 5
-timesteps = 500
-nDeposits = 1
 
-velocities    = np.zeros((loop_limit-1,2))
-periodicities = np.zeros((loop_limit-1,2))
+bounds    = 5
+timesteps = 5000
+nDeposits = 400
+
+velocities    = []
+periodicities = []
+errors 		  = [0.2,0.4,0.8,1.6, 3.2, 6.4,12.8, 25,6.4, 51.2,102.4]
 #Perform parameter sweep over laser periodicities
 
-for i in range(loop_limit):
-	periodicity = 1+i*1e-9
+for i in range(len(periodicities)):
+	periodicity = periodicities[i]
 	generateNewData(nDeposits, timesteps, periodicity*1e-9,bounds)
 	trajectory       = np.genfromtxt("trajectory.csv",delimiter=',',skip_header=3)
 	velocity,error   = data_analysis(trajectory)
-	velocities[i,0]  = velocity
-	velocities[i,1]  = error
-	periodicities[i] = periodicity
+	
+	velocities.append(velocity)
+	velocities.append(error)
 os.chdir("..")
 os.chdir("figures")
 
-plt.plot(velocities,periodicities)
+plt.plot(periodicities,velocities)
 plt.savefig("test.png")
 ##################
 
