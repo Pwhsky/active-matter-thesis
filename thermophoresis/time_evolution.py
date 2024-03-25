@@ -95,7 +95,7 @@ def generateFigure():
 		#Save figure in figures directory:
 		os.chdir("..")
 		os.chdir("figures")
-		plt.savefig("time_evolution.png")#,facecolor=faceColor)
+		plt.savefig(f"time_evolution_{round(spatialPeriodicity/1000)}_microns.png")#,facecolor=faceColor)
 		os.chdir("..")
 		os.chdir("src")
 ##################################################################################################
@@ -175,7 +175,7 @@ def generateFigure():
 	plt.grid(True)
 	plt.legend(fontsize=15)
 	
-	plt.savefig("mean_square_displacement.png")
+	plt.savefig(f"MSD_{round(spatialPeriodicity/1000)}_microns.png")
 ##############################################################################################
 def update(frame):
 	if (frame%2 == 0):
@@ -210,7 +210,7 @@ Z = (1+ (np.cos(2*pi*((X))/(spatialPeriodicity))))
 
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-#generateNewData()
+generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
@@ -239,8 +239,8 @@ sc     = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='non
 tic    = time.time()
 
 ################ MOVIE, TAKES A LONG TIME
-ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
-ani.save('particle_animation.mp4', writer='ffmpeg')
+#ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
+#ani.save('particle_animation.mp4', writer='ffmpeg')
 ################
 
 toc = time.time()
