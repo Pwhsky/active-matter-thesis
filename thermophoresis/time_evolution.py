@@ -178,25 +178,29 @@ def generateFigure():
 	plt.savefig("mean_square_displacement.png")
 ##############################################################################################
 def update(frame):
-	ax.clear()
-	ax.set_title('Particle positions at t = {:.2f}'.format(frame))
-	ax.set_xlabel('X')
-	ax.set_ylabel('Z')
-	ax.axis('equal')
-	
-	circle = Circle((x_positions[frame],y_positions[frame]),radius=2e-6,edgecolor='b',facecolor='none' )
-	ax.add_patch(circle)
+	if (frame%2 == 0):
+		ax.clear()
+		ax.set_title('Particle positions at t = {:.2f}'.format(frame))
+		ax.set_xlabel('X')
+		ax.set_ylabel('Z')
+		ax.axis('equal')
+		
+		circle = Circle((x_positions[frame],y_positions[frame]),radius=2e-6,edgecolor='b',facecolor='none' )
+		ax.add_patch(circle)
 
-	start_index = (frame) * int(nDeposits)
-	end_index   = (frame + 1) * int(nDeposits)
+		start_index = (frame) * int(nDeposits)
+		end_index   = (frame + 1) * int(nDeposits)
 
-	scatter      = ax.scatter(x_deposits[start_index:end_index], 
-					    y_deposits[start_index:end_index], 
-						color='red', marker='o',zorder=0)
+		scatter      = ax.scatter(x_deposits[start_index:end_index], 
+							y_deposits[start_index:end_index], 
+							color='red', marker='o',zorder=0)
 
-	ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
-	ax.set_xlim(-limit, limit)
-	ax.set_ylim(-limit*2,limit)
+		ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
+		ax.set_xlim(-limit, limit)
+		ax.set_ylim(-limit*2,limit)
+
+	if frame % 1000 == 0:
+		print(f"finished {frame}/{sys.argv[3]} frames.")
 	return circle,scatter
 
 x   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
