@@ -47,7 +47,7 @@ void Particle::generateDeposits(int nDeposits) {
 	//u is commonly set (0.9,1) so the deposits are near the surface.
 
     uniform_real_distribution<double> phi(0.0,twoPi); 
-    uniform_real_distribution<double> costheta(0.0,1);
+    uniform_real_distribution<double> costheta(-1,1);
     uniform_real_distribution<double> u(0.8,1);
 
 

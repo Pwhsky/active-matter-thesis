@@ -40,7 +40,7 @@ def compute_MSD(x):
 
 
 def generateFigure():
-	makeFigure = False
+	makeFigure = True
 	if makeFigure:
 		fig, ax     = plt.subplots(1, 2, figsize=(10, 7))
 		xlim = [- limit,  limit]
@@ -194,7 +194,7 @@ def update(frame):
 					    y_deposits[start_index:end_index], 
 						color='red', marker='o',zorder=0)
 
-	ax.contourf(X,Y,Z1,25,alpha=1,zorder=-1)
+	ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
 	ax.set_xlim(-limit, limit)
 	ax.set_ylim(-limit*2,limit)
 	return circle,scatter
@@ -206,7 +206,7 @@ Z = (1+ (np.cos(2*pi*((X))/(spatialPeriodicity))))
 
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-generateNewData()
+#generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
@@ -235,8 +235,8 @@ sc     = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='non
 tic    = time.time()
 
 ################ MOVIE, TAKES A LONG TIME
-#ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
-#ani.save('particle_animation.mp4', writer='ffmpeg')
+ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
+ani.save('particle_animation.mp4', writer='ffmpeg')
 ################
 
 toc = time.time()

@@ -6,8 +6,6 @@
 using namespace std;
 	constexpr double particleRadius	= 2*pow(10,-6);
 
-
-
 std::vector<Particle> initializeParticles(){
 
 	//Create the coordinates
