@@ -205,9 +205,7 @@ void hard_sphere_correction(std::vector<Particle> &particles){
 	int const nParticles = particles.size();
 	
 	for (int i = 0; i<nParticles; i++){
-		
 		for(int j = 0; j<nParticles; j++) {
-			
 			double centerToCenterDistance = sqrt(particles[i].getSquaredDistance(particles[j].center)); 
 			double overlap =   2*particleRadius - centerToCenterDistance; //Experiment with this
 			
@@ -315,9 +313,6 @@ void Particle::getKinematics(std::vector<double> linspace,
 
 		#pragma omp parallel for schedule(dynamic)
 		for (auto i:linspace){
-
-
-
 			for(auto j:linspace){
 
 				for(auto k:linspace){		

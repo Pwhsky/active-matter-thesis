@@ -178,26 +178,25 @@ def generateFigure():
 	plt.savefig(f"MSD_{round(spatialPeriodicity/1000)}_microns.png")
 ##############################################################################################
 def update(frame):
-	if (frame%2 == 0):
-		ax.clear()
-		ax.set_title('Particle positions at t = {:.2f}'.format(frame))
-		ax.set_xlabel('X')
-		ax.set_ylabel('Z')
-		ax.axis('equal')
-		
-		circle = Circle((x_positions[frame],y_positions[frame]),radius=2e-6,edgecolor='b',facecolor='none' )
-		ax.add_patch(circle)
+	ax.clear()
+	ax.set_title('Particle positions at t = {:.2f}'.format(frame))
+	ax.set_xlabel('X')
+	ax.set_ylabel('Z')
+	ax.axis('equal')
+	
+	circle = Circle((x_positions[frame],y_positions[frame]),radius=2e-6,edgecolor='b',facecolor='none' )
+	ax.add_patch(circle)
 
-		start_index = (frame) * int(nDeposits)
-		end_index   = (frame + 1) * int(nDeposits)
+	start_index = (frame) * int(nDeposits)
+	end_index   = (frame + 1) * int(nDeposits)
 
-		scatter      = ax.scatter(x_deposits[start_index:end_index], 
+	scatter      = ax.scatter(x_deposits[start_index:end_index], 
 							y_deposits[start_index:end_index], 
 							color='red', marker='o',zorder=0)
 
-		ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
-		ax.set_xlim(-limit, limit)
-		ax.set_ylim(-limit*2,limit)
+	ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
+	ax.set_xlim(-limit, limit)
+	ax.set_ylim(-limit*2,limit)
 
 	if frame % 1000 == 0:
 		print(f"finished {frame}/{sys.argv[3]} frames.")
@@ -210,7 +209,7 @@ Z = (1+ (np.cos(2*pi*((X))/(spatialPeriodicity))))
 
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-generateNewData()
+#generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
@@ -230,7 +229,7 @@ MSD = np.asarray([compute_MSD(trajectory[:,1])*1e12,
 
 print("Computing MSD...")
 ################ GRAPHS AND FIGURES
-generateFigure()
+#generateFigure()
 ################
 print("Creating movie...")
 
@@ -239,8 +238,8 @@ sc     = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='non
 tic    = time.time()
 
 ################ MOVIE, TAKES A LONG TIME
-#ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
-#ani.save('particle_animation.mp4', writer='ffmpeg')
+ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
+ani.save('particle_animation.mp4', writer='ffmpeg')
 ################
 
 toc = time.time()
