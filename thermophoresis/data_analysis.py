@@ -4,6 +4,7 @@ import os
 import time 
 import subprocess
 import sys
+from sklearn.linear_model import LinearRegression
 
 os.chdir("src")
 faceColor = (1,0.964706,0.901961)
@@ -75,13 +76,13 @@ def data_analysis(trajectory):
 
 bounds        = 5
 timesteps     = 5000
-deposit_number = [400,425,450,475,500,
+deposit_number = [400,450,475,500,
 				 525,550,575,600,
 				 625,650,675,700,
 				 725,750,775,800,
 				 825,850,875,900]
-velocities = []
-errors = []
+velocities = [2.5136975781808886,  2.445356601463794, 2.458232955184125, 2.6451380562640336, 2.5895883544878666, 2.5376388553024527, 2.608278273190855, 2.643675850756448, 2.688509986448934, 2.6289077882257215, 2.65648510051654, 2.6523037538104965, 2.6434481993678656, 2.629211197357292, 2.709985560952113, 2.6711007696359226, 2.709485467448876, 2.6461686214498408, 2.6399559411670475, 2.6539831410935033]
+errors = [0.003522033740621655, 0.00503520513172484, 0.0047583371822637055, 0.0020076924404301977, 0.001535248075055673, 0.004039533263003214, 0.002492088170126916, 0.0017590080899712035, 0.0025657399853122875, 0.0017927395056758222, 0.003051272116764814, 0.0028058747329615663, 0.001734106070752972, 0.0020798171825058276, 0.0008566913994085823, 0.0016801771113872377, 0.0020286020405806404, 0.00218555576099444, 0.0024901912394086345, 0.0010347779173649485]
 #Perform parameter sweep over laser periodicities
 tic = time.time()
 #for i in range(len(deposits)):
@@ -92,8 +93,8 @@ tic = time.time()
 	
 #	velocities.append(velocity)
 #	errors.append(error)
-print(velocities)
-print(errors)
+#print(velocities)
+#print(errors)
 
 deposits = np.asarray(deposit_number)
 
@@ -110,18 +111,26 @@ total_iron   = deposits*deposit_volume*density_FeO
 total_gold   = deposits*deposit_volume*density_Ag
 total_silica = (particle_volume-(deposits*deposit_volume))*density_SiO
 
-mass_ratios  = total_iron/(total_silica+total_iron) 
+mass_ratios  = np.array(total_iron/(total_silica+total_iron))
+velocities = np.array(velocities)
+model = LinearRegression()
+model.fit(mass_ratios.reshape(-1,1),velocities.flatten())
+x_new  = np.linspace(0.0025,0.0075,100)
+y_pred = model.predict(x_new.reshape(-1,1))
+new_errors = np.std(velocities-model.predict(mass_ratios.reshape(-1,1)))
 
+slope = model.coef_[0]
 
 toc = time.time()
 os.chdir("..")
 os.chdir("figures")
 fig, ax = plt.subplots(figsize=(10, 7))
-ax.errorbar(mass_ratios,velocities,errors,capsize=4)
-
-ax.set_ylabel("Velocity",fontsize=20)
-ax.set_xlabel(r"$\frac{m_{\rm FeO}}{m_{\rm total}}$ ",fontsize=20)
-ax.set_title("Velocity mass relationship",fontsize=20)
+ax.errorbar(mass_ratios,velocities,errors,capsize=4,fmt='o',label="Average propulsion velocity")
+ax.plot(x_new,y_pred,'r-',label=f"Linear fit")
+ax.set_ylabel(r"Velocity [$\mu m /s $]",fontsize=20)
+ax.set_xlabel(r"$\frac{m_{\rm Fe}}{m_{\rm tot}}$ ",fontsize=20)
+ax.set_title("Propulsion velocity and mass ratio",fontsize=20)
+ax.legend()
 plt.savefig("vel_mass.png")
 
 
