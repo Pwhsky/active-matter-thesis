@@ -75,7 +75,7 @@ def data_analysis(trajectory):
 
 bounds        = 5
 timesteps     = 5000
-deposits 	  = [400,425,450,475,500,
+deposit_number = [400,425,450,475,500,
 				 525,550,575,600,
 				 625,650,675,700,
 				 725,750,775,800,
@@ -95,24 +95,34 @@ tic = time.time()
 print(velocities)
 print(errors)
 
-deposits = np.asarray(deposits)
+deposits = np.asarray(deposit_number)
+
 r = 30e-9
 R = 2e-6
 particle_volume = (4*pi*R**3)/3
 deposit_volume  = (4*pi*r**3)/3
-ratios = deposits*(deposit_volume/(particle_volume-deposit_volume))
+
+density_FeO   = 5250  #iron oxide density   in Kg/m³
+density_Ag    = 19300 #gold density        in kg/m³
+density_SiO   = 2320  #silica oxide density in kg/m³
+
+total_iron   = deposits*deposit_volume*density_FeO
+total_gold   = deposits*deposit_volume*density_Ag
+total_silica = (particle_volume-(deposits*deposit_volume))*density_SiO
+
+mass_ratios  = total_iron/(total_silica+total_iron) 
 
 
 toc = time.time()
 os.chdir("..")
 os.chdir("figures")
 fig, ax = plt.subplots(figsize=(10, 7))
-ax.errorbar(ratios,velocities,errors,capsize=4)
+ax.errorbar(mass_ratios,velocities,errors,capsize=4)
 
 ax.set_ylabel("Velocity",fontsize=20)
-ax.set_xlabel(r"$\frac{V_{iron}}{V_{particle}}$ ",fontsize=20)
-ax.set_title("Velocity vs volume ratio",fontsize=20)
-plt.savefig("test.png")
+ax.set_xlabel(r"$\frac{m_{\rm FeO}}{m_{\rm total}}$ ",fontsize=20)
+ax.set_title("Velocity mass relationship",fontsize=20)
+plt.savefig("vel_mass.png")
 
 
 print("Finished after " + str(round(toc-tic)) + " s")
