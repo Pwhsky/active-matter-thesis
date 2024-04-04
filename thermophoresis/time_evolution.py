@@ -197,9 +197,6 @@ def update(frame):
 	ax.contourf(X,Y,Z,25,alpha=1,zorder=-1)
 	ax.set_xlim(-limit, limit)
 	ax.set_ylim(-limit*2,limit)
-
-	if frame % 1000 == 0:
-		print(f"finished {frame}/{sys.argv[3]} frames.")
 	return circle,scatter
 
 x   = np.linspace(-spatialPeriodicity*20,spatialPeriodicity*20, 200)
@@ -209,7 +206,7 @@ Z = (1+ (np.cos(2*pi*((X))/(spatialPeriodicity))))
 
 
 ################# C++ SIMULATION, YOU CAN REUSE OLD DATA TO SAVE TIME
-#generateNewData()
+generateNewData()
 ##################
 
 #Trajectory.csv contains time,x,y,z,velocity
@@ -229,7 +226,7 @@ MSD = np.asarray([compute_MSD(trajectory[:,1])*1e12,
 
 print("Computing MSD...")
 ################ GRAPHS AND FIGURES
-#generateFigure()
+generateFigure()
 ################
 print("Creating movie...")
 
@@ -238,8 +235,8 @@ sc     = ax.scatter([], [], color='b', edgecolor='k', marker='o', facecolor='non
 tic    = time.time()
 
 ################ MOVIE, TAKES A LONG TIME
-ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
-ani.save('particle_animation.mp4', writer='ffmpeg')
+#ani = animation.FuncAnimation(fig, update, frames=N, interval=50,blit=True)
+#ani.save('particle_animation.mp4', writer='ffmpeg')
 ################
 
 toc = time.time()

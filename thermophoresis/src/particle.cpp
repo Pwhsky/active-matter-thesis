@@ -47,7 +47,7 @@ void Particle::generateDeposits(int nDeposits) {
 	//u is commonly set (0.9,1) so the deposits are near the surface.
 
     uniform_real_distribution<double> phi(0.0,twoPi); 
-    uniform_real_distribution<double> costheta(-1,1);
+    uniform_real_distribution<double> costheta(0.0,1.0);
     uniform_real_distribution<double> u(0.8,1);
 
 
@@ -63,15 +63,21 @@ void Particle::generateDeposits(int nDeposits) {
 		double const r 	 = particleRadius*u(gen);
 
 		//Convert to cartesian:
-    	double  x = r*sin(theta) * cos(phi(gen)) + _x; 
-    	double  y = r*sin(theta) * sin(phi(gen)) + _y;
-    	double  z = r*cos(theta)				 + _z;
+    	double  x = r*sin(theta) * cos(phi(gen)) ;
+    	double  y = r*sin(theta) * sin(phi(gen)) ;
+    	double  z = r*cos(theta)				 ;
    		
 		
-		if( (x-_x)*(x-_x) + (y-_y)*(y-_y) + (z-_z)*(z-_z) < particleRadiusSquared ){
-			(this->deposits).emplace_back(Point{x,y,z});
+
+		 //This works for a single particle
+		if( x*x + y*y + z*z < particleRadiusSquared ){
+
+			(this->deposits).emplace_back(Point{x+_x,y+_y,z+_z});
 			i++;
 		}
+		
+
+
 		//Add to deposits list
     	
     	
@@ -211,7 +217,7 @@ void hard_sphere_correction(std::vector<Particle> &particles){
 			
 			if (overlap > 0.0 && overlap != 0.0 && i !=j ){
 				std::cout<<"Performing H-S correction"<<"\n";
-				double distanceToMove = overlap/1.9; //Overlap should be slightly more than needed
+				double distanceToMove = overlap/2.0; //Overlap should be slightly more than needed
 
 				vector<double> direction = getDirection(particles[i],particles[j]);				
 		
@@ -354,7 +360,7 @@ void Particle::getKinematics(std::vector<double> linspace,
 							for(int l = 0; l<3; l++){
 								radial[l]    	    = duvwr * r[l] / d;
 								tangential[l]	    = gradient[l] - radial[l];
-								vel[l]     		   += tangential[l] * sincos;
+								vel[l]     		   -= tangential[l] * sincos;
 
 							}
 

@@ -28,19 +28,26 @@ int main(int argc, char** argv) {
 	number_of_steps = (int)stof(argv[4]);
     dv	      		= stepSize*stepSize*stepSize;     //volume element for integral
 
-
+/*
 	std::ofstream write_deposit_data("deposits.csv");
 	std::ofstream write_trajectory_data("trajectory.csv");
-	//std::ofstream p2("particle_2.csv");
+*/
 
-	write_deposit_data      << "x,y,z"<<"\n";
-	write_trajectory_data   << "t,x,y,z,v"<<"\n";
+	std::ofstream write_dep_1("deposits_1.csv");
+	std::ofstream write_dep_2("deposits_2.csv");
+	std::ofstream write_traj_1("trajectory_1.csv");
+	std::ofstream write_traj_2("trajectory_2.csv");
+
+	write_dep_1      << "x,y,z"<<"\n";
+	write_traj_1   << "t,x,y,z,v"<<"\n";
+	write_dep_2      << "x,y,z"<<"\n";
+	write_traj_2   << "t,x,y,z,v"<<"\n";
 	//p2   << "x,y,z"<<"\n";
-
 	vector<Particle> particles = initializeParticles();
 
 	for(int i = 0; i < particles.size(); i++ ){
 		particles[i].generateDeposits(nDeposits);
+
 		for(int j = 0; j<nDeposits;j++){
 			globalDeposits.push_back(particles[i].deposits[j]);
 		}
@@ -55,18 +62,31 @@ int main(int argc, char** argv) {
 
 	
 	//Write initial positions to file:
-	write_trajectory_data << 0.0 <<"," 
+	write_traj_1 << 0.0 <<"," 
 						  << particles[0].center.x << ","
 	   					  << particles[0].center.y << "," 
 	   					  << particles[0].center.z << ","
 						  <<                   0.0 << "\n";
-	for(int i = 0; i<globalDeposits.size(); i++){
-		write_deposit_data << globalDeposits[i].x << "," 
-		   				   << globalDeposits[i].y << "," 
-		   			 	   << globalDeposits[i].z <<"\n";
+	write_traj_2 << 0.0 <<"," 
+						  << particles[1].center.x << ","
+	   					  << particles[1].center.y << "," 
+	   					  << particles[1].center.z << ","
+						  <<                   0.0 << "\n";
+						  
+
+	for(int i = 0; i<particles[0].deposits.size(); i++){
+			write_dep_1 << particles[0].deposits[i].x << "," 
+					<< particles[0].deposits[i].y << "," 
+					<< particles[0].deposits[i].z <<"\n";
 	}
-	
-//	p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
+	for(int i = 0; i<particles[1].deposits.size(); i++){
+			write_dep_2 << particles[1].deposits[i].x << "," 
+					<< particles[1].deposits[i].y << "," 
+					<< particles[1].deposits[i].z <<"\n";
+	}
+
+
+
 
 	for(int time = 0; time < number_of_steps; time ++){ 
 
@@ -84,20 +104,42 @@ int main(int argc, char** argv) {
 
 
 		//Write deposits to csv file:
+		/*
+		
 		for(int i = 0; i<globalDeposits.size(); i++){
-			write_deposit_data << globalDeposits[i].x << "," 
+			write_dep_1        << globalDeposits[i].x << "," 
 			   				   << globalDeposits[i].y << "," 
 			   				   << globalDeposits[i].z <<"\n";
 		}
+		*/
+		for(int i = 0; i<particles[0].deposits.size(); i++){
+			write_dep_1 << particles[0].deposits[i].x << "," 
+					<< particles[0].deposits[i].y << "," 
+					<< particles[0].deposits[i].z <<"\n";
+		}
+		for(int i = 0; i<particles[1].deposits.size(); i++){
+			write_dep_2 << particles[1].deposits[i].x << "," 
+					<< particles[1].deposits[i].y << "," 
+					<< particles[1].deposits[i].z <<"\n";
+		}
+
 		globalDeposits = update_globalDeposits(particles);
 		
 		//Write velocity and displacements to csv file
 		double total_vel = compute_total_velocity(particles[0]);
-		write_trajectory_data << time*0.01 << ","
+		write_traj_1 << time*0.01 << ","
 		                      << particles[0].center.x << ","
 							  << particles[0].center.y << ","
 							  << particles[0].center.z << "," 
 							  << total_vel             << "\n";
+
+		write_traj_2 << time*0.01 << ","
+		                      << particles[1].center.x << ","
+							  << particles[1].center.y << ","
+							  << particles[1].center.z << "," 
+							  << total_vel             << "\n";
+
+
 		//p2 << particles[1].center.x << "," << particles[1].center.y << "," << particles[1].center.z << "\n";
 		if(time%1000 == 0){
 			cout<<"Finished step "<<time<<"/"<<number_of_steps<<"\n";
@@ -105,8 +147,11 @@ int main(int argc, char** argv) {
 			
 	}
 
-	write_trajectory_data.close();
-	write_deposit_data.close();
+	write_dep_1.close();
+	write_dep_2.close();
+	write_traj_1.close();
+	write_traj_2.close();
+
 
 	cout<<"Simulation finished, writing to csv..."<<"\n";
     //////////////////////////////////////////////////////////////////
